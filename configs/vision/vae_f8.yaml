@@ -1,0 +1,22 @@
+# Latent autoencoder. Train this to convergence first, then freeze it and train
+# a diffusion model in its latent space for resolutions above 64x64.
+kind: vae
+run_name: vae-f8
+
+model:
+  template: vae_f8_64
+
+data:
+  train: data/images/faces
+  eval: data/images/faces-val
+
+training:
+  max_steps: 50000
+  batch_size: 32
+  lr: 1.0e-4
+  # Small on purpose: the goal is a bounded latent scale, not a generative
+  # prior. Larger values visibly blur reconstructions.
+  kl_weight: 1.0e-6
+  log_every: 100
+  eval_every: 1000
+  save_every: 5000

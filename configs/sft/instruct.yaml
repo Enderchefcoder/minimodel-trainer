@@ -1,0 +1,43 @@
+# Instruction tuning on the general SFT mixture.
+#
+#   minimodel data pull sft-general --limit 200000
+#   minimodel data tokenize smoltalk -t artifacts/tokenizer.json --format chat
+#   minimodel posttrain --config configs/sft/instruct.yaml
+
+stage: sft
+tokenizer: artifacts/tokenizer.json
+
+model:
+  checkpoint: runs/dense-30m/model
+
+data:
+  train: data/tokenized/smoltalk
+  eval: data/tokenized/smoltalk-val
+  # Pretraining data mixed back in to limit catastrophic forgetting.
+  replay: data/tokenized/fineweb-edu-dedup
+
+training:
+  run_name: dense-30m-instruct
+  max_steps: 3000
+  batch_size: 16
+  seq_len: 1024
+  grad_accum_steps: 2
+
+  # An order of magnitude below the pretraining rate. Higher rates make the
+  # model fluent in the SFT format within a few hundred steps and erase most of
+  # what pretraining taught it.
+  lr: 2.0e-5
+  weight_decay: 0.0
+  warmup: 0.03
+  lr_schedule: cosine
+  min_lr_ratio: 0.1
+
+  replay_fraction: 0.1
+  label_smoothing: 0.05
+  track_accuracy: true
+
+  log_every: 20
+  eval_every: 200
+  save_every: 500
+  early_stopping_patience: 3
+  seed: 1337

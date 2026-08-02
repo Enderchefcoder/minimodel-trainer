@@ -35,7 +35,10 @@ __all__ = [
 logger = get_logger(__name__)
 
 #: Metrics where a smaller value is better.
-LOWER_IS_BETTER = {"perplexity", "loss", "val_loss", "bits_per_token", "ms_per_token"}
+LOWER_IS_BETTER = {"perplexity", "ppl", "loss", "val_loss", "bits_per_token", "ms_per_token"}
+
+#: Columns that describe the model rather than score it; never highlighted.
+NO_HIGHLIGHT = {"model", "run", "params", "parameters", "active_parameters", "steps"}
 
 
 class ComparisonTable:
@@ -82,6 +85,8 @@ class ComparisonTable:
 
 def _best_index(values: list[Any], column: str) -> int | None:
     """Index of the best value in ``values``, or ``None`` if not comparable."""
+    if column.lower() in NO_HIGHLIGHT:
+        return None
     numeric = [(i, v) for i, v in enumerate(values) if isinstance(v, (int, float))]
     if len(numeric) < 2:
         return None
@@ -172,7 +177,10 @@ def compare_results(
                 continue
             for key in ("accuracy_norm", "accuracy", "perplexity", "solve_rate"):
                 if key in metrics:
-                    row[task_name] = round(float(metrics[key]), 5)
+                    # Perplexity columns get a suffix so the "lower is better"
+                    # highlighting rule can recognise them by name.
+                    column = f"{task_name}_ppl" if key == "perplexity" else task_name
+                    row[column] = round(float(metrics[key]), 5)
                     break
         if include_throughput and result.get("throughput"):
             decode = result["throughput"].get("decode_tokens_per_second")

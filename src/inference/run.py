@@ -255,8 +255,11 @@ def stream_completion(
 ) -> Iterator[str]:
     """Yield decoded text incrementally.
 
-    Tokens are buffered until they form valid UTF-8, so multi-byte characters
-    are never emitted half-finished.
+    Tokens are buffered until they form valid UTF-8, so a multi-byte character
+    that spans several byte-level tokens is never emitted half-finished. The
+    buffer is capped at four tokens: byte-level BPE can emit a genuinely
+    invalid byte (especially from an under-trained model), and waiting forever
+    for it to become valid would stall the stream.
     """
     tokenizer = loaded.tokenizer
     if chat:
@@ -282,7 +285,7 @@ def stream_completion(
     ):
         pending.append(token_id)
         text = tokenizer.decode(pending)
-        if "\ufffd" not in text:
+        if "\ufffd" not in text or len(pending) >= 4:
             yield text
             pending = []
     if pending:

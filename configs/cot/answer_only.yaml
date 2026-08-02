@@ -1,0 +1,12 @@
+# Train on the answers only, using the traces purely as context.
+#
+# The right choice below ~20M parameters: the model learns what a correct answer
+# looks like without spending its capacity imitating reasoning it cannot
+# reproduce.
+extends: reasoning.yaml
+
+training:
+  run_name: small-answer-only
+  reasoning_loss_weight: 0.0
+  answer_loss_weight: 1.0
+  enforce_think_close: 0.0

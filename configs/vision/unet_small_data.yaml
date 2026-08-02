@@ -1,0 +1,21 @@
+# UNet on a small corpus. Below ~50K images the convolutional prior beats the
+# transformer at equal parameter count.
+kind: diffusion
+run_name: unet-butterflies
+
+model:
+  template: unet_small_32
+  overrides:
+    condition: none
+
+data:
+  train: data/images/butterflies
+
+training:
+  max_steps: 40000
+  batch_size: 64
+  lr: 2.0e-4
+  ema_decay: 0.999
+  horizontal_flip: true
+  log_every: 100
+  save_every: 5000

@@ -1,0 +1,28 @@
+# 30M dense transformer, the recommended starting point for a model you intend
+# to instruction-tune and actually use.
+extends: _base.yaml
+
+run_name: dense-30m
+
+model:
+  template: dense_30m
+
+data:
+  mixture:
+    - { path: data/tokenized/fineweb-edu-dedup, weight: 0.60 }
+    - { path: data/tokenized/cosmopedia-v2, weight: 0.25 }
+    - { path: data/tokenized/finemath, weight: 0.15 }
+  eval: data/tokenized/fineweb-edu-val
+
+training:
+  max_steps: 100000
+  batch_size: 24
+  seq_len: 1024
+  grad_accum_steps: 11     # ~264K tokens per optimizer step
+  lr: 1.2e-3
+  optimizer: muon
+  lr_schedule: wsd
+  warmup: 0.005
+  compile: true
+  eval_every: 2000
+  save_every: 5000

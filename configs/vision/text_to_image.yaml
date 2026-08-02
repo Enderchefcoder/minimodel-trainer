@@ -1,0 +1,22 @@
+# Text-conditioned image generation, using the same BPE tokenizer as the
+# language models.
+kind: diffusion
+run_name: dit-text-64
+tokenizer: artifacts/tokenizer.json
+
+model:
+  template: dit_text_64
+
+data:
+  train: data/images/pokemon      # prepared with captions
+
+training:
+  max_steps: 80000
+  batch_size: 64
+  lr: 2.0e-4
+  ema_decay: 0.9995
+  # 10% of captions are dropped during training so classifier-free guidance
+  # has an unconditional branch to extrapolate from.
+  log_every: 100
+  sample_every: 5000
+  save_every: 5000

@@ -1,0 +1,19 @@
+# Smallest useful pretraining run: a 3M dense model on whatever corpus you have
+# tokenized. Finishes in a few minutes on CPU.
+extends: _base.yaml
+
+run_name: demo-tiny
+
+model:
+  template: dense_3m
+  overrides:
+    max_seq_len: 512
+
+training:
+  max_steps: 2000
+  batch_size: 16
+  seq_len: 256
+  lr: 3.0e-3
+  log_every: 25
+  eval_every: 200
+  save_every: 500

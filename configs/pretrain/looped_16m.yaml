@@ -1,0 +1,29 @@
+# 16M looped transformer on the SmolLM corpus mixture.
+extends: _base.yaml
+
+run_name: looped-16m
+
+model:
+  template: looped_16m
+
+data:
+  mixture:
+    - { path: data/tokenized/fineweb-edu-dedup, weight: 0.70 }
+    - { path: data/tokenized/cosmopedia-v2, weight: 0.30 }
+  eval: data/tokenized/fineweb-edu-val
+
+training:
+  max_steps: 60000
+  batch_size: 32
+  seq_len: 1024
+  grad_accum_steps: 8
+  lr: 1.2e-3
+  optimizer: muon
+  optimizer_kwargs:
+    adamw_lr: 3.0e-4
+    momentum: 0.95
+  lr_schedule: wsd
+  warmup: 0.01
+  schedule_kwargs:
+    decay_ratio: 0.1
+    decay_shape: sqrt

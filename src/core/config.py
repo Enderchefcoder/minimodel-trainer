@@ -64,16 +64,24 @@ def parse_scalar(text: str) -> Any:
     >>> parse_scalar("hello")
     'hello'
     """
+    stripped = text.strip()
+    if stripped == "":
+        return ""
     try:
         value = yaml.safe_load(text)
     except yaml.YAMLError:
         return text
-    # `yaml.safe_load("")` returns None, but an explicitly empty override should
-    # stay an empty string rather than silently becoming null.
-    if value is None and text.strip() != "" and text.strip().lower() not in {"null", "~", "none"}:
+    # YAML 1.1 only recognises floats whose exponent form has a decimal point,
+    # so `3e-4` parses as the string "3e-4". Learning rates are written that way
+    # constantly, so the numeric interpretation is applied explicitly.
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return value
+    # `yaml.safe_load` returns None for some inputs that were not meant as null.
+    if value is None and stripped.lower() not in {"null", "~", "none"}:
         return text
-    if text.strip() == "":
-        return ""
     return value
 
 
