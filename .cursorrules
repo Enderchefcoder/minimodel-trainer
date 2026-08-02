@@ -89,7 +89,7 @@ Plan and status:
 [X] docs: 17 pages + module READMEs + README/AGENTS/CONTRIBUTING/CHANGELOG
 [X] research/: reading lists + design notes; notebooks x2
 [X] ruff clean (fix + format, 48 files reformatted, suite re-green)
-[ ] push branch cursor/populate-full-trainer-system-1770, open PR
+[X] pushed branch; PR #1 open: https://github.com/Enderchefcoder/minimodel-trainer/pull/1
 
 Verification commands (all green as of last run):
   venv/bin/pytest            # 455 passed ~30s
