@@ -53,15 +53,15 @@ class ModelAdapter:
         """
         out: list[tuple[float, int]] = []
         for start in range(0, len(sequences), self.batch_size):
-            batch = sequences[start : start + self.batch_size]
+            batch = [s[: self.max_len] for s in sequences[start : start + self.batch_size]]
             width = max(len(s) for s in batch)
             padded = torch.zeros(len(batch), width, dtype=torch.long)
             for i, seq in enumerate(batch):
-                padded[i, : len(seq)] = torch.tensor(seq[: self.max_len], dtype=torch.long)
+                padded[i, : len(seq)] = torch.tensor(seq, dtype=torch.long)
             logits = self.forward(padded).float()
             logp = torch.log_softmax(logits, dim=-1)
             for i, seq in enumerate(batch):
-                length = min(len(seq), self.max_len)
+                length = len(seq)
                 if length < 2:
                     out.append((0.0, 0))
                     continue

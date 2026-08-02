@@ -39,6 +39,7 @@ __all__ = [
     "RecurrentBlock",
     "RotaryEmbedding",
     "SwiGLUFeedForward",
+    "TiedEmbedding",
     "TransformerBlock",
     "apply_rope",
     "build_attention_mask",
@@ -308,6 +309,34 @@ def repeat_kv(x: Tensor, n_rep: int) -> Tensor:
         return x
     b, h, t, d = x.shape
     return x[:, :, None, :, :].expand(b, h, n_rep, t, d).reshape(b, h * n_rep, t, d)
+
+
+class TiedEmbedding(nn.Module):
+    """Plain ``[vocab, dim]`` embedding whose transpose is the LM head.
+
+    The classic weight-tied setup (GPT-2, Glint-2): one matrix serves both as
+    the input lookup and, transposed, as the output projection. Provided
+    alongside :class:`FactorizedEmbedding` so the looped architecture can match
+    either a factorized (supra2) or a tied (Glint-2) embedding at fixed budget.
+    """
+
+    def __init__(self, vocab_size: int, dim: int):
+        super().__init__()
+        self.vocab_size = int(vocab_size)
+        self.dim = int(dim)
+        self.weight = nn.Parameter(torch.empty(self.vocab_size, self.dim))
+        nn.init.normal_(self.weight, mean=0.0, std=0.02)
+
+    def forward(self, tokens: Tensor) -> Tensor:
+        """Embed ``[B, T]`` token ids into ``[B, T, dim]``."""
+        return F.embedding(tokens, self.weight)
+
+    def logits(self, hidden: Tensor, *, materialize: bool = False) -> Tensor:
+        """Project hidden states to vocabulary logits via the tied weight."""
+        return F.linear(hidden, self.weight)
+
+    def extra_repr(self) -> str:
+        return f"vocab_size={self.vocab_size}, dim={self.dim}, tied=True"
 
 
 class CausalLocalAttention(nn.Module):
