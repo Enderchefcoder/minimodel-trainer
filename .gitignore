@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+.eggs/
+build/
+dist/
+.Python
+
+# Environments
+venv/
+.venv/
+env/
+.env
+
+# Testing / tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Project artifacts (models, tokenized data, run outputs)
+artifacts/
+runs/
+data/
+checkpoints/
+outputs/
+wandb/
+*.bin
+*.idx
+*.safetensors
+*.pt
+*.ckpt
+
+# Keep tiny fixtures that tests depend on
+!tests/fixtures/**
+
+# OS noise
+.DS_Store
+Thumbs.db

@@ -1,1 +1,15 @@
+# Runtime requirements for minimodel-trainer.
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# For a CPU-only PyTorch build (useful in CI or on laptops) install torch first:
+#   pip install --index-url https://download.pytorch.org/whl/cpu torch
+#
+# Optional extras live in requirements-dev.txt and requirements-optional.txt.
 
+torch>=2.1
+numpy>=1.24
+pyyaml>=6.0
+tqdm>=4.65
+requests>=2.28
