@@ -59,9 +59,23 @@ from minimodel.training.callbacks import (
 from minimodel.training.optim import build_optimizer
 from minimodel.training.schedules import build_scheduler, resolve_warmup
 
-__all__ = ["Trainer", "TrainerConfig", "TrainingResult"]
+__all__ = ["Trainer", "TrainerConfig", "TrainingResult", "count_batch_tokens"]
 
 logger = get_logger(__name__)
+
+
+def count_batch_tokens(batch: Mapping[str, Tensor]) -> int:
+    """Count the tokens in a batch, whatever shape the objective uses.
+
+    Pretraining batches have ``input_ids``; preference batches have
+    ``chosen_ids``/``rejected_ids`` instead. Throughput accounting should work
+    for both without the loop knowing which trainer it is running.
+    """
+    total = 0
+    for key, value in batch.items():
+        if isinstance(value, torch.Tensor) and key.endswith("_ids"):
+            total += int(value.numel())
+    return total
 
 
 @dataclass
@@ -351,9 +365,9 @@ class Trainer:
         extras: dict[str, float] = {}
         tokens = 0
 
-        for micro in range(self.config.grad_accum_steps):
+        for _ in range(self.config.grad_accum_steps):
             batch = self._next_batch()
-            tokens += int(batch["input_ids"].numel())
+            tokens += count_batch_tokens(batch)
             with autocast_context(self.device, self.dtype):
                 loss, step_extras = self.compute_loss(batch)
                 scaled = loss / self.config.grad_accum_steps
