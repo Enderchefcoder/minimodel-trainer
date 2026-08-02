@@ -43,6 +43,17 @@ wandb/
 # Keep tiny fixtures that tests depend on
 !tests/fixtures/**
 
+# Research: keep code, reports, and small result JSONs; exclude big downloads
+research/data/train/
+research/data/eval/*.jsonl
+research/data/eval/*.txt
+research/baselines/glint2/*.pt
+research/baselines/glint2/tokenizer.json
+research/experiments/runs/
+research/artifacts/
+*.pt
+!research/**/*.result.json
+
 # OS noise
 .DS_Store
 Thumbs.db
