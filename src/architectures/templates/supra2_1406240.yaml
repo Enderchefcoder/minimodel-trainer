@@ -1,0 +1,289 @@
+name: supra2_1.4m
+params: 1406240
+family: looped-transformer
+
+tokenizer:
+  type: bpe
+  vocab_size: 4096
+  source: artifacts/glint2/tokenizer.json
+  # Factorized E and proj are shared by embed() and lm_head (not a full [V,d] tie).
+  shared_factorized_lm_head: true
+
+model:
+  dim: 128
+  n_heads: 8
+  head_dim: 16                 # invariant: n_heads * head_dim == dim
+  ffn_hidden: 544
+  activation: swiglu           # == ffn.type
+  norm: rmsnorm
+  norm_eps: 1.0e-6             # NOT torch default 1e-5; pass eps= on every RMSNorm
+  norm_weight_init: ones
+  bias: false                  # all Linear layers bias-free
+  dropout: 0.0                 # unused: no dropout sites in forward
+  max_position_embeddings: 4096  # documentary context limit; RoPE built for actual T
+
+  # ----------------------------------------------------------
+  # EMBEDDING & LM_HEAD (factorized, shared factors)
+  # ----------------------------------------------------------
+  # Root module attributes (not nested): self.E, self.proj
+  embedding:
+    type: factorized
+    vocab_size: 4096
+    rank: 64
+    E:
+      type: nn.Embedding
+      shape: [4096, 64]
+      params: 262144
+    proj:
+      type: nn.Linear
+      in: 64
+      out: 128
+      bias: false
+      weight_shape: [128, 64]
+      params: 8192
+    init:
+      E: normal(mean=0.0, std=0.02)
+      proj: normal(mean=0.0, std=0.02)
+    formula: "embed(tok) = self.proj(self.E(tok))  # [B,T,64] -> [B,T,128]"
+
+  lm_head:
+    type: factorized_tied
+    tied_factors: [E, proj]
+    train:
+      # F.linear(x, A) = x @ A.T.
+      # Want z = x @ W with W = proj.weight [128, 64] (dim -> rank),
+      # so A = W.T = [64, 128]:
+      z: "F.linear(x, self.proj.weight.T) -> [B, T, 64]"
+      logits: "F.linear(z, self.E.weight) -> [B, T, 4096]"
+    infer:
+      # Temporary tensor only — never register as Parameter (would break budget/tying).
+      full_embed: "self.E.weight @ self.proj.weight.T -> [4096, 128]"
+      logits: "F.linear(x, full_embed) -> [B, T, 4096]"
+    logits_shape: "[B, T, 4096]"
+    equivalence: |
+      F.linear(F.linear(x, W.T), E) == F.linear(x, E @ W.T)
+      with W = proj.weight [128,64], E = E.weight [4096,64].
+
+  # ----------------------------------------------------------
+  # POSITION ENCODING
+  # ----------------------------------------------------------
+  position_encoding:
+    type: rope
+    applied_to: [q, k]
+    layout: even_odd_interleave
+    base: 10000.0
+    inv_freq: "1.0 / (base ** (arange(0, head_dim, 2, dtype=float32) / head_dim))"
+    angles: "outer(arange(T, dtype=float32), inv_freq)"
+    cos_sin_shape: "[1, 1, T, head_dim/2]"   # broadcast over [B, n_heads, T, head_dim]
+    convention: |
+      x1, x2 = x[..., 0::2], x[..., 1::2]
+      rotated = stack([x1*cos - x2*sin, x1*sin + x2*cos], dim=-1).flatten(-2)
+      Must match apply_rope() exactly.
+
+  # ----------------------------------------------------------
+  # ATTENTION
+  # ----------------------------------------------------------
+  attention:
+    type: causal_local_sdpa
+    qkv: {in: 128, out: 384, bias: false}    # 384 = 3 * dim
+    out: {in: 128, out: 128, bias: false}
+    scale: "1 / sqrt(head_dim)"              # 1/sqrt(16)
+    window: 256
+    mask: "(k_pos <= q_pos) & (q_pos - k_pos < window)"
+    forward: |
+      raw_qkv = W_qkv(x_norm) + qkv_delta          # [B,T,384]; delta 0 outside loop
+      q, k, v = raw_qkv.split(dim, dim=-1)
+      q, k, v = reshape_heads(q, k, v)             # [B, 8, T, 16]
+      if v_prev is not None:
+        lam = sigmoid(v_lambda_logit).view(1, n_heads, 1, 1)
+        v = lam * v + (1.0 - lam) * v_prev
+      q, k = apply_rope(q, cos, sin), apply_rope(k, cos, sin)   # v is NOT RoPE'd
+      attn = SDPA(q, k, v, attn_mask=mask, scale=1/sqrt(head_dim))
+      out = W_out(merge_heads(attn))               # [B,T,128]
+      return out, v                                # return MIXED v for threading
+    value_residual:
+      enabled: true
+      lambda_logit_param: v_lambda_logit
+      lambda_logit_shape: [8]                # one logit per head, PER Attention module
+      lambda_logit_init: 0.0                 # sigmoid(0) = 0.5
+      lambda_formula: "lam = sigmoid(v_lambda_logit).view(1, n_heads, 1, 1)"
+      mix_formula: "v = lam * v + (1.0 - lam) * v_prev"
+      scope: across_all_layers               # prelude, every loop iter, coda
+      ownership: |
+        Each of the 4 Attention modules (prelude, shared_a, shared_b, coda)
+        owns its own v_lambda_logit[8]. Shared A/B reuse that module's λ
+        across loop iterations.
+      v_prev_threading: |
+        Within one forward (train step or one decode step):
+          first Attention: v_prev is None → skip mix; then v_prev = v
+          later Attention: apply mix; then v_prev = v
+        Across decode steps: v_prev does NOT persist (no cross-token VR).
+        KV caching (if added later) is orthogonal and unspecified here.
+
+  # ----------------------------------------------------------
+  # FFN
+  # ----------------------------------------------------------
+  ffn:
+    type: swiglu
+    gate_up: {in: 128, out: 1088, bias: false}   # 1088 = 2 * 544
+    down: {in: 544, out: 128, bias: false}
+    formula: "down(silu(gate) * up)  # gate, up = chunk(gate_up(x), 2, dim=-1)"
+
+  # ----------------------------------------------------------
+  # BLOCK
+  # ----------------------------------------------------------
+  block:
+    weight_classes: [prelude, shared_a, shared_b, coda]
+    forward_signature: "(x, cos, sin, qkv_delta, window, v_prev=None, timestep_scale=None) -> (x, v)"
+    structure:
+      - pre_norm_attention_residual: |
+          x_norm = RMSNorm(x, eps=norm_eps)
+          attn_out, v = attention(x_norm, cos, sin, qkv_delta, window, v_prev)
+          x = x + attn_out
+      - pre_norm_ffn_residual: |
+          x_norm = RMSNorm(x, eps=norm_eps)
+          ffn_out = ffn(x_norm)
+          if timestep_scale is not None:
+            ffn_out = ffn_out * timestep_scale     # [1,1,dim] or [dim]
+          x = x + ffn_out
+          return x, v
+
+  # ----------------------------------------------------------
+  # TOPOLOGY
+  # ----------------------------------------------------------
+  topology:
+    prelude:
+      unique: true
+      n_layers: 1
+      weight_class: prelude
+      qkv_delta: zeros
+      timestep_scale: null
+      outer_residual: false
+
+    recurrent:
+      n_shared_blocks: 2
+      weight_classes: [shared_a, shared_b]
+      schedule: "shared[t % n_shared_blocks]"      # ABAB
+      train_loops: 8
+      infer_loops_default: 8
+      variable_loops:
+        enabled: true
+        distribution: uniform_inclusive
+        min: 4
+        max: 8                              # MUST equal train_loops; not an independent code field
+        when: training_only
+        overrides_explicit_loops_arg: false # model(tokens, loops=K) honors K
+      max_loops_table: 16
+      per_loop:
+        loop_embed:
+          type: nn.Embedding
+          shape: [16, 128]
+          use: "gated = x + loop_embed.weight[clamped]"
+        loop_lora:
+          rank: 4
+          down: {in: 128, out: 4, bias: false}
+          up: {in: 4, out: 384, bias: false}
+          up_init: zeros
+          n_tables: 16
+          use: "qkv_delta = up_t(down_t(gated))"
+        timestep_scale:
+          type: nn.Parameter
+          shape: [16, 128]
+          init: ones
+          use: "ffn_out = ffn_out * τ[clamped].view(1, 1, -1)"
+      outer_residual:
+        # Shared across loops (NOT per-loop). Channel-wise re-injection of x0.
+        shared_across_loops: true
+        gate_param: outer_gate
+        gate_shape: [128]
+        gate_init: "full(128, 0.1)"
+        formula: "x = x_new + outer_gate * x0"     # x0 = post-embed stream
+
+    coda:
+      unique: true
+      n_layers: 1
+      weight_class: coda
+      qkv_delta: zeros
+      timestep_scale: null
+      outer_residual: false
+
+    forward: |
+      x = embed(tokens)                  # factorized
+      x0 = x
+      v_prev = None
+      cos, sin = rope(T)                 # shape [1,1,T,head_dim/2]
+
+      L = train_loops
+      if loops is not None and (not training or not variable_loops.overrides_explicit_loops_arg):
+        L = loops
+      elif training and variable_loops.enabled:
+        L = Uniform{loop_min .. train_loops}   # inclusive; upper bound is train_loops
+
+      for block in prelude:              # unique × 1
+        x, v_prev = block(x, cos, sin, zeros_delta, window, v_prev, None)
+
+      for t in range(L):
+        clamped = min(t, max_loops_table - 1)
+        gated = x + loop_embed.weight[clamped]
+        delta = LoopLora[clamped](gated)
+        blk = shared[t % n_shared_blocks]
+        tau = timestep_scale[clamped].view(1, 1, -1)
+        x_new, v_prev = blk(gated, cos, sin, delta, window, v_prev, tau)
+        x = x_new + outer_gate * x0
+
+      for block in coda:                 # unique × 1
+        x, v_prev = block(x, cos, sin, zeros_delta, window, v_prev, None)
+
+      h = RMSNorm(x, eps=norm_eps)
+      if return_hidden: return h
+      return lm_head(h)                  # factorized tied
+
+  final:
+    norm: {type: rmsnorm, dim: 128, eps: 1.0e-6}
+    lm_head: factorized_tied
+
+weight_init:
+  # Order (required):
+  #   (1) apply normal(0, 0.02) to every Linear + Embedding
+  #   (2) re-assert specials so they survive (1):
+  #         loop_lora_up = zeros
+  #         outer_gate = full(dim, 0.1)
+  #         timestep_scale = ones
+  #   v_lambda_logit=0 and rmsnorm_weight=ones are not Linears — (1) must not touch them.
+  linear: normal(mean=0.0, std=0.02)
+  embedding: normal(mean=0.0, std=0.02)
+  loop_lora_up: zeros
+  outer_gate: full(128, 0.1)
+  v_lambda_logit: 0.0
+  timestep_scale: ones
+  rmsnorm_weight: ones
+
+param_budget:
+  E: 262144                                  # 4096 * 64
+  proj: 8192                                 # 64 * 128
+  blocks: 1098784                            # 4 * 274696
+  # per block 274696 = qkv(49152)+out(16384)+v_λ(8)+2*RMSNorm(256)+gate_up(139264)+down(69632)
+  loop_lora_tables: 32768                    # 16 * (128*4 + 4*384)
+  loop_embed: 2048                           # 16 * 128
+  timestep_scale: 2048                       # 16 * 128
+  outer_gate: 128                            # dim vector
+  final_norm: 128
+  total: 1406240
+
+forward_api:
+  train: "logits = model(tokens)              # L ~ Uniform{4..8} if loops=None"
+  train_fixed: "logits = model(tokens, loops=K)  # honors K (overrides_explicit_loops_arg: false)"
+  infer: "logits = model(tokens, loops=8)"
+  hidden: "h = model(tokens, loops=8, return_hidden=True)"
+  logits_shape: "[B, T, 4096]"
+
+training_defaults_reference:
+  data: fineweb_edu_sample
+  seq_len: 128
+  batch_size: 8
+  optimizer: AdamW
+  lr: 3.0e-3
+  weight_decay: 0.1
+  betas: [0.9, 0.95]
+  grad_clip: 1.0
+  lr_schedule: cosine_with_warmup
