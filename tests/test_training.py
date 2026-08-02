@@ -6,6 +6,7 @@ import math
 
 import pytest
 import torch
+from conftest import TINY_MODEL
 from torch import nn
 
 from minimodel.architectures.builder import build_model
@@ -34,8 +35,6 @@ from minimodel.training.optim import (
 )
 from minimodel.training.schedules import SCHEDULES, build_scheduler, resolve_warmup
 from minimodel.training.trainer import Trainer, TrainerConfig, count_batch_tokens
-
-from conftest import TINY_MODEL
 
 
 class TestOptimizers:
@@ -169,20 +168,20 @@ class TestSchedules:
 
 
 def _trainer_config(tmp_path, **overrides) -> TrainerConfig:
-    defaults = dict(
-        run_name="t",
-        output_dir=str(tmp_path),
-        max_steps=6,
-        batch_size=2,
-        seq_len=16,
-        lr=1e-3,
-        log_every=3,
-        eval_every=3,
-        eval_batches=2,
-        save_every=3,
-        warmup=0.2,
-        resume=False,
-    )
+    defaults = {
+        "run_name": "t",
+        "output_dir": str(tmp_path),
+        "max_steps": 6,
+        "batch_size": 2,
+        "seq_len": 16,
+        "lr": 1e-3,
+        "log_every": 3,
+        "eval_every": 3,
+        "eval_batches": 2,
+        "save_every": 3,
+        "warmup": 0.2,
+        "resume": False,
+    }
     defaults.update(overrides)
     return TrainerConfig(**defaults)
 
@@ -226,7 +225,9 @@ class TestTrainer:
 
         model = build_model("dense_3m", overrides=overrides, verify_budget=False)
         first = Trainer(
-            model, _trainer_config(tmp_path, max_steps=4, save_every=2, eval_every=0), train_dataset=dataset
+            model,
+            _trainer_config(tmp_path, max_steps=4, save_every=2, eval_every=0),
+            train_dataset=dataset,
         )
         first.fit()
 
@@ -245,9 +246,7 @@ class TestTrainer:
         dataset = PackedTextDataset(corpus_dir, seq_len=16)
         trainer = Trainer(
             tiny_model,
-            _trainer_config(
-                tmp_path, max_steps=2, grad_accum_steps=3, eval_every=0, save_every=0
-            ),
+            _trainer_config(tmp_path, max_steps=2, grad_accum_steps=3, eval_every=0, save_every=0),
             train_dataset=dataset,
         )
         result = trainer.fit()
@@ -333,7 +332,7 @@ class TestCallbacks:
         stopper.on_evaluate(trainer, 3, {"val_loss": 1.2})
         assert trainer.should_stop
         stopper.on_evaluate(trainer, 4, {"other": 1})  # ignored
-        with pytest.raises(ValueError, match="min.*max"):
+        with pytest.raises(ValueError, match=r"min.*max"):
             EarlyStopping(mode="diagonal")
 
     def test_early_stopping_max_mode(self, tiny_model, corpus_dir, tmp_path):

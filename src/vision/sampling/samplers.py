@@ -130,13 +130,19 @@ def heun_sample(
         t_next = timesteps[index + 1]
         dt = t_next - t_current
         velocity = _model_call(
-            model, x, t_current.expand(x.shape[0]), guidance_scale=guidance_scale,
+            model,
+            x,
+            t_current.expand(x.shape[0]),
+            guidance_scale=guidance_scale,
             model_kwargs=model_kwargs,
         )
         x_euler = x + dt * velocity
         if index < n_steps - 1:
             velocity_next = _model_call(
-                model, x_euler, t_next.expand(x.shape[0]), guidance_scale=guidance_scale,
+                model,
+                x_euler,
+                t_next.expand(x.shape[0]),
+                guidance_scale=guidance_scale,
                 model_kwargs=model_kwargs,
             )
             x = x + dt * 0.5 * (velocity + velocity_next)
@@ -180,7 +186,10 @@ def ddim_sample(
         alpha_bar_next = cosine_alpha_bar(t_next).view(1, *([1] * (x.dim() - 1)))
 
         epsilon = _model_call(
-            model, x, t_current.expand(x.shape[0]), guidance_scale=guidance_scale,
+            model,
+            x,
+            t_current.expand(x.shape[0]),
+            guidance_scale=guidance_scale,
             model_kwargs=model_kwargs,
         )
         x0 = (x - (1 - alpha_bar).sqrt() * epsilon) / alpha_bar.sqrt()

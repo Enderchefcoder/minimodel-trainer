@@ -87,8 +87,10 @@ class ETREstimator:
 
     def remaining_steps(self, current_step: int | None = None) -> int:
         """Steps left until :attr:`total_steps`."""
-        step = current_step if current_step is not None else (
-            self._samples[-1].step if self._samples else 0
+        step = (
+            current_step
+            if current_step is not None
+            else (self._samples[-1].step if self._samples else 0)
         )
         return max(0, self.total_steps - int(step))
 
@@ -125,7 +127,8 @@ class ETREstimator:
             "steps_per_second": round(self.steps_per_second, 4),
             "remaining_steps": self.remaining_steps(current_step),
             "remaining_seconds": (
-                None if self.remaining_seconds(current_step) == float("inf")
+                None
+                if self.remaining_seconds(current_step) == float("inf")
                 else round(self.remaining_seconds(current_step), 1)
             ),
             "elapsed_seconds": round(self.elapsed_seconds(), 1),

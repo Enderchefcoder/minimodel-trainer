@@ -84,9 +84,7 @@ def cmd_tokenizer_train(args: argparse.Namespace) -> int:
                 from minimodel.core.io_utils import read_jsonl
 
                 texts.extend(
-                    str(record.get("text", ""))
-                    for record in read_jsonl(path)
-                    if record.get("text")
+                    str(record.get("text", "")) for record in read_jsonl(path) if record.get("text")
                 )
             else:
                 texts.append(path.read_text(encoding="utf-8", errors="replace"))
@@ -182,7 +180,7 @@ def cmd_data_list(args: argparse.Namespace) -> int:
     for spec in datasets:
         print(
             f"{spec.name:<26} {spec.stage:<11} {spec.format:<15} "
-            f"{str(spec.tokens or '-'):<8} {spec.display}"
+            f"{spec.tokens or '-'!s:<8} {spec.display}"
         )
     print("\nMixtures:")
     for mixture in list_mixtures():
@@ -205,9 +203,7 @@ def cmd_data_pull(args: argparse.Namespace) -> int:
         )
         payload = {name: str(path) for name, path in outputs.items()}
     else:
-        path = pull_dataset(
-            args.name, args.output, limit=args.limit, overwrite=args.overwrite
-        )
+        path = pull_dataset(args.name, args.output, limit=args.limit, overwrite=args.overwrite)
         payload = {args.name: str(path)}
     if args.json:
         _print_json(payload)
@@ -226,10 +222,12 @@ def cmd_data_tokenize(args: argparse.Namespace) -> int:
     if data_format == "auto":
         try:
             data_format = get_dataset(args.name).format if args.name else "text"
-        except Exception:  # noqa: BLE001 - registry lookup is best-effort here
+        except Exception:
             data_format = "text"
 
-    output = Path(args.output) if args.output else Path("data/tokenized") / (args.name or source.stem)
+    output = (
+        Path(args.output) if args.output else Path("data/tokenized") / (args.name or source.stem)
+    )
     stats = tokenize_jsonl(
         source,
         tokenizer,
@@ -286,9 +284,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
     """Generate a completion from a model directory."""
     from minimodel.inference.run import complete, load_for_inference
 
-    loaded = load_for_inference(
-        args.model, tokenizer_path=args.tokenizer, device=args.device
-    )
+    loaded = load_for_inference(args.model, tokenizer_path=args.tokenizer, device=args.device)
     model_kwargs = {"loops": args.loops} if args.loops else {}
     text = complete(
         loaded,
@@ -315,9 +311,7 @@ def cmd_chat(args: argparse.Namespace) -> int:
     """Start an interactive chat session."""
     from minimodel.inference.run import chat_loop, load_for_inference
 
-    loaded = load_for_inference(
-        args.model, tokenizer_path=args.tokenizer, device=args.device
-    )
+    loaded = load_for_inference(args.model, tokenizer_path=args.tokenizer, device=args.device)
     chat_loop(
         loaded,
         max_new_tokens=args.max_new_tokens,
@@ -338,9 +332,7 @@ def cmd_bench(args: argparse.Namespace) -> int:
     from minimodel.benchmarking.tasks import BUILTIN_TASKS, load_task
     from minimodel.inference.run import load_for_inference
 
-    loaded = load_for_inference(
-        args.model, tokenizer_path=args.tokenizer, device=args.device
-    )
+    loaded = load_for_inference(args.model, tokenizer_path=args.tokenizer, device=args.device)
     tasks = list(BUILTIN_TASKS.values())
     if args.task:
         tasks = [load_task(Path(p).stem, p, args.task_kind, limit=args.limit) for p in args.task]
@@ -380,9 +372,7 @@ def cmd_plot(args: argparse.Namespace) -> int:
     """Plot loss curves from a run."""
     from minimodel.checkpointing.loss_visualization import plot_loss_curve, summarize_run
 
-    output = plot_loss_curve(
-        args.run, args.output, keys=tuple(args.keys), smoothing=args.smoothing
-    )
+    output = plot_loss_curve(args.run, args.output, keys=tuple(args.keys), smoothing=args.smoothing)
     if args.json:
         _print_json({"output": str(output), "summary": summarize_run(args.run)})
     else:
@@ -421,7 +411,7 @@ def cmd_card(args: argparse.Namespace) -> int:
     for name in args.dataset or []:
         try:
             datasets.append(get_dataset(name).to_dict())
-        except Exception:  # noqa: BLE001 - unknown names are recorded verbatim
+        except Exception:
             datasets.append({"name": name})
 
     path = generate_model_card(
@@ -471,7 +461,9 @@ def cmd_models(args: argparse.Namespace) -> int:
     print(f"\n{'TEMPLATE':<18} {'FAMILY':<20} {'PARAMS':>13}  DESCRIPTION")
     for row in rows:
         params = f"{row['params']:,}" if row["params"] else "-"
-        print(f"{row['template']:<18} {str(row['family']):<20} {params:>13}  {row['description'][:60]}")
+        print(
+            f"{row['template']:<18} {row['family']!s:<20} {params:>13}  {row['description'][:60]}"
+        )
     return 0
 
 
@@ -718,8 +710,8 @@ def main(argv: list[str] | None = None) -> int:
     if not getattr(args, "func", None):
         # A group was named without a subcommand, or nothing was.
         if getattr(args, "command", None):
-            for action in parser._subparsers._actions:  # noqa: SLF001 - argparse has no public API
-                if isinstance(action, argparse._SubParsersAction):  # noqa: SLF001
+            for action in parser._subparsers._actions:
+                if isinstance(action, argparse._SubParsersAction):
                     subparser = action.choices.get(args.command)
                     if subparser is not None:
                         subparser.print_help()

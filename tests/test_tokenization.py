@@ -113,8 +113,7 @@ class TestBPETokenizer:
                 "merges": [" ".join(pair) for pair in tokenizer.merges],
             },
             "added_tokens": [
-                {"content": token, "id": index}
-                for token, index in tokenizer.special_tokens.items()
+                {"content": token, "id": index} for token, index in tokenizer.special_tokens.items()
             ],
         }
         path = tmp_path / "tokenizer.json"
@@ -227,9 +226,12 @@ class TestChatTemplate:
         template = ChatTemplate(tokenizer)
         ids = template.render_prompt([{"role": "user", "content": "hi"}])
         assert ids[-1] == tokenizer.token_to_id("<|assistant|>")
-        assert all(label == IGNORE_INDEX for label in template.render(
-            [{"role": "user", "content": "hi"}], add_generation_prompt=True
-        ).labels)
+        assert all(
+            label == IGNORE_INDEX
+            for label in template.render(
+                [{"role": "user", "content": "hi"}], add_generation_prompt=True
+            ).labels
+        )
 
     def test_default_system_prompt_injected(self, tokenizer):
         template = ChatTemplate(tokenizer, default_system="be nice")

@@ -132,9 +132,7 @@ def load_registry(path: str | Path | None = None) -> dict[str, Any]:
     return {"datasets": datasets, "mixtures": mixtures, "path": str(registry_path)}
 
 
-def list_datasets(
-    *, stage: str | None = None, path: str | Path | None = None
-) -> list[DatasetSpec]:
+def list_datasets(*, stage: str | None = None, path: str | Path | None = None) -> list[DatasetSpec]:
     """All registered datasets, optionally filtered by training stage."""
     registry = load_registry(path)
     specs = [DatasetSpec.from_dict(name, data) for name, data in registry["datasets"].items()]

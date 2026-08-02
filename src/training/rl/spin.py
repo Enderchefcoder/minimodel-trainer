@@ -180,13 +180,17 @@ class SPINTrainer(DPOTrainer):
     ):
         config = config or SPINConfig()
         self.spin_config = config
-        self.source_records = list(records) if records is not None else self._load_records(dataset_path)
+        self.source_records = (
+            list(records) if records is not None else self._load_records(dataset_path)
+        )
         if not self.source_records:
             raise ValueError(f"no usable SPIN records in {dataset_path}")
 
         self.template = ChatTemplate(tokenizer)
         self.iteration = 0
-        cache_dir = Path(config.pair_cache_dir or (Path(config.output_dir) / config.run_name / "pairs"))
+        cache_dir = Path(
+            config.pair_cache_dir or (Path(config.output_dir) / config.run_name / "pairs")
+        )
         self.pair_cache_dir = ensure_dir(cache_dir)
 
         # Iteration 0's negatives come from the starting model, so they have to
@@ -195,7 +199,8 @@ class SPINTrainer(DPOTrainer):
         generate_self_play_pairs(
             model,
             tokenizer,
-            self.source_records if not config.prompts_per_iteration
+            self.source_records
+            if not config.prompts_per_iteration
             else self.source_records[: config.prompts_per_iteration],
             initial,
             template=self.template,

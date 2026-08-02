@@ -166,9 +166,11 @@ class DiT(BaseImageModel):
         for block in self.blocks:
             block.attention.apply(_init)
             block.mlp.apply(_init)
-        nn.init.xavier_uniform_(self.patch_embed.projection.weight.flatten(1).view_as(
+        nn.init.xavier_uniform_(
             self.patch_embed.projection.weight.flatten(1)
-        ).view(self.patch_embed.projection.weight.shape))
+            .view_as(self.patch_embed.projection.weight.flatten(1))
+            .view(self.patch_embed.projection.weight.shape)
+        )
         nn.init.zeros_(self.patch_embed.projection.bias)
 
     def build_condition(
@@ -183,7 +185,10 @@ class DiT(BaseImageModel):
         if self.label_embedding is not None:
             if labels is None:
                 labels = torch.full(
-                    (t.shape[0],), self.label_embedding.null_index, dtype=torch.long, device=t.device
+                    (t.shape[0],),
+                    self.label_embedding.null_index,
+                    dtype=torch.long,
+                    device=t.device,
                 )
             condition = condition + self.label_embedding(labels)
         if self.text_conditioner is not None:
@@ -217,7 +222,12 @@ class DiT(BaseImageModel):
             x = torch.cat([x, reference], dim=1)
         elif self.extra_in_channels:
             zeros = torch.zeros(
-                x.shape[0], self.extra_in_channels, x.shape[2], x.shape[3], device=x.device, dtype=x.dtype
+                x.shape[0],
+                self.extra_in_channels,
+                x.shape[2],
+                x.shape[3],
+                device=x.device,
+                dtype=x.dtype,
             )
             x = torch.cat([x, zeros], dim=1)
 
@@ -244,7 +254,9 @@ class DiT(BaseImageModel):
         rather than run sequentially, which halves the number of kernel launches
         and matters a lot at these model sizes where launch overhead dominates.
         """
-        if guidance_scale == 1.0 or (self.label_embedding is None and self.text_conditioner is None):
+        if guidance_scale == 1.0 or (
+            self.label_embedding is None and self.text_conditioner is None
+        ):
             return self(x, t, labels=labels, text_tokens=text_tokens, reference=reference)
 
         batch = x.shape[0]

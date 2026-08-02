@@ -29,7 +29,7 @@ from minimodel.architectures.layers import (
     TransformerBlock,
 )
 
-__all__ = ["HybridRecurrentTransformer", "HybridRecurrentConfig"]
+__all__ = ["HybridRecurrentConfig", "HybridRecurrentTransformer"]
 
 #: Defaults for every key the hybrid architecture understands.
 HybridRecurrentConfig: dict[str, Any] = {

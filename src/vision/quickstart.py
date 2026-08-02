@@ -59,9 +59,7 @@ def run_vision_quickstart(
         palette_size=palette_size,
         source="synthetic",
     )
-    rgb_stats = prepare_image_corpus(
-        sprites, root / "data" / "rgb", size=size, source="synthetic"
-    )
+    rgb_stats = prepare_image_corpus(sprites, root / "data" / "rgb", size=size, source="synthetic")
     summary["corpora"] = {
         "palette": {"images": palette_stats["n_images"], "colors": palette_stats["palette_size"]},
         "rgb": {"images": rgb_stats["n_images"]},

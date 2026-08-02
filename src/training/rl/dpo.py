@@ -192,9 +192,7 @@ class _PairIterator:
 
     def _collate(self, rows: list[dict[str, Any]]) -> dict[str, Tensor]:
         keys = ("chosen_ids", "chosen_labels", "rejected_ids", "rejected_labels")
-        lengths = [
-            min(self.max_length, len(row[key])) for row in rows for key in keys
-        ]
+        lengths = [min(self.max_length, len(row[key])) for row in rows for key in keys]
         width = max(lengths)
         batch: dict[str, Tensor] = {}
         for key in keys:

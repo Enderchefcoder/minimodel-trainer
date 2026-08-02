@@ -58,9 +58,12 @@ class VAEOutput:
 
     def kl_divergence(self) -> Tensor:
         """KL to a standard normal, averaged over the batch."""
-        return 0.5 * torch.sum(
-            self.mean.pow(2) + self.logvar.exp() - 1.0 - self.logvar, dim=[1, 2, 3]
-        ).mean()
+        return (
+            0.5
+            * torch.sum(
+                self.mean.pow(2) + self.logvar.exp() - 1.0 - self.logvar, dim=[1, 2, 3]
+            ).mean()
+        )
 
 
 class VAE(BaseImageModel):

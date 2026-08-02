@@ -135,7 +135,9 @@ class LoopedTransformer(BaseLanguageModel):
         self.max_seq_len = int(cfg["max_seq_len"])
 
         self.embedding = FactorizedEmbedding(self.vocab_size, int(cfg["embedding_rank"]), dim)
-        self.rope = RotaryEmbedding(head_dim, base=float(cfg["rope_base"]), max_seq_len=self.max_seq_len)
+        self.rope = RotaryEmbedding(
+            head_dim, base=float(cfg["rope_base"]), max_seq_len=self.max_seq_len
+        )
 
         block_kwargs = {
             "dim": dim,

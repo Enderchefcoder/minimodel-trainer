@@ -124,7 +124,9 @@ def filter_logits(
     return logits
 
 
-def _sample_from(logits: Tensor, config: SamplingConfig, generator: torch.Generator | None) -> Tensor:
+def _sample_from(
+    logits: Tensor, config: SamplingConfig, generator: torch.Generator | None
+) -> Tensor:
     """Pick the next token id for each row of ``logits``."""
     if not config.do_sample:
         return logits.argmax(dim=-1, keepdim=True)
@@ -173,7 +175,7 @@ def generate(
     tokens = input_ids
     logits = model(tokens, cache=cache, **config.model_kwargs)[:, -1, :].float()
 
-    stop_ids = set(int(t) for t in config.stop_token_ids)
+    stop_ids = {int(t) for t in config.stop_token_ids}
     finished = torch.zeros(tokens.shape[0], dtype=torch.bool, device=device)
 
     for _ in range(config.max_new_tokens):

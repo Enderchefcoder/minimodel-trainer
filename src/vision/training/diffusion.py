@@ -81,9 +81,7 @@ def sample_timesteps(
     raise ValueError(f"unknown timestep distribution {distribution!r}")
 
 
-def flow_matching_targets(
-    x0: Tensor, noise: Tensor, t: Tensor
-) -> tuple[Tensor, Tensor]:
+def flow_matching_targets(x0: Tensor, noise: Tensor, t: Tensor) -> tuple[Tensor, Tensor]:
     """Return ``(x_t, velocity_target)`` for rectified flow.
 
     ``t`` is broadcast over the trailing dimensions so it works for any tensor
@@ -166,7 +164,9 @@ class EMA:
         """Blend the current weights into the shadow copy."""
         for name, param in model.named_parameters():
             if name in self.shadow:
-                self.shadow[name].mul_(self.decay).add_(param.detach().float(), alpha=1 - self.decay)
+                self.shadow[name].mul_(self.decay).add_(
+                    param.detach().float(), alpha=1 - self.decay
+                )
 
     @torch.no_grad()
     def copy_to(self, model: nn.Module) -> dict[str, Tensor]:

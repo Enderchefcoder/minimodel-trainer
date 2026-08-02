@@ -171,9 +171,7 @@ class ShardWriter:
         self._buffered = 0
         self._shard_id = 0
 
-    def write_document(
-        self, tokens: Sequence[int], labels: Sequence[int] | None = None
-    ) -> None:
+    def write_document(self, tokens: Sequence[int], labels: Sequence[int] | None = None) -> None:
         """Append one document (and its labels for supervised corpora)."""
         if len(tokens) == 0:
             return
@@ -267,7 +265,11 @@ class TokenizedCorpus:
         offset = 0
         for shard in self.index.shards:
             path = self.directory / shard["path"]
-            array = np.memmap(path, dtype=self.dtype, mode="r") if mmap else np.fromfile(path, dtype=self.dtype)
+            array = (
+                np.memmap(path, dtype=self.dtype, mode="r")
+                if mmap
+                else np.fromfile(path, dtype=self.dtype)
+            )
             self._arrays.append(array)
             self._offsets.append(offset)
             offset += int(array.size)

@@ -179,7 +179,7 @@ def human_duration(seconds: float) -> str:
     seconds = max(0.0, float(seconds))
     if seconds < 60:
         return f"{seconds:.1f}s"
-    total = int(round(seconds))
+    total = round(seconds)
     days, rem = divmod(total, 86400)
     hours, rem = divmod(rem, 3600)
     minutes, secs = divmod(rem, 60)

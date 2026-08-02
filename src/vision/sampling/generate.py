@@ -21,8 +21,8 @@ from minimodel.vision.sampling.samplers import sample_images
 
 __all__ = [
     "make_grid",
-    "save_image_grid",
     "sample_pixel_art",
+    "save_image_grid",
     "tensor_to_uint8",
 ]
 
@@ -160,9 +160,7 @@ def sample_and_save(
     device: torch.device | str | None = None,
 ) -> Path:
     """Sample from a diffusion model and write a grid."""
-    label_tensor = (
-        torch.tensor(list(labels), dtype=torch.long) if labels is not None else None
-    )
+    label_tensor = torch.tensor(list(labels), dtype=torch.long) if labels is not None else None
     images = sample_images(
         model,
         n_samples=n_samples,

@@ -98,8 +98,7 @@ class TestRegistry:
     def test_dangling_mixture_reference_rejected(self, tmp_path):
         path = tmp_path / "bad.yaml"
         path.write_text(
-            "datasets: {a: {source: builtin}}\n"
-            "mixtures: {m: {components: [{dataset: missing}]}}\n",
+            "datasets: {a: {source: builtin}}\nmixtures: {m: {components: [{dataset: missing}]}}\n",
             encoding="utf-8",
         )
         with pytest.raises(ConfigError, match="unknown dataset"):
@@ -152,7 +151,7 @@ class TestShards:
             corpus.read(0, 1, labels=True)
 
     def test_missing_index_raises(self, tmp_path):
-        with pytest.raises(FileNotFoundError, match="index.json"):
+        with pytest.raises(FileNotFoundError, match=r"index\.json"):
             TokenizedCorpus(tmp_path)
 
     def test_iter_windows_and_stats(self, corpus_dir):
@@ -253,9 +252,7 @@ class TestPullAndTokenize:
         assert (labels != IGNORE_INDEX).any()
 
     def test_tokenize_chat_truncates(self, tokenizer, tmp_path):
-        stats = tokenize_chat_records(
-            builtin_records("sft"), tokenizer, tmp_path, max_length=4
-        )
+        stats = tokenize_chat_records(builtin_records("sft"), tokenizer, tmp_path, max_length=4)
         assert stats["truncated"] > 0
 
     def test_tokenize_chat_skips_bad_records(self, tokenizer, tmp_path):

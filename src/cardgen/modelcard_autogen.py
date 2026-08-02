@@ -246,7 +246,10 @@ class ModelCard:
         detail_rows.extend(
             [
                 ("Vocabulary", f"{data.vocab_size:,}" if data.vocab_size else TODO.format("vocab")),
-                ("Context length", f"{data.max_seq_len:,}" if data.max_seq_len else TODO.format("context")),
+                (
+                    "Context length",
+                    f"{data.max_seq_len:,}" if data.max_seq_len else TODO.format("context"),
+                ),
                 ("Training stage", data.stage),
             ]
         )

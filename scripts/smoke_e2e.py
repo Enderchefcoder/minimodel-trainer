@@ -278,7 +278,10 @@ def run_vision_pipeline(root: Path) -> dict[str, Any]:
         sprites, root / "images" / "palette", size=16, palette_size=16
     )
     prepare_image_corpus(sprites, root / "images" / "rgb", size=16)
-    results["corpus"] = {"images": palette_stats["n_images"], "colors": palette_stats["palette_size"]}
+    results["corpus"] = {
+        "images": palette_stats["n_images"],
+        "colors": palette_stats["palette_size"],
+    }
 
     _stage("PixelGPT", 2, 4)
     pixel_model = build_pixel_model(palette_stats)

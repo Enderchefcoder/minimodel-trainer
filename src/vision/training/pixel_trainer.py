@@ -112,7 +112,10 @@ class PixelGPTTrainer(Trainer):
 
         with torch.no_grad():
             accuracy = float((flat_logits.argmax(dim=-1) == flat_targets).float().mean())
-        return loss, {"pixel_accuracy": accuracy, "bits_per_pixel": float(loss.detach()) / math.log(2)}
+        return loss, {
+            "pixel_accuracy": accuracy,
+            "bits_per_pixel": float(loss.detach()) / math.log(2),
+        }
 
     @torch.no_grad()
     def evaluate(self, loader=None, max_batches: int | None = None) -> dict[str, float]:

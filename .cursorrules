@@ -1,0 +1,99 @@
+# Instructions
+
+See AGENTS.md for the full repository conventions. This file holds working
+notes: reusable lessons first, then a scratchpad for the active task.
+
+# Lessons
+
+## User Specified Lessons
+
+- You have a python venv in ./venv. Always use (activate) it when doing python
+  development. First, to check whether 'uv' is available, use `which uv`. If
+  that's the case, first activate the venv, and then use `uv pip install` to
+  install packages. Otherwise, fall back to `pip`.
+- Due to Cursor's limit, when you use `git` and `gh` and need to submit a
+  multiline commit message, first write the message in a file, and then use
+  `git commit -F <filename>` or similar command to commit. And then remove the
+  file. Include "[Cursor] " in the commit message and PR title.
+
+## Cursor learned
+
+- This environment has no `uv`; plain `venv/bin/pip` works. CPU torch comes
+  from `pip install --index-url https://download.pytorch.org/whl/cpu torch`.
+- `python3 -m venv` fails on this image until `apt-get update && apt-get
+  install -y python3.12-venv` (ensurepip is stripped).
+- Sources live in `src/` but the import name is `minimodel`
+  (`package-dir = {minimodel = "src"}` + an explicit `packages` list in
+  pyproject; `packages.find` mis-maps subpackages with a renamed root).
+- PyYAML follows YAML 1.1: `3e-4` parses as a *string* (needs `3.0e-4`).
+  `core.config.parse_scalar` therefore float()s bare scientific notation so
+  `--set training.lr=3e-4` works; keep decimals in YAML files themselves.
+- Python `re` has no `\p{L}`; letters are `[^\W\d_]` and "symbol runs" need a
+  negative-lookahead class. Any pre-tokenizer split pattern must be *total*
+  (`|.` fallback + a test), otherwise unmatched chars are silently dropped
+  from the corpus.
+- `torch.load(weights_only=True)` for model weights always; trainer state
+  (RNG/optimizer objects) cannot use it - keep the two in separate files.
+- Muon's Newton-Schulz coefficients do NOT converge singular values to 1;
+  they compress the spectrum into ~[0.2, 2]. Test the ratio, not orthogonality.
+  Route embeddings/lm_head/1-D params to AdamW, never Muon.
+- Newly initialised byte-BPE models can emit isolated invalid UTF-8 bytes:
+  streaming decoders must cap their "wait for valid UTF-8" buffer (we use 4
+  tokens) or they stall/accumulate U+FFFD forever.
+- Weight-shared/looped blocks need a KV cache keyed by *call order*
+  (`begin_forward()` rewinds a cursor), not by module identity; hybrid
+  recurrent state rides in the same cache (`cache.recurrent_states`) so
+  incremental decoding exactly matches full forward (tested to 1e-4).
+- `nn.Module.apply(normal_init)` tramples special inits - re-assert zeros/
+  ones/constants (LoRA-up, gates, timestep scales, RMSNorm weights, RG-LRU
+  log-lambda) *after* the generic pass, in that order.
+- DPO/GRPO logging: call `.detach()` before `float(tensor)` on anything that
+  requires grad, or PyTorch warns on every step.
+- argparse subparser help: reaching `parser._subparsers._actions` is the only
+  way to print a *group's* help when no subcommand was given; wrap it once in
+  `cli.main` and reuse.
+- matplotlib in CI/headless: `matplotlib.use("Agg")` before pyplot import,
+  and provide ASCII fallbacks so nothing hard-requires it.
+- Generated-artifact pattern that works: generator script + committed output
+  + `--check` mode wired into tests/CI (used for both template families).
+
+# Scratchpad
+
+## Task: populate repo with a full trainer system (2026-08-02)
+
+Plan and status:
+[X] Scaffolding: pyproject (src->minimodel mapping), Makefile, CI, lint, LICENSE
+[X] core/: config(+extends/env/--set), registry, io, logging, seeding, devices, dist
+[X] Architectures: shared layers (GQA/QK-norm/RoPE/SwiGLU/MoE/RG-LRU/KVCache),
+    dense, looped (supra2 == 1,406,240 params exactly), MoE, hybrid
+[X] 13 LM templates 1.4M-343M via scripts/generate_templates.py (--check green)
+[X] Tokenization: byte-BPE (total split pattern) + chat template w/ loss mask
+[X] Datasets: registry yaml (48 sets, 10 mixtures), pull/tokenize/shards/loaders,
+    builtin offline corpus
+[X] Checkpointing: manager (+retention/resume/export), ETR, loss viz (+ASCII)
+[X] Training: Trainer core; optim (AdamW/Muon/Lion/SGD); schedules (cosine/WSD/
+    linear/const/isqrt); callbacks
+[X] Post-train: SFT (replay/masking/accuracy), CoT (span weighting, think-close)
+[X] RL: DPO (4 losses), RLVR/GRPO (5 verifiers), SPIN (iterative self-play)
+[X] Inference: sampling (top-k/p/min-p/penalties/stream/batch), runner, chat,
+    reasoning mode w/ budget forcing
+[X] Bench: likelihood MC + minimal pairs + generation + ppl + throughput;
+    compare tables; charts; merging (5 methods); cardgen
+[X] Vision: DiT/UNet/PixelGPT(24x24 ~9.9M)/edit/VAE; palette+shards+datasets;
+    flow/DDPM trainers + EMA; Euler/Heun/DDIM/DDPM samplers; 10 templates;
+    registry of image datasets; vision CLI + quickstart
+[X] CLI `minimodel`/`mmt` + text quickstart
+[X] configs/: pretrain x6, sft x2, cot x2, rl x4, vision x7
+[X] scripts/smoke_e2e.py (all pipelines offline ~2s)
+[X] tests: 455 passing, ~90% line coverage, all offline
+[X] docs: 17 pages + module READMEs + README/AGENTS/CONTRIBUTING/CHANGELOG
+[X] research/: reading lists + design notes; notebooks x2
+[X] ruff clean (fix + format, 48 files reformatted, suite re-green)
+[ ] push branch cursor/populate-full-trainer-system-1770, open PR
+
+Verification commands (all green as of last run):
+  venv/bin/pytest            # 455 passed ~30s
+  venv/bin/ruff check src tests scripts
+  venv/bin/python scripts/smoke_e2e.py
+  venv/bin/python scripts/generate_templates.py --check
+  venv/bin/python scripts/generate_vision_templates.py --check

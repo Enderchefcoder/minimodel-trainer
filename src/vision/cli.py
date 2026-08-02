@@ -52,7 +52,9 @@ def cmd_vision_models(args: argparse.Namespace) -> int:
     print(f"\n{'TEMPLATE':<24} {'FAMILY':<14} {'PARAMS':>13}  DESCRIPTION")
     for row in rows:
         params = f"{row['params']:,}" if row["params"] else "-"
-        print(f"{row['template']:<24} {str(row['family']):<14} {params:>13}  {row['description'][:52]}")
+        print(
+            f"{row['template']:<24} {row['family']!s:<14} {params:>13}  {row['description'][:52]}"
+        )
     return 0
 
 
@@ -67,8 +69,8 @@ def cmd_vision_datasets(args: argparse.Namespace) -> int:
     print(f"{'NAME':<26} {'KIND':<12} {'SIZE':<8} {'IMAGES':<10} SOURCE")
     for spec in datasets:
         print(
-            f"{spec.name:<26} {spec.kind:<12} {str(spec.image_size):<8} "
-            f"{str(spec.images or '-'):<10} {spec.display}"
+            f"{spec.name:<26} {spec.kind:<12} {spec.image_size!s:<8} "
+            f"{spec.images or '-'!s:<10} {spec.display}"
         )
     return 0
 
@@ -201,9 +203,11 @@ def cmd_vision_edit(args: argparse.Namespace) -> int:
     model = load_image_model(args.model, device=args.device)
     size = int(model.config.get("image_size", 64))
     source = _load_pil(Path(args.image), size)
-    source_tensor = torch.from_numpy(
-        np.asarray(source, dtype=np.float32) / 127.5 - 1.0
-    ).permute(2, 0, 1).unsqueeze(0)
+    source_tensor = (
+        torch.from_numpy(np.asarray(source, dtype=np.float32) / 127.5 - 1.0)
+        .permute(2, 0, 1)
+        .unsqueeze(0)
+    )
 
     text_tokens = None
     if args.tokenizer:

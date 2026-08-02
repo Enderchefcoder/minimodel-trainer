@@ -143,7 +143,11 @@ class BPETokenizer:
         self.id_to_token_map = {i: t for t, i in self.vocab.items()}
         self.id_to_token_map.update({i: t for t, i in self.special_tokens.items()})
         self._special_pattern = (
-            re.compile("(" + "|".join(re.escape(t) for t in sorted(self.special_tokens, key=len, reverse=True)) + ")")
+            re.compile(
+                "("
+                + "|".join(re.escape(t) for t in sorted(self.special_tokens, key=len, reverse=True))
+                + ")"
+            )
             if self.special_tokens
             else None
         )
@@ -205,11 +209,7 @@ class BPETokenizer:
             merged: list[str] = []
             i = 0
             while i < len(symbols):
-                if (
-                    i < len(symbols) - 1
-                    and symbols[i] == first
-                    and symbols[i + 1] == second
-                ):
+                if i < len(symbols) - 1 and symbols[i] == first and symbols[i + 1] == second:
                     merged.append(first + second)
                     i += 2
                 else:
@@ -295,7 +295,10 @@ class BPETokenizer:
         chunks: list[str] = []
         for token_id in ids:
             token_id = int(token_id)
-            if token_id in self.id_to_token_map and self.id_to_token_map[token_id] in self.special_tokens:
+            if (
+                token_id in self.id_to_token_map
+                and self.id_to_token_map[token_id] in self.special_tokens
+            ):
                 if buffer:
                     chunks.append(buffer.decode("utf-8", errors="replace"))
                     buffer = bytearray()
@@ -458,9 +461,7 @@ class BPETokenizer:
             merges = [
                 tuple(m) if isinstance(m, list) else tuple(m.split(" ", 1)) for m in merges_raw
             ]
-            specials = {
-                entry["content"]: entry["id"] for entry in data.get("added_tokens", [])
-            }
+            specials = {entry["content"]: entry["id"] for entry in data.get("added_tokens", [])}
             vocab = {k: v for k, v in model["vocab"].items() if k not in specials}
             return cls(vocab, merges, specials)
         raise ValueError(f"{path} is not a recognised tokenizer file")
@@ -511,7 +512,9 @@ def train_tokenizer(
     if backend in {"auto", "fast"}:
         try:
             return _train_with_fast_backend(
-                texts, vocab_size=vocab_size, special_tokens=special_tokens,
+                texts,
+                vocab_size=vocab_size,
+                special_tokens=special_tokens,
                 min_frequency=min_frequency,
             )
         except ImportError:

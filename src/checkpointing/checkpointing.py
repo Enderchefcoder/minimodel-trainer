@@ -174,7 +174,7 @@ class CheckpointManager:
             trainer_state["extra"] = dict(extra)
         torch.save(trainer_state, path / "trainer.pt")
 
-        recorded = {"step": int(step), **{k: v for k, v in (metrics or {}).items()}}
+        recorded = {"step": int(step), **dict((metrics or {}).items())}
         write_json(path / "metrics.json", recorded)
 
         checkpoint = Checkpoint(path, int(step), recorded)
@@ -240,7 +240,11 @@ class CheckpointManager:
 
         if optimizer is not None and "optimizer" in trainer_state:
             optimizer.load_state_dict(trainer_state["optimizer"])
-        if scheduler is not None and "scheduler" in trainer_state and hasattr(scheduler, "load_state_dict"):
+        if (
+            scheduler is not None
+            and "scheduler" in trainer_state
+            and hasattr(scheduler, "load_state_dict")
+        ):
             scheduler.load_state_dict(trainer_state["scheduler"])
         if scaler is not None and "scaler" in trainer_state and hasattr(scaler, "load_state_dict"):
             scaler.load_state_dict(trainer_state["scaler"])

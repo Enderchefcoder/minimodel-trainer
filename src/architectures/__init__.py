@@ -54,6 +54,7 @@ from minimodel.architectures.registry import (
 
 __all__ = [
     "ARCHITECTURES",
+    "TEMPLATE_DIR",
     "BaseLanguageModel",
     "CausalLocalAttention",
     "DenseTransformer",
@@ -73,7 +74,6 @@ __all__ = [
     "RecurrentBlock",
     "RotaryEmbedding",
     "SwiGLUFeedForward",
-    "TEMPLATE_DIR",
     "TransformerBlock",
     "build_model",
     "describe_model",

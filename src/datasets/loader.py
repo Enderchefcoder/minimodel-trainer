@@ -155,12 +155,10 @@ class SupervisedDataset(Dataset):
         self.shuffle = bool(shuffle)
         self.seed = int(seed)
         if self.corpus.n_tokens < self.seq_len + 1:
-            raise ValueError(
-                f"corpus has {self.corpus.n_tokens} tokens, fewer than seq_len + 1"
-            )
+            raise ValueError(f"corpus has {self.corpus.n_tokens} tokens, fewer than seq_len + 1")
         self.max_start = self.corpus.n_tokens - self.seq_len - 1
-        self._length = int(length) if length is not None else max(
-            1, self.corpus.n_tokens // self.seq_len
+        self._length = (
+            int(length) if length is not None else max(1, self.corpus.n_tokens // self.seq_len)
         )
 
     def __len__(self) -> int:
@@ -240,9 +238,7 @@ class MixtureDataset(Dataset):
         """Per-component name, weight and size, for logging."""
         return [
             {"name": name, "weight": weight, "items": len(dataset)}
-            for name, weight, dataset in zip(
-                self.names, self.weights, self.datasets, strict=True
-            )
+            for name, weight, dataset in zip(self.names, self.weights, self.datasets, strict=True)
         ]
 
 
@@ -285,8 +281,7 @@ def infinite_loader(loader: DataLoader) -> Iterator[dict[str, torch.Tensor]]:
     needs to know how long an epoch is.
     """
     while True:
-        for batch in loader:
-            yield batch
+        yield from loader
 
 
 class JsonlPairDataset(IterableDataset):
@@ -322,7 +317,9 @@ class JsonlPairDataset(IterableDataset):
                 return
 
     @staticmethod
-    def collate(items: Sequence[dict[str, torch.Tensor]], pad_id: int = 0) -> dict[str, torch.Tensor]:
+    def collate(
+        items: Sequence[dict[str, torch.Tensor]], pad_id: int = 0
+    ) -> dict[str, torch.Tensor]:
         """Right-pad a list of pairs into batched tensors."""
         keys = ("chosen_ids", "chosen_labels", "rejected_ids", "rejected_labels")
         max_len = max(int(item[key].numel()) for item in items for key in keys)

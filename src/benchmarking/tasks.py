@@ -237,10 +237,18 @@ BUILTIN_TASKS: dict[str, Task] = {
         kind="multiple_choice",
         description="Four completion questions over the bundled corpus.",
         items=[
-            MultipleChoiceItem("The river runs", ["east through the valley.", "under the oven."], 0),
-            MultipleChoiceItem("Bread needs flour, water,", ["salt and time.", "iron and rust."], 0),
-            MultipleChoiceItem("Iron rusts because", ["it prefers to be an oxide.", "it is asleep."], 0),
-            MultipleChoiceItem("The train leaves at seven and", ["arrives at ten.", "eats the bridge."], 0),
+            MultipleChoiceItem(
+                "The river runs", ["east through the valley.", "under the oven."], 0
+            ),
+            MultipleChoiceItem(
+                "Bread needs flour, water,", ["salt and time.", "iron and rust."], 0
+            ),
+            MultipleChoiceItem(
+                "Iron rusts because", ["it prefers to be an oxide.", "it is asleep."], 0
+            ),
+            MultipleChoiceItem(
+                "The train leaves at seven and", ["arrives at ten.", "eats the bridge."], 0
+            ),
         ],
     ),
     "demo-math": Task(

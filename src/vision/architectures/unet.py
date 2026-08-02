@@ -103,9 +103,7 @@ class UNet(BaseImageModel):
                 dropout_prob=float(cfg["class_dropout"]),
             )
 
-        self.input_conv = nn.Conv2d(
-            self.in_channels + self.extra_in_channels, base, 3, padding=1
-        )
+        self.input_conv = nn.Conv2d(self.in_channels + self.extra_in_channels, base, 3, padding=1)
 
         self.down_blocks = nn.ModuleList()
         self.down_attentions = nn.ModuleList()
@@ -194,7 +192,10 @@ class UNet(BaseImageModel):
         if self.label_embedding is not None:
             if labels is None:
                 labels = torch.full(
-                    (t.shape[0],), self.label_embedding.null_index, dtype=torch.long, device=t.device
+                    (t.shape[0],),
+                    self.label_embedding.null_index,
+                    dtype=torch.long,
+                    device=t.device,
                 )
             condition = condition + self.label_embedding(labels)
         if self.text_conditioner is not None:
@@ -217,8 +218,12 @@ class UNet(BaseImageModel):
             x = torch.cat([x, reference], dim=1)
         elif self.extra_in_channels:
             zeros = torch.zeros(
-                x.shape[0], self.extra_in_channels, x.shape[2], x.shape[3],
-                device=x.device, dtype=x.dtype,
+                x.shape[0],
+                self.extra_in_channels,
+                x.shape[2],
+                x.shape[3],
+                device=x.device,
+                dtype=x.dtype,
             )
             x = torch.cat([x, zeros], dim=1)
 
@@ -268,7 +273,9 @@ class UNet(BaseImageModel):
         guidance_scale: float = 1.0,
     ) -> Tensor:
         """Classifier-free guidance in one batched forward pass."""
-        if guidance_scale == 1.0 or (self.label_embedding is None and self.text_conditioner is None):
+        if guidance_scale == 1.0 or (
+            self.label_embedding is None and self.text_conditioner is None
+        ):
             return self(x, t, labels=labels, text_tokens=text_tokens, reference=reference)
 
         batch = x.shape[0]

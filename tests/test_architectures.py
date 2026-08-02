@@ -33,7 +33,11 @@ from minimodel.architectures.layers import (
 )
 from minimodel.architectures.looped import LoopedTransformer
 from minimodel.architectures.moe import MoETransformer
-from minimodel.architectures.registry import ARCHITECTURES, list_architectures, register_architecture
+from minimodel.architectures.registry import (
+    ARCHITECTURES,
+    list_architectures,
+    register_architecture,
+)
 from minimodel.core.config import ConfigError
 
 TINY = {
@@ -202,7 +206,7 @@ class TestModels:
         output = tiny_model.forward_with_loss(tokens, tokens)
         assert isinstance(output, ModelOutput)
         assert output.loss is not None and output.loss.item() > 0
-        logits, loss = output
+        logits, _loss = output
         assert logits.shape[-1] == tiny_model.vocab_size
 
         labels = tokens.clone()
@@ -284,7 +288,9 @@ class TestLoopedTransformer:
             LoopedTransformer({**TINY, "n_shared_blocks": 0})
 
     def test_lora_up_starts_at_zero(self):
-        model = _tiny(LoopedTransformer, embedding_rank=16, max_loops_table=4, train_loops=2, min_loops=1)
+        model = _tiny(
+            LoopedTransformer, embedding_rank=16, max_loops_table=4, train_loops=2, min_loops=1
+        )
         assert torch.all(model.loop_lora_up == 0)
         assert torch.all(model.timestep_scale == 1)
 
@@ -317,7 +323,9 @@ class TestOtherArchitectures:
         assert "max_over_mean" in stats
 
     def test_hybrid_layer_pattern(self):
-        model = _tiny(HybridRecurrentTransformer, n_layers=4, layer_pattern=["recurrent", "attention"])
+        model = _tiny(
+            HybridRecurrentTransformer, n_layers=4, layer_pattern=["recurrent", "attention"]
+        )
         assert model.layer_types == ["recurrent", "attention", "recurrent", "attention"]
         assert len(model.new_states()) == 4
         with pytest.raises(ValueError, match="unknown layer types"):
@@ -380,7 +388,18 @@ class TestBuilder:
 
     def test_budget_mismatch_warns(self, caplog):
         build_model(
-            {"family": "dense-transformer", "params": 1, "arch": {"dim": 32, "n_heads": 2, "head_dim": 16, "n_layers": 1, "ffn_hidden": 32, "vocab_size": 16}},
+            {
+                "family": "dense-transformer",
+                "params": 1,
+                "arch": {
+                    "dim": 32,
+                    "n_heads": 2,
+                    "head_dim": 16,
+                    "n_layers": 1,
+                    "ffn_hidden": 32,
+                    "vocab_size": 16,
+                },
+            },
         )
         assert "declares" in caplog.text
 
@@ -391,7 +410,7 @@ class TestBuilder:
         assert rebuilt.num_parameters() == tiny_model.num_parameters()
 
     def test_load_model_missing_config(self, tmp_path):
-        with pytest.raises(FileNotFoundError, match="config.json"):
+        with pytest.raises(FileNotFoundError, match=r"config\.json"):
             load_model(tmp_path)
 
     def test_device_and_dtype_placement(self):

@@ -26,8 +26,8 @@ from __future__ import annotations
 __version__ = "0.1.0"
 
 __all__ = [
-    "__version__",
     "Config",
+    "__version__",
     "build_model",
     "get_logger",
     "set_seed",

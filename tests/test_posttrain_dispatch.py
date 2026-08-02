@@ -23,17 +23,17 @@ class TestPostTrainDispatch:
     """Every stage reachable from a recipe."""
 
     def _recipe(self, stage, tokenizer, base_model_dir, tmp_path, data, **training):
-        defaults = dict(
-            output_dir=str(tmp_path / "runs"),
-            max_steps=2,
-            batch_size=2,
-            seq_len=16,
-            eval_every=0,
-            save_every=0,
-            log_every=2,
-            warmup=0,
-            resume=False,
-        )
+        defaults = {
+            "output_dir": str(tmp_path / "runs"),
+            "max_steps": 2,
+            "batch_size": 2,
+            "seq_len": 16,
+            "eval_every": 0,
+            "save_every": 0,
+            "log_every": 2,
+            "warmup": 0,
+            "resume": False,
+        }
         defaults.update(training)
         return {
             "stage": stage,
@@ -45,7 +45,11 @@ class TestPostTrainDispatch:
 
     def test_cot_stage(self, tokenizer, base_model_dir, cot_dir, tmp_path):
         recipe = self._recipe(
-            "cot", tokenizer, base_model_dir, tmp_path, {"train": str(cot_dir)},
+            "cot",
+            tokenizer,
+            base_model_dir,
+            tmp_path,
+            {"train": str(cot_dir)},
             reasoning_loss_weight=0.5,
         )
         result = post_train(recipe)
@@ -65,15 +69,27 @@ class TestPostTrainDispatch:
 
     def test_spin_stage(self, tokenizer, base_model_dir, sft_jsonl, tmp_path):
         recipe = self._recipe(
-            "spin", tokenizer, base_model_dir, tmp_path, {"pairs": str(sft_jsonl)},
-            iterations=1, max_new_tokens=6, lr=1e-6,
+            "spin",
+            tokenizer,
+            base_model_dir,
+            tmp_path,
+            {"pairs": str(sft_jsonl)},
+            iterations=1,
+            max_new_tokens=6,
+            lr=1e-6,
         )
         assert post_train(recipe).steps == 2
 
     def test_rlvr_stage(self, tokenizer, base_model_dir, tasks_path, tmp_path):
         recipe = self._recipe(
-            "rlvr", tokenizer, base_model_dir, tmp_path, {"tasks": str(tasks_path)},
-            group_size=2, max_new_tokens=6, lr=1e-6,
+            "rlvr",
+            tokenizer,
+            base_model_dir,
+            tmp_path,
+            {"tasks": str(tasks_path)},
+            group_size=2,
+            max_new_tokens=6,
+            lr=1e-6,
         )
         summary = post_train(recipe)
         assert summary["steps"] == 2
@@ -81,9 +97,9 @@ class TestPostTrainDispatch:
     def test_missing_pairs_and_tasks_rejected(self, tokenizer, base_model_dir, tmp_path):
         from minimodel.core.config import ConfigError
 
-        with pytest.raises(ConfigError, match="data.pairs"):
+        with pytest.raises(ConfigError, match=r"data\.pairs"):
             post_train(self._recipe("dpo", tokenizer, base_model_dir, tmp_path, {}))
-        with pytest.raises(ConfigError, match="data.tasks"):
+        with pytest.raises(ConfigError, match=r"data\.tasks"):
             post_train(self._recipe("rlvr", tokenizer, base_model_dir, tmp_path, {}))
 
     def test_rlvr_requires_tokenizer(self, base_model_dir, tasks_path, tmp_path):
@@ -101,12 +117,15 @@ class TestPostTrainDispatch:
     def test_sft_requires_train_data(self, tokenizer, base_model_dir, tmp_path):
         from minimodel.core.config import ConfigError
 
-        with pytest.raises(ConfigError, match="data.train"):
+        with pytest.raises(ConfigError, match=r"data\.train"):
             post_train(self._recipe("sft", tokenizer, base_model_dir, tmp_path, {}))
 
     def test_replay_dataset_wiring(self, tokenizer, base_model_dir, sft_dir, corpus_dir, tmp_path):
         recipe = self._recipe(
-            "sft", tokenizer, base_model_dir, tmp_path,
+            "sft",
+            tokenizer,
+            base_model_dir,
+            tmp_path,
             {"train": str(sft_dir), "eval": str(sft_dir), "replay": str(corpus_dir)},
             replay_fraction=0.2,
         )
@@ -128,7 +147,7 @@ class TestPostTrainDispatch:
     def test_load_pretrained_validation(self, tmp_path):
         from minimodel.core.config import ConfigError
 
-        with pytest.raises(ConfigError, match="checkpoint.*template|template.*checkpoint"):
+        with pytest.raises(ConfigError, match=r"checkpoint.*template|template.*checkpoint"):
             load_pretrained({})
         with pytest.raises(ConfigError, match="not found"):
             load_pretrained({"checkpoint": tmp_path / "missing"})
@@ -167,9 +186,21 @@ class TestVisionCLI:
         assert (
             main(
                 [
-                    "vision", "data", "prepare", "--synthetic", "--limit", "12",
-                    "--size", "12", "--mode", "palette", "--palette-size", "8",
-                    "-o", str(tmp_path / "corpus"), "--json",
+                    "vision",
+                    "data",
+                    "prepare",
+                    "--synthetic",
+                    "--limit",
+                    "12",
+                    "--size",
+                    "12",
+                    "--mode",
+                    "palette",
+                    "--palette-size",
+                    "8",
+                    "-o",
+                    str(tmp_path / "corpus"),
+                    "--json",
                 ]
             )
             == 0
@@ -189,8 +220,16 @@ class TestVisionCLI:
         assert (
             main(
                 [
-                    "vision", "data", "prepare", "--input", str(tmp_path / "imgs"),
-                    "--size", "16", "-o", str(tmp_path / "rgb"), "--json",
+                    "vision",
+                    "data",
+                    "prepare",
+                    "--input",
+                    str(tmp_path / "imgs"),
+                    "--size",
+                    "16",
+                    "-o",
+                    str(tmp_path / "rgb"),
+                    "--json",
                 ]
             )
             == 0
@@ -201,14 +240,21 @@ class TestVisionCLI:
         assert main(["vision", "data", "prepare", "-o", str(tmp_path / "x")]) == 1
 
     def test_sample_from_pixel_model(self, tmp_path, capsys):
+        import numpy as np
+
         from minimodel.vision.architectures.pixelgpt import PixelGPT
         from minimodel.vision.data.palette import Palette
-        import numpy as np
 
         model = PixelGPT(
             {
-                "image_size": 6, "palette_size": 8, "dim": 32, "n_layers": 1,
-                "n_heads": 2, "head_dim": 16, "n_kv_heads": 1, "ffn_hidden": 64,
+                "image_size": 6,
+                "palette_size": 8,
+                "dim": 32,
+                "n_layers": 1,
+                "n_heads": 2,
+                "head_dim": 16,
+                "n_kv_heads": 1,
+                "ffn_hidden": 64,
             }
         )
         model_dir = tmp_path / "model"
@@ -218,8 +264,18 @@ class TestVisionCLI:
         assert (
             main(
                 [
-                    "vision", "sample", "-m", str(model_dir), "-n", "2",
-                    "-o", str(output), "--device", "cpu", "--seed", "0",
+                    "vision",
+                    "sample",
+                    "-m",
+                    str(model_dir),
+                    "-n",
+                    "2",
+                    "-o",
+                    str(output),
+                    "--device",
+                    "cpu",
+                    "--seed",
+                    "0",
                 ]
             )
             == 0
@@ -236,8 +292,18 @@ class TestVisionCLI:
         assert (
             main(
                 [
-                    "vision", "sample", "-m", str(model_dir), "-n", "2",
-                    "--steps", "2", "-o", str(output), "--device", "cpu",
+                    "vision",
+                    "sample",
+                    "-m",
+                    str(model_dir),
+                    "-n",
+                    "2",
+                    "--steps",
+                    "2",
+                    "-o",
+                    str(output),
+                    "--device",
+                    "cpu",
                 ]
             )
             == 0

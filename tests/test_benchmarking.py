@@ -8,7 +8,6 @@ import pytest
 import torch
 
 from minimodel.benchmarking.bench import (
-    BenchmarkResult,
     evaluate_generation,
     evaluate_minimal_pairs,
     evaluate_multiple_choice,
@@ -18,7 +17,6 @@ from minimodel.benchmarking.bench import (
     sequence_logprob,
 )
 from minimodel.benchmarking.compare import (
-    ComparisonTable,
     compare_results,
     compare_runs,
     load_results,
@@ -69,7 +67,10 @@ class TestTaskLoading:
         assert item.choices == ["x", "y"] and item.label == 1
 
     def test_piqa_and_winogrande_layouts(self):
-        assert normalize_multiple_choice({"goal": "g", "sol1": "a", "sol2": "b", "label": 0}).label == 0
+        assert (
+            normalize_multiple_choice({"goal": "g", "sol1": "a", "sol2": "b", "label": 0}).label
+            == 0
+        )
         item = normalize_multiple_choice(
             {"sentence": "s", "option1": "a", "option2": "b", "answer": "2"}
         )
@@ -78,9 +79,12 @@ class TestTaskLoading:
     def test_already_normalised_and_invalid(self):
         assert normalize_multiple_choice({"context": "c", "choices": ["a"], "label": 0}).label == 0
         assert normalize_multiple_choice({"unknown": 1}) is None
-        assert normalize_multiple_choice(
-            {"question": "q", "choices": {"text": ["a"], "label": ["A"]}, "answerKey": "Z"}
-        ) is None
+        assert (
+            normalize_multiple_choice(
+                {"question": "q", "choices": {"text": ["a"], "label": ["A"]}, "answerKey": "Z"}
+            )
+            is None
+        )
 
     def test_load_task_from_jsonl(self, tmp_path):
         path = tmp_path / "task.jsonl"
@@ -133,7 +137,9 @@ class TestHarness:
         assert evaluate_minimal_pairs(tiny_model, tokenizer, Task("e", "minimal_pairs"))["n"] == 0
 
     def test_perplexity_over_corpus(self, tiny_model, corpus_dir):
-        metrics = evaluate_perplexity(tiny_model, corpus_dir, seq_len=32, max_batches=3, batch_size=2)
+        metrics = evaluate_perplexity(
+            tiny_model, corpus_dir, seq_len=32, max_batches=3, batch_size=2
+        )
         assert metrics["perplexity"] > 1.0
         assert metrics["n_tokens"] == 3 * 2 * 32
         assert metrics["bits_per_token"] > 0
@@ -183,13 +189,19 @@ class TestCompare:
                 "model": "a",
                 "parameters": 1000,
                 "tasks": {"syntax": {"accuracy": 0.7, "chance": 0.5}, "ppl": {"perplexity": 30.0}},
-                "throughput": {"decode_tokens_per_second": 100.0, "prefill_tokens_per_second": 500.0},
+                "throughput": {
+                    "decode_tokens_per_second": 100.0,
+                    "prefill_tokens_per_second": 500.0,
+                },
             },
             {
                 "model": "b",
                 "parameters": 2000,
                 "tasks": {"syntax": {"accuracy": 0.8}, "ppl": {"perplexity": 20.0}},
-                "throughput": {"decode_tokens_per_second": 50.0, "prefill_tokens_per_second": 400.0},
+                "throughput": {
+                    "decode_tokens_per_second": 50.0,
+                    "prefill_tokens_per_second": 400.0,
+                },
             },
         ]
 
@@ -262,15 +274,25 @@ class TestVisualize:
 
     def test_plot_functions_write_files(self, tmp_path):
         results = [
-            {"model": "a", "parameters": 100, "tasks": {"t": {"accuracy": 0.6, "chance": 0.5}},
-             "throughput": {"prefill_tokens_per_second": 10, "decode_tokens_per_second": 5}},
-            {"model": "b", "parameters": 200, "tasks": {"t": {"accuracy": 0.7}},
-             "throughput": {"prefill_tokens_per_second": 20, "decode_tokens_per_second": 8}},
+            {
+                "model": "a",
+                "parameters": 100,
+                "tasks": {"t": {"accuracy": 0.6, "chance": 0.5}},
+                "throughput": {"prefill_tokens_per_second": 10, "decode_tokens_per_second": 5},
+            },
+            {
+                "model": "b",
+                "parameters": 200,
+                "tasks": {"t": {"accuracy": 0.7}},
+                "throughput": {"prefill_tokens_per_second": 20, "decode_tokens_per_second": 8},
+            },
         ]
         assert str(plot_task_comparison(results, tmp_path / "tasks.png")).endswith(".png")
         assert str(plot_throughput(results, tmp_path / "tp.png")).endswith(".png")
-        points = [{"model": "a", "parameters": 100, "perplexity": 30},
-                  {"model": "b", "parameters": 200, "perplexity": 20}]
+        points = [
+            {"model": "a", "parameters": 100, "perplexity": 30},
+            {"model": "b", "parameters": 200, "perplexity": 20},
+        ]
         assert str(plot_scaling_curve(points, tmp_path / "s.png")).endswith(".png")
         assert plot_scaling_curve([], tmp_path / "e.png") == "no data"
         assert plot_throughput([{}], tmp_path / "x.png") == "no throughput data"
@@ -283,17 +305,20 @@ class TestMerging:
 
     @pytest.fixture
     def states(self, tokenizer):
-        from minimodel.architectures.builder import build_model
         from conftest import TINY_MODEL
+
+        from minimodel.architectures.builder import build_model
 
         torch.manual_seed(0)
         first = build_model(
-            "dense_3m", overrides={**TINY_MODEL, "vocab_size": tokenizer.vocab_size},
+            "dense_3m",
+            overrides={**TINY_MODEL, "vocab_size": tokenizer.vocab_size},
             verify_budget=False,
         ).state_dict()
         torch.manual_seed(1)
         second = build_model(
-            "dense_3m", overrides={**TINY_MODEL, "vocab_size": tokenizer.vocab_size},
+            "dense_3m",
+            overrides={**TINY_MODEL, "vocab_size": tokenizer.vocab_size},
             verify_budget=False,
         ).state_dict()
         return first, second
@@ -354,9 +379,7 @@ class TestMerging:
         second_dir = tmp_path / "b"
         tiny_model.save_pretrained(first_dir)
         tiny_model.save_pretrained(second_dir)
-        merge_models(
-            [first_dir, second_dir], method="slerp", output=tmp_path / "merged", t=0.3
-        )
+        merge_models([first_dir, second_dir], method="slerp", output=tmp_path / "merged", t=0.3)
         assert (tmp_path / "merged" / "model.pt").exists()
         assert (tmp_path / "merged" / "config.json").exists()
 

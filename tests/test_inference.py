@@ -68,9 +68,7 @@ class TestLogitFilters:
     def test_penalties_downweight_seen_tokens(self):
         logits = torch.tensor([[2.0, -1.0, 3.0]])
         generated = torch.tensor([[0, 1]])
-        penalised = apply_penalties(
-            logits, generated, repetition_penalty=2.0, presence_penalty=0.5
-        )
+        penalised = apply_penalties(logits, generated, repetition_penalty=2.0, presence_penalty=0.5)
         assert penalised[0, 0] == pytest.approx(2.0 / 2.0 - 0.5)
         assert penalised[0, 1] == pytest.approx(-1.0 * 2.0 - 0.5)
         assert penalised[0, 2] == 3.0
@@ -93,13 +91,16 @@ class TestGenerate:
     def test_seeded_sampling_reproduces(self, tiny_model):
         prompt = torch.randint(0, tiny_model.vocab_size, (1, 4))
         config = SamplingConfig(max_new_tokens=6, temperature=1.0, seed=7)
-        assert torch.equal(generate(tiny_model, prompt, config), generate(tiny_model, prompt, config))
+        assert torch.equal(
+            generate(tiny_model, prompt, config), generate(tiny_model, prompt, config)
+        )
 
     def test_stop_tokens_halt_generation(self, tiny_model, tokenizer):
         prompt = torch.randint(0, tiny_model.vocab_size, (1, 4))
         # Every token is a stop token, so generation should stop immediately.
         config = SamplingConfig(
-            max_new_tokens=50, do_sample=False,
+            max_new_tokens=50,
+            do_sample=False,
             stop_token_ids=list(range(tiny_model.vocab_size)),
         )
         output = generate(tiny_model, prompt, config)
@@ -124,18 +125,22 @@ class TestGenerate:
             list(stream_generate(tiny_model, torch.zeros(2, 3, dtype=torch.long)))
 
     def test_generate_text_and_batch(self, tiny_model, tokenizer):
-        text = generate_text(
-            tiny_model, tokenizer, "The river", max_new_tokens=6, temperature=0.0
-        )
+        text = generate_text(tiny_model, tokenizer, "The river", max_new_tokens=6, temperature=0.0)
         assert text.startswith("The river")
         completion_only = generate_text(
-            tiny_model, tokenizer, "The river", max_new_tokens=6, temperature=0.0,
+            tiny_model,
+            tokenizer,
+            "The river",
+            max_new_tokens=6,
+            temperature=0.0,
             include_prompt=False,
         )
         assert not completion_only.startswith("The river")
 
         results = generate_batch(
-            tiny_model, tokenizer, ["The river", "A very much longer prompt here"],
+            tiny_model,
+            tokenizer,
+            ["The river", "A very much longer prompt here"],
             SamplingConfig(max_new_tokens=4, do_sample=False),
         )
         assert len(results) == 2
@@ -190,11 +195,15 @@ class TestInferenceRunner:
     def test_stream_completion_matches_full_decode(self, model_dir):
         loaded = load_for_inference(model_dir, device="cpu")
         prompt_ids = loaded.tokenizer.encode("The", add_bos=True)
-        config = SamplingConfig(max_new_tokens=6, do_sample=False, stop_token_ids=[loaded.tokenizer.eos_id])
+        config = SamplingConfig(
+            max_new_tokens=6, do_sample=False, stop_token_ids=[loaded.tokenizer.eos_id]
+        )
         expected_ids = generate(
             loaded.model, torch.tensor([prompt_ids]), config, device=loaded.device
-        )[0, len(prompt_ids):].tolist()
-        streamed = "".join(stream_completion(loaded, "The", max_new_tokens=6, temperature=0.0, chat=False))
+        )[0, len(prompt_ids) :].tolist()
+        streamed = "".join(
+            stream_completion(loaded, "The", max_new_tokens=6, temperature=0.0, chat=False)
+        )
         # Streamed text equals decoding the same ids in one shot, and no valid
         # multi-byte character is ever split across chunks.
         assert streamed == loaded.tokenizer.decode(expected_ids)

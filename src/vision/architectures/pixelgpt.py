@@ -135,8 +135,12 @@ class PixelGPT(BaseImageModel):
         self.final_norm = RMSNorm(dim, eps=float(cfg["norm_eps"]))
         self.lm_head = nn.Linear(dim, self.vocab_size, bias=False)
 
-        self.register_buffer("row_index", torch.arange(self.n_pixels) // self.image_size, persistent=False)
-        self.register_buffer("col_index", torch.arange(self.n_pixels) % self.image_size, persistent=False)
+        self.register_buffer(
+            "row_index", torch.arange(self.n_pixels) // self.image_size, persistent=False
+        )
+        self.register_buffer(
+            "col_index", torch.arange(self.n_pixels) % self.image_size, persistent=False
+        )
         self.init_weights()
 
     def init_weights(self) -> None:
@@ -206,9 +210,7 @@ class PixelGPT(BaseImageModel):
             start = self.start_embedding.expand(batch, 1, -1)
             if self.class_embedding is not None:
                 if labels is None:
-                    labels = torch.full(
-                        (batch,), self.num_classes, dtype=torch.long, device=device
-                    )
+                    labels = torch.full((batch,), self.num_classes, dtype=torch.long, device=device)
                 elif self.training and self.class_dropout > 0:
                     drop = torch.rand(batch, device=device) < self.class_dropout
                     labels = torch.where(drop, torch.full_like(labels, self.num_classes), labels)
@@ -245,9 +247,7 @@ class PixelGPT(BaseImageModel):
         """
         logits = self(pixels, labels=labels)[:, :-1]
         targets = pixels + N_SPECIAL_TOKENS
-        return F.cross_entropy(
-            logits.reshape(-1, logits.size(-1)).float(), targets.reshape(-1)
-        )
+        return F.cross_entropy(logits.reshape(-1, logits.size(-1)).float(), targets.reshape(-1))
 
     @torch.no_grad()
     def generate(

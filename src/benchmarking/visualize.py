@@ -49,7 +49,7 @@ def ascii_bar_chart(
     for label, value in values.items():
         filled = int(abs(float(value)) / largest * width)
         bar = "#" * filled
-        lines.append(f"{str(label):<{label_width}} | {bar:<{width}} {value_format.format(value)}")
+        lines.append(f"{label!s:<{label_width}} | {bar:<{width}} {value_format.format(value)}")
     return "\n".join(lines)
 
 
@@ -64,7 +64,7 @@ def plot_task_comparison(
     models = [str(r.get("model", f"model{i}")) for i, r in enumerate(results)]
     task_names: list[str] = []
     for result in results:
-        for name in (result.get("tasks") or {}):
+        for name in result.get("tasks") or {}:
             if name not in task_names:
                 task_names.append(name)
 

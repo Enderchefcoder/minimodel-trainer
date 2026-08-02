@@ -83,7 +83,7 @@ class TestCheckpointManager:
         assert manager.best() is None
 
     def test_mode_validation(self, tmp_path):
-        with pytest.raises(ValueError, match="min.*max"):
+        with pytest.raises(ValueError, match=r"min.*max"):
             CheckpointManager(tmp_path, mode="sideways")
 
     def test_export_model_copies_weights_only(self, tiny_model, tmp_path):

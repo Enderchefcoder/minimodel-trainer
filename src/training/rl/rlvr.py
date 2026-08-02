@@ -35,7 +35,6 @@ from pathlib import Path
 from typing import Any
 
 import torch
-import torch.nn.functional as F
 from torch import Tensor, nn
 
 from minimodel.core.logging_utils import get_logger
@@ -120,7 +119,7 @@ def verify_expression(completion: str, reference: str) -> float:
         if not expression or not re.fullmatch(r"[-+*/() \d.]+", expression):
             continue
         try:
-            value = eval(expression, {"__builtins__": {}}, {})  # noqa: S307
+            value = eval(expression, {"__builtins__": {}}, {})
         except (SyntaxError, ZeroDivisionError, TypeError, NameError, ValueError):
             continue
         if isinstance(value, (int, float)) and math.isclose(value, target, rel_tol=1e-6):

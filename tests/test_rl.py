@@ -71,18 +71,18 @@ class TestDPOTrainer:
     """End-to-end DPO on the bundled pairs."""
 
     def _config(self, tmp_path, **overrides) -> DPOConfig:
-        defaults = dict(
-            run_name="dpo",
-            output_dir=str(tmp_path),
-            max_steps=4,
-            batch_size=2,
-            lr=1e-5,
-            log_every=2,
-            eval_every=0,
-            save_every=0,
-            warmup=0,
-            resume=False,
-        )
+        defaults = {
+            "run_name": "dpo",
+            "output_dir": str(tmp_path),
+            "max_steps": 4,
+            "batch_size": 2,
+            "lr": 1e-5,
+            "log_every": 2,
+            "eval_every": 0,
+            "save_every": 0,
+            "warmup": 0,
+            "resume": False,
+        }
         defaults.update(overrides)
         return DPOConfig(**defaults)
 
@@ -192,20 +192,20 @@ class TestRLVRTrainer:
     """Rollouts, scoring and the policy-gradient loss."""
 
     def _config(self, tmp_path, **overrides) -> RLVRConfig:
-        defaults = dict(
-            run_name="rlvr",
-            output_dir=str(tmp_path),
-            max_steps=2,
-            batch_size=2,
-            group_size=4,
-            max_new_tokens=6,
-            lr=1e-5,
-            log_every=1,
-            eval_every=0,
-            save_every=0,
-            warmup=0,
-            resume=False,
-        )
+        defaults = {
+            "run_name": "rlvr",
+            "output_dir": str(tmp_path),
+            "max_steps": 2,
+            "batch_size": 2,
+            "group_size": 4,
+            "max_new_tokens": 6,
+            "lr": 1e-5,
+            "log_every": 1,
+            "eval_every": 0,
+            "save_every": 0,
+            "warmup": 0,
+            "resume": False,
+        }
         defaults.update(overrides)
         return RLVRConfig(**defaults)
 
@@ -233,7 +233,9 @@ class TestRLVRTrainer:
         )
         assert trainer.score("the answer is 13", {"answer": "13"}) == pytest.approx(1.1)
         assert trainer.score("wrong", {"answer": "13"}) == pytest.approx(0.1)
-        assert trainer.score("Paris", {"answer": "paris", "verifier": "exact_match"}) == pytest.approx(1.1)
+        assert trainer.score(
+            "Paris", {"answer": "paris", "verifier": "exact_match"}
+        ) == pytest.approx(1.1)
 
     def test_system_prompt_prepended(self, tiny_model, tasks_path, tokenizer, tmp_path):
         trainer = RLVRTrainer(
@@ -262,9 +264,7 @@ class TestRLVRTrainer:
         empty = tmp_path / "empty.jsonl"
         empty.write_text("", encoding="utf-8")
         with pytest.raises(ValueError, match="at least one task"):
-            RLVRTrainer(
-                tiny_model, self._config(tmp_path), tasks_path=empty, tokenizer=tokenizer
-            )
+            RLVRTrainer(tiny_model, self._config(tmp_path), tasks_path=empty, tokenizer=tokenizer)
 
     def test_in_memory_tasks(self, tiny_model, tokenizer, tmp_path):
         trainer = RLVRTrainer(
@@ -306,15 +306,13 @@ class TestSPIN:
             warmup=0,
             resume=False,
         )
-        trainer = SPINTrainer(
-            tiny_model, config, dataset_path=sft_jsonl, tokenizer=tokenizer
-        )
+        trainer = SPINTrainer(tiny_model, config, dataset_path=sft_jsonl, tokenizer=tokenizer)
         result = trainer.fit()
         assert result.steps == 4
         # Two iterations means the second pair file was generated.
         assert (trainer.pair_cache_dir / "iteration_000.jsonl").exists()
         assert trainer.iteration >= 1
-        loss, extras = trainer.compute_loss(trainer._next_batch())
+        _loss, extras = trainer.compute_loss(trainer._next_batch())
         assert extras["spin_iteration"] == float(trainer.iteration)
 
     def test_spin_missing_dataset(self, tiny_model, tokenizer, tmp_path):

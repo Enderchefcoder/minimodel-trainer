@@ -133,6 +133,7 @@ class TestRecipeRunners:
 
     def test_pretrain_recipe_runs(self, tokenizer, corpus_dir, tmp_path):
         from conftest import TINY_MODEL
+
         from minimodel.training.recipe import run_pretrain_recipe
 
         tokenizer_path = tokenizer.save(tmp_path / "tok")
@@ -156,8 +157,11 @@ class TestRecipeRunners:
         assert result.steps == 3
         assert (tmp_path / "runs" / "recipe-test" / "model" / "tokenizer.json").exists()
 
-    def test_pretrain_recipe_with_mixture_and_overrides(self, tokenizer, corpus_dir, sft_dir, tmp_path):
+    def test_pretrain_recipe_with_mixture_and_overrides(
+        self, tokenizer, corpus_dir, sft_dir, tmp_path
+    ):
         from conftest import TINY_MODEL
+
         from minimodel.training.recipe import run_pretrain_recipe
 
         recipe = {
@@ -267,9 +271,7 @@ class TestCLI:
 
     def test_tokenizer_train_and_inspect(self, tmp_path, capsys):
         output = tmp_path / "tok.json"
-        assert main(
-            ["tokenizer", "train", "--vocab-size", "300", "-o", str(output), "--json"]
-        ) == 0
+        assert main(["tokenizer", "train", "--vocab-size", "300", "-o", str(output), "--json"]) == 0
         assert output.exists()
         capsys.readouterr()  # discard the training summary
         assert main(["tokenizer", "inspect", str(output), "--text", "hello"]) == 0
@@ -283,10 +285,15 @@ class TestCLI:
         assert (
             main(
                 [
-                    "data", "tokenize", "builtin-demo",
-                    "--raw-dir", str(tmp_path / "raw"),
-                    "-t", str(tokenizer_path),
-                    "-o", str(tmp_path / "tok"),
+                    "data",
+                    "tokenize",
+                    "builtin-demo",
+                    "--raw-dir",
+                    str(tmp_path / "raw"),
+                    "-t",
+                    str(tokenizer_path),
+                    "-o",
+                    str(tmp_path / "tok"),
                 ]
             )
             == 0
@@ -302,8 +309,17 @@ class TestCLI:
         assert (
             main(
                 [
-                    "generate", "-m", str(model_dir), "-p", "The",
-                    "--max-new-tokens", "4", "--temperature", "0", "--device", "cpu",
+                    "generate",
+                    "-m",
+                    str(model_dir),
+                    "-p",
+                    "The",
+                    "--max-new-tokens",
+                    "4",
+                    "--temperature",
+                    "0",
+                    "--device",
+                    "cpu",
                 ]
             )
             == 0
@@ -318,8 +334,16 @@ class TestCLI:
         assert (
             main(
                 [
-                    "bench", "-m", str(model_dir), "--device", "cpu",
-                    "--limit", "2", "--no-throughput", "-o", str(bench_out),
+                    "bench",
+                    "-m",
+                    str(model_dir),
+                    "--device",
+                    "cpu",
+                    "--limit",
+                    "2",
+                    "--no-throughput",
+                    "-o",
+                    str(bench_out),
                 ]
             )
             == 0
@@ -340,10 +364,7 @@ class TestCLI:
         tiny_model.save_pretrained(a)
         tiny_model.save_pretrained(b)
         assert (
-            main(
-                ["merge", str(a), str(b), "--method", "linear", "-o", str(tmp_path / "out")]
-            )
-            == 0
+            main(["merge", str(a), str(b), "--method", "linear", "-o", str(tmp_path / "out")]) == 0
         )
         assert (tmp_path / "out" / "model.pt").exists()
 

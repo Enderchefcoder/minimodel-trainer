@@ -7,6 +7,7 @@ stored inside checkpoints alongside the model and optimizer state.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import random
 from typing import Any
@@ -63,10 +64,8 @@ def set_deterministic(enabled: bool = True, *, warn_only: bool = True) -> None:
     torch.backends.cudnn.benchmark = not enabled
     if enabled:
         os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-    try:
+    with contextlib.suppress(RuntimeError, TypeError):  # older torch builds
         torch.use_deterministic_algorithms(bool(enabled), warn_only=warn_only)
-    except (RuntimeError, TypeError):  # pragma: no cover - older torch builds
-        pass
 
 
 def seed_worker(worker_id: int) -> None:
@@ -111,7 +110,5 @@ def set_rng_state(state: dict[str, Any] | None) -> None:
             tensor = torch.tensor(tensor, dtype=torch.uint8)
         torch.set_rng_state(tensor.cpu().to(torch.uint8))
     if "cuda" in state and torch.cuda.is_available():  # pragma: no cover - hardware
-        try:
+        with contextlib.suppress(RuntimeError, ValueError):
             torch.cuda.set_rng_state_all(state["cuda"])
-        except (RuntimeError, ValueError):
-            pass

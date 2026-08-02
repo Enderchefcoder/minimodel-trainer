@@ -87,8 +87,12 @@ class TestVisionRecipe:
             "model": {
                 "template": "pixelgpt_16x16_3m",
                 "overrides": {
-                    "dim": 32, "n_layers": 1, "n_heads": 2, "head_dim": 16,
-                    "n_kv_heads": 1, "ffn_hidden": 64,
+                    "dim": 32,
+                    "n_layers": 1,
+                    "n_heads": 2,
+                    "head_dim": 16,
+                    "n_kv_heads": 1,
+                    "ffn_hidden": 64,
                 },
             },
             "data": {"train": str(tmp_path / "corpus")},
@@ -115,8 +119,15 @@ class TestVisionRecipe:
             "run_name": "recipe-dit",
             "model": {
                 "template": "dit_tiny_32",
-                "overrides": {"image_size": 16, "patch_size": 4, "dim": 32, "depth": 1,
-                              "n_heads": 2, "condition": "none", "num_classes": 0},
+                "overrides": {
+                    "image_size": 16,
+                    "patch_size": 4,
+                    "dim": 32,
+                    "depth": 1,
+                    "n_heads": 2,
+                    "condition": "none",
+                    "num_classes": 0,
+                },
             },
             "data": {"train": str(tmp_path / "corpus")},
             "training": {
@@ -136,7 +147,7 @@ class TestVisionRecipe:
 
         with pytest.raises(ConfigError, match="unknown vision recipe kind"):
             run_vision_recipe({"kind": "hologram"})
-        with pytest.raises(ConfigError, match="data.train"):
+        with pytest.raises(ConfigError, match=r"data\.train"):
             run_vision_recipe({"kind": "diffusion", "data": {}})
 
 
@@ -147,7 +158,10 @@ class TestBundledConfigs:
         "recipe",
         sorted(
             str(p.relative_to(p.parents[2]))
-            for p in __import__("pathlib").Path(__file__).parent.parent.joinpath("configs").rglob("*.yaml")
+            for p in __import__("pathlib")
+            .Path(__file__)
+            .parent.parent.joinpath("configs")
+            .rglob("*.yaml")
         ),
     )
     def test_recipe_parses(self, recipe):

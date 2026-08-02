@@ -108,9 +108,7 @@ def setup_distributed(backend: str | None = None, *, timeout_minutes: int = 30) 
 
     if backend is None:
         backend = "nccl" if torch.cuda.is_available() else "gloo"
-    dist.init_process_group(
-        backend=backend, timeout=datetime.timedelta(minutes=timeout_minutes)
-    )
+    dist.init_process_group(backend=backend, timeout=datetime.timedelta(minutes=timeout_minutes))
     local_rank = get_local_rank()
     if torch.cuda.is_available():
         torch.cuda.set_device(local_rank)

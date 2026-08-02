@@ -35,7 +35,7 @@ from torch import Tensor
 
 from minimodel.vision.architectures.dit import DiT, DiTConfig
 
-__all__ = ["ImageEditModel", "ImageEditConfig"]
+__all__ = ["ImageEditConfig", "ImageEditModel"]
 
 #: Defaults for the edit model. ``extra_in_channels`` mirrors ``in_channels``
 #: so the source image can be concatenated.

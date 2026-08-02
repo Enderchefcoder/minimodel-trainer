@@ -68,11 +68,10 @@ def supports_bf16(device: torch.device | None = None) -> bool:
             return bool(torch.cuda.is_bf16_supported())
         except (RuntimeError, AttributeError):
             return False
-    if device.type == "cpu":
-        # CPU bf16 autocast works everywhere on modern PyTorch, it is just slow
-        # without AMX/AVX512-BF16. It is still numerically valid.
-        return True
-    return False  # pragma: no cover - MPS has no bf16 autocast
+    # CPU bf16 autocast works everywhere on modern PyTorch, it is just slow
+    # without AMX/AVX512-BF16. It is still numerically valid. MPS has no bf16
+    # autocast at all.
+    return device.type == "cpu"
 
 
 def resolve_dtype(
@@ -107,7 +106,9 @@ def autocast_context(
     Autocast is skipped for float32 and on devices without autocast support so
     that callers can always wrap their forward pass in this context.
     """
-    use_amp = enabled and dtype in (torch.float16, torch.bfloat16) and device.type in ("cuda", "cpu")
+    use_amp = (
+        enabled and dtype in (torch.float16, torch.bfloat16) and device.type in ("cuda", "cpu")
+    )
     if not use_amp:
         yield
         return

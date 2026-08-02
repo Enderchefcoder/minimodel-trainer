@@ -306,9 +306,7 @@ def tokenize_registered(
     spec: DatasetSpec = get_dataset(name, path=registry_path)
     raw_path = Path(raw_dir) / f"{name}.jsonl"
     if not raw_path.exists():
-        raise FileNotFoundError(
-            f"{raw_path} not found. Run `minimodel data pull {name}` first."
-        )
+        raise FileNotFoundError(f"{raw_path} not found. Run `minimodel data pull {name}` first.")
     return tokenize_jsonl(
         raw_path,
         tokenizer,

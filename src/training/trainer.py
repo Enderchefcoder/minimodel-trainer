@@ -45,7 +45,7 @@ from minimodel.core.devices import (
     resolve_device,
     resolve_dtype,
 )
-from minimodel.core.distributed import DistInfo, is_main_process, setup_distributed
+from minimodel.core.distributed import DistInfo, setup_distributed
 from minimodel.core.io_utils import ensure_dir, human_count, write_json
 from minimodel.core.logging_utils import JsonlLogger, get_logger, setup_logging
 from minimodel.core.seeding import set_seed
@@ -265,9 +265,7 @@ class Trainer:
             **self.config.schedule_kwargs,
         )
         # A GradScaler is only needed for fp16; bf16 has enough exponent range.
-        self.scaler = torch.amp.GradScaler(
-            self.device.type, enabled=self.dtype == torch.float16
-        )
+        self.scaler = torch.amp.GradScaler(self.device.type, enabled=self.dtype == torch.float16)
 
         self.train_loader = train_loader or self._make_loader(train_dataset, shuffle=False)
         self.eval_loader = eval_loader or (
@@ -281,9 +279,7 @@ class Trainer:
             keep_best=self.config.keep_best,
             monitor=self.config.monitor,
         )
-        self.metrics_logger = JsonlLogger(
-            self.run_dir / "metrics.jsonl", enabled=self.dist.is_main
-        )
+        self.metrics_logger = JsonlLogger(self.run_dir / "metrics.jsonl", enabled=self.dist.is_main)
         self.etr = ETREstimator(self.config.max_steps)
         self.throughput = ThroughputMeter()
 
@@ -390,9 +386,7 @@ class Trainer:
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_clip)
             )
         elif self.config.max_grad_norm_log:
-            grad_norm = float(
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), float("inf"))
-            )
+            grad_norm = float(torch.nn.utils.clip_grad_norm_(self.model.parameters(), float("inf")))
 
         if self.scaler.is_enabled():
             self.scaler.step(self.optimizer)
@@ -412,7 +406,9 @@ class Trainer:
         return metrics
 
     @torch.no_grad()
-    def evaluate(self, loader: DataLoader | None = None, max_batches: int | None = None) -> dict[str, float]:
+    def evaluate(
+        self, loader: DataLoader | None = None, max_batches: int | None = None
+    ) -> dict[str, float]:
         """Run a validation pass and return averaged metrics."""
         loader = loader or self.eval_loader
         if loader is None:

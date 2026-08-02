@@ -78,7 +78,9 @@ def normalize_messages(raw: Any) -> list[Message]:
             content = item.get("content")
             if content is None:
                 content = item.get("value", "")
-            role = {"human": "user", "gpt": "assistant", "bot": "assistant"}.get(str(role), str(role))
+            role = {"human": "user", "gpt": "assistant", "bot": "assistant"}.get(
+                str(role), str(role)
+            )
             message: Message = {"role": role, "content": str(content)}
             reasoning = item.get("reasoning") or item.get("thinking")
             if reasoning:
@@ -99,7 +101,9 @@ def normalize_messages(raw: Any) -> list[Message]:
     if system:
         messages.append({"role": "system", "content": str(system)})
 
-    instruction = raw.get("instruction") or raw.get("prompt") or raw.get("question") or raw.get("input")
+    instruction = (
+        raw.get("instruction") or raw.get("prompt") or raw.get("question") or raw.get("input")
+    )
     extra_input = raw.get("input") if raw.get("instruction") else None
     if instruction is None:
         raise ValueError(f"no recognisable prompt field in record with keys {sorted(raw)}")

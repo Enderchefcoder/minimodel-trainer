@@ -9,6 +9,12 @@ distributed-training utilities.
 from __future__ import annotations
 
 from minimodel.core.config import Config, ConfigError, load_config, merge_configs, parse_overrides
+from minimodel.core.devices import (
+    autocast_context,
+    describe_device,
+    resolve_device,
+    resolve_dtype,
+)
 from minimodel.core.distributed import (
     barrier,
     get_rank,
@@ -17,12 +23,6 @@ from minimodel.core.distributed import (
     is_main_process,
     setup_distributed,
     teardown_distributed,
-)
-from minimodel.core.devices import (
-    autocast_context,
-    describe_device,
-    resolve_device,
-    resolve_dtype,
 )
 from minimodel.core.io_utils import (
     append_jsonl,

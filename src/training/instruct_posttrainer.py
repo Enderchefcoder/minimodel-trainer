@@ -138,9 +138,7 @@ class InstructTrainer(Trainer):
         if self.sft_config.track_accuracy and supervised > 0:
             with torch.no_grad():
                 predictions = flat_logits[mask].argmax(dim=-1)
-                extras["token_accuracy"] = float(
-                    (predictions == flat_labels[mask]).float().mean()
-                )
+                extras["token_accuracy"] = float((predictions == flat_labels[mask]).float().mean())
         return loss, extras
 
     @torch.no_grad()

@@ -417,7 +417,7 @@ class TestImageData:
             )
 
     def test_missing_corpus_raises(self, tmp_path):
-        with pytest.raises(FileNotFoundError, match="index.json"):
+        with pytest.raises(FileNotFoundError, match=r"index\.json"):
             ImageCorpus(tmp_path)
 
     def test_synthetic_sprites_are_symmetric(self):
@@ -523,9 +523,7 @@ class TestPixelAndVAETrainers:
     def test_pixelgpt_trainer(self, sprites, tmp_path):
         prepare_pixel_corpus(sprites, tmp_path / "pal", size=16, palette_size=8)
         stats = ImageCorpus(tmp_path / "pal")
-        model = PixelGPT(
-            {**TINY_PIXEL, "image_size": 16, "palette_size": stats.index.palette_size}
-        )
+        model = PixelGPT({**TINY_PIXEL, "image_size": 16, "palette_size": stats.index.palette_size})
         trainer = PixelGPTTrainer(
             model,
             PixelGPTConfig(
@@ -604,8 +602,13 @@ class TestSamplers:
     def test_sample_images_wrapper(self):
         model = DiT({**TINY_DIT, "condition": "class", "num_classes": 3})
         images = sample_images(
-            model, n_samples=2, sampler="euler", n_steps=2,
-            labels=torch.tensor([0, 1]), guidance_scale=2.0, seed=0,
+            model,
+            n_samples=2,
+            sampler="euler",
+            n_steps=2,
+            labels=torch.tensor([0, 1]),
+            guidance_scale=2.0,
+            seed=0,
         )
         assert images.shape == (2, 3, 8, 8)
         with pytest.raises(ValueError, match="unknown sampler"):

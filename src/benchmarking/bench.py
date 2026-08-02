@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import Any
 
 import torch
-from torch import Tensor, nn
+from torch import nn
 
 from minimodel.benchmarking.tasks import (
     BUILTIN_TASKS,

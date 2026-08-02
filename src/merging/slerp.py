@@ -94,7 +94,9 @@ def _check_compatible(states: Sequence[Mapping[str, Tensor]]) -> list[str]:
     return sorted(common)
 
 
-def slerp(a: Tensor, b: Tensor, t: float, *, eps: float = 1e-8, dot_threshold: float = 0.9995) -> Tensor:
+def slerp(
+    a: Tensor, b: Tensor, t: float, *, eps: float = 1e-8, dot_threshold: float = 0.9995
+) -> Tensor:
     """Spherical linear interpolation between two tensors.
 
     Falls back to a linear blend when the two are nearly parallel, where the
@@ -136,9 +138,7 @@ def linear_merge(
     return merged
 
 
-def slerp_merge(
-    states: Sequence[Mapping[str, Tensor]], t: float = 0.5
-) -> dict[str, Tensor]:
+def slerp_merge(states: Sequence[Mapping[str, Tensor]], t: float = 0.5) -> dict[str, Tensor]:
     """Spherically interpolate exactly two state dicts."""
     if len(states) != 2:
         raise ValueError(f"slerp merges exactly two models, got {len(states)}")
@@ -148,7 +148,9 @@ def slerp_merge(
         a, b = states[0][key], states[1][key]
         # 0-d and 1-d tensors (norm gains, biases, gates) have no meaningful
         # direction to interpolate, so they are blended linearly.
-        merged[key] = torch.lerp(a.float(), b.float(), t).to(a.dtype) if a.dim() < 2 else slerp(a, b, t)
+        merged[key] = (
+            torch.lerp(a.float(), b.float(), t).to(a.dtype) if a.dim() < 2 else slerp(a, b, t)
+        )
     return merged
 
 

@@ -161,7 +161,9 @@ class TestConfig:
     def test_cli_overrides_applied_last(self, tmp_path):
         (tmp_path / "c.yaml").write_text("training:\n  lr: 1.0\n", encoding="utf-8")
         cfg = load_config(
-            tmp_path / "c.yaml", overrides={"training": {"lr": 2.0}}, cli_overrides=["training.lr=3"]
+            tmp_path / "c.yaml",
+            overrides={"training": {"lr": 2.0}},
+            cli_overrides=["training.lr=3"],
         )
         assert cfg["training.lr"] == 3
 
@@ -356,7 +358,9 @@ class TestSeeding:
 
     def test_set_rng_state_tolerates_partial(self):
         set_rng_state(None)
-        set_rng_state({"python": list(np.random.get_state()[:1]) and __import__("random").getstate()})
+        set_rng_state(
+            {"python": list(np.random.get_state()[:1]) and __import__("random").getstate()}
+        )
 
     def test_seed_worker_runs(self):
         seed_worker(3)

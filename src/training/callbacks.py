@@ -187,8 +187,7 @@ class EarlyStopping(Callback):
         self.waited += 1
         if self.waited >= self.patience:
             logger.info(
-                "early stopping at step %d: %s has not improved for %d evaluations "
-                "(best %.4f)",
+                "early stopping at step %d: %s has not improved for %d evaluations (best %.4f)",
                 step,
                 self.monitor,
                 self.waited,

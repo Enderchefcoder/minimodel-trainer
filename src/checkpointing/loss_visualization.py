@@ -208,9 +208,7 @@ def plot_learning_rate(
     output: str | Path | None = None,
 ) -> str | Path:
     """Plot the learning-rate schedule that was actually applied."""
-    return plot_loss_curve(
-        metrics, output, keys=("lr",), title="Learning rate", smoothing=0.0
-    )
+    return plot_loss_curve(metrics, output, keys=("lr",), title="Learning rate", smoothing=0.0)
 
 
 def summarize_run(metrics: str | Path | Iterable[dict[str, Any]]) -> dict[str, Any]:

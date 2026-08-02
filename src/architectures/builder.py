@@ -24,6 +24,7 @@ Both forms are resolved by :func:`build_model`, which also verifies the declared
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -121,20 +122,16 @@ def _extract_annotated_looped(template: Mapping[str, Any]) -> dict[str, Any]:
     gate_init = recurrent.get("outer_residual.gate_init")
     if isinstance(gate_init, str) and "," in gate_init:
         # e.g. "full(128, 0.1)" -> 0.1
-        try:
+        with contextlib.suppress(ValueError):
             out["outer_gate_init"] = float(gate_init.rsplit(",", 1)[1].strip(" )"))
-        except ValueError:  # pragma: no cover - malformed template
-            pass
     elif isinstance(gate_init, (int, float)):
         out["outer_gate_init"] = float(gate_init)
 
     init = cfg.section("weight_init")
     linear_init = init.get("linear")
     if isinstance(linear_init, str) and "std=" in linear_init:
-        try:
+        with contextlib.suppress(ValueError):
             out["init_std"] = float(linear_init.split("std=")[1].strip(" )"))
-        except ValueError:  # pragma: no cover - malformed template
-            pass
     return out
 
 

@@ -62,7 +62,9 @@ class BaseLanguageModel(nn.Module):
         """Instantiate the model from a plain config mapping."""
         return cls(config)  # pragma: no cover - overridden by every subclass
 
-    def save_pretrained(self, directory: str | Path, *, extra: Mapping[str, Any] | None = None) -> Path:
+    def save_pretrained(
+        self, directory: str | Path, *, extra: Mapping[str, Any] | None = None
+    ) -> Path:
         """Write ``model.pt`` and ``config.json`` into ``directory``.
 
         The saved config always carries ``architecture`` so

@@ -46,9 +46,7 @@ logger = get_logger(__name__)
 OPTIMIZERS: Registry[Any] = Registry("optimizer")
 
 
-def param_groups(
-    model: nn.Module, weight_decay: float = 0.1
-) -> list[dict[str, Any]]:
+def param_groups(model: nn.Module, weight_decay: float = 0.1) -> list[dict[str, Any]]:
     """Split parameters into decayed and non-decayed groups.
 
     Any parameter with 2 or more dimensions is treated as a matrix and decayed;
@@ -204,9 +202,7 @@ class Lion(Optimizer):
             raise ValueError(f"lr must be positive, got {lr}")
         if not all(0.0 <= b < 1.0 for b in betas):
             raise ValueError(f"betas must be in [0, 1), got {betas}")
-        super().__init__(
-            list(params), {"lr": lr, "betas": betas, "weight_decay": weight_decay}
-        )
+        super().__init__(list(params), {"lr": lr, "betas": betas, "weight_decay": weight_decay})
 
     @torch.no_grad()
     def step(self, closure=None):  # type: ignore[override]
@@ -321,7 +317,9 @@ def _build_lion(model: nn.Module, **kwargs: Any) -> Optimizer:
     betas = tuple(kwargs.get("betas", (0.9, 0.99)))
     weight_decay = float(kwargs.get("weight_decay", 1.0))
     return Lion(  # type: ignore[return-value]
-        param_groups(model, weight_decay), lr=lr, betas=betas  # type: ignore[arg-type]
+        param_groups(model, weight_decay),
+        lr=lr,
+        betas=betas,  # type: ignore[arg-type]
     )
 
 
@@ -351,7 +349,7 @@ def _build_muon(model: nn.Module, **kwargs: Any) -> Optimizer:
         if not param.requires_grad or id(param) in seen:
             continue
         seen.add(id(param))
-        is_head = "lm_head" in name or name.endswith("proj.weight") and "embedding" in name
+        is_head = "lm_head" in name or (name.endswith("proj.weight") and "embedding" in name)
         if param.dim() == 2 and id(param) not in embedding_ids and not is_head:
             matrices.append(param)
         else:
