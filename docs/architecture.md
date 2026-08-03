@@ -59,6 +59,17 @@ model(tokens, loops=8)   # better
 Pick it when parameters are the binding constraint: embedded targets, weight
 budgets, "how good can 5MB get" experiments.
 
+The looped model is fully configurable to span the design space: `prelude_layers`
+/ `coda_layers` (0+ each — set both to 0 for a pure-loop model), `embedding_type`
+(`factorized` or `tied`), and independent switches for the value-residual,
+timestep-scale and outer-residual stabilisers. Loop-count sampling supports
+`uniform` or **log-normal `poisson`** (Huginn 2025 — trains the upper loop range
+so the model keeps improving past its centre instead of collapsing), and
+`backprop_loops` enables truncated backprop through the last *N* iterations for
+~30% backward-FLOP savings. These choices are studied empirically in
+`research/reports/` (07 shows Poisson sampling + stabilisers make test-time loop
+scaling actually work).
+
 ### `moe-transformer` - parameters without FLOPs
 
 Sparse mixture-of-experts: top-2 routing over 8-16 SwiGLU experts per layer,

@@ -61,8 +61,12 @@ class QualityProbe:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
         torch.save(
-            {"weight": self.weight, "bias": torch.tensor([self.bias]),
-             "mean": self.mean, "std": self.std},
+            {
+                "weight": self.weight,
+                "bias": torch.tensor([self.bias]),
+                "mean": self.mean,
+                "std": self.std,
+            },
             path,
         )
         return path
@@ -112,8 +116,11 @@ def train_quality_probe(
     real_feats: list[Tensor] = []
     fake_feats: list[Tensor] = []
     sampling = SamplingConfig(
-        max_new_tokens=max_new_tokens, temperature=0.8, top_k=40,
-        stop_token_ids=[getattr(tokenizer, "eos_id", 0)], model_kwargs=dict(model_kwargs),
+        max_new_tokens=max_new_tokens,
+        temperature=0.8,
+        top_k=40,
+        stop_token_ids=[getattr(tokenizer, "eos_id", 0)],
+        model_kwargs=dict(model_kwargs),
     )
 
     for text in real_texts[:n_prompts]:
@@ -148,7 +155,9 @@ def train_quality_probe(
         acc = float(((torch.sigmoid(linear(xz).squeeze(-1)) > 0.5) == (y > 0.5)).float().mean())
     logger.info(
         "trained quality probe: %d real / %d fake, train accuracy %.2f",
-        len(real_feats), len(fake_feats), acc,
+        len(real_feats),
+        len(fake_feats),
+        acc,
     )
     return QualityProbe(linear.weight.detach(), linear.bias.detach(), mean, std)
 

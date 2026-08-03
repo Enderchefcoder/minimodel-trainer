@@ -1,6 +1,6 @@
 # Experiment results (auto-aggregated)
 
-_Generated from 6 result files. Glint-2 baseline included where relevant._
+_Generated from 11 result files. Glint-2 baseline included where relevant._
 
 ## Baseline
 
@@ -18,8 +18,28 @@ _Generated from 6 result files. Glint-2 baseline included where relevant._
 | arch_pureloop | 1,765,152 | 4.029 | 17.94 | 52.04 | 20 | 20.67 | 2696 |
 | arch_supra2 | 1,738,016 | 4.992 | 19.21 | 50.65 | 19.33 | 22.67 | 1.296e+04 |
 
+## contender
+
+| name | params | val_loss | wikitext_byte_ppl | blimp_acc | arc_easy_acc | arc_easy_acc_norm | tokens_per_second |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| contender_dense | 1,701,152 | 2.021 | 16.27 | 57.52 | 26.6 | 25.34 | 2.531e+04 |
+
 ## glint-2 (loops=8)
 
 | name | params | wikitext_byte_ppl | blimp_acc | arc_easy_acc | arc_easy_acc_norm |
 | --- | --- | --- | --- | --- | --- |
 | glint-2 (loops=8) | 1,710,049 | 3.179 | 66.36 | 36.78 | 37.25 |
+
+## head
+
+| name |
+| --- |
+| head_to_head |
+
+## opt
+
+| name | params | val_loss | wikitext_byte_ppl | blimp_acc | arc_easy_acc | arc_easy_acc_norm | tokens_per_second |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| opt_adamw | 937,552 | 4.543 | 18.09 | **52.24** | 16.67 | **22.67** | 1.226e+04 |
+| opt_lion | 937,552 | 5.38 | 18.81 | 50.55 | 16.67 | 22 | **1.277e+04** |
+| opt_muon | 937,552 | **3.12** | **13.93** | 49.95 | **22.67** | 20 | 1.239e+04 |

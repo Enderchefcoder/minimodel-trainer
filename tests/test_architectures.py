@@ -287,6 +287,50 @@ class TestLoopedTransformer:
         with pytest.raises(ValueError, match="n_shared_blocks"):
             LoopedTransformer({**TINY, "n_shared_blocks": 0})
 
+    def test_configurable_prelude_coda_and_tied_embedding(self):
+        # Glint-2 shape: tied embed, prelude 0, coda 1, no stabilisers.
+        model = LoopedTransformer(
+            {**TINY, "embedding_type": "tied", "prelude_layers": 0, "coda_layers": 1,
+             "n_shared_blocks": 1, "train_loops": 2, "min_loops": 1, "max_loops_table": 4,
+             "use_timestep_scale": False, "use_outer_residual": False}
+        )
+        assert len(model.prelude) == 0 and len(model.coda) == 1
+        assert model.timestep_scale is None and model.outer_gate is None
+        assert model.num_parameters() == model.expected_parameter_count()
+        assert model(torch.zeros(1, 5, dtype=torch.long), loops=2).shape == (1, 5, TINY["vocab_size"])
+
+    def test_pure_loop_no_unique_layers(self):
+        model = LoopedTransformer(
+            {**TINY, "embedding_type": "tied", "prelude_layers": 0, "coda_layers": 0,
+             "n_shared_blocks": 1, "train_loops": 2, "min_loops": 1, "max_loops_table": 4}
+        )
+        assert len(model.prelude) == 0 and len(model.coda) == 0
+        assert model.num_parameters() == model.expected_parameter_count()
+
+    def test_poisson_loop_sampling_in_range(self):
+        model = _tiny(LoopedTransformer, embedding_rank=16, max_loops_table=8, train_loops=6,
+                      min_loops=2, variable_loops=True, loop_sampling="poisson")
+        model.train()
+        counts = {model.resolve_loops(None) for _ in range(200)}
+        assert all(2 <= c <= 8 for c in counts)
+        assert len(counts) > 1
+
+    def test_truncated_backprop_runs(self):
+        # Single shared block so the last (non-detached) loop uses it.
+        model = _tiny(LoopedTransformer, embedding_rank=16, max_loops_table=8, train_loops=4,
+                      min_loops=4, variable_loops=False, n_shared_blocks=1, backprop_loops=1)
+        model.train()
+        tokens = torch.randint(0, TINY["vocab_size"], (1, 6))
+        model.forward_with_loss(tokens, tokens).loss.backward()
+        grad = model.shared[0].ffn.down.weight.grad
+        assert grad is not None and torch.isfinite(grad).all()
+        # Full backprop through the same model also runs and gives finite grads.
+        full = _tiny(LoopedTransformer, embedding_rank=16, max_loops_table=8, train_loops=4,
+                     min_loops=4, variable_loops=False, n_shared_blocks=1, backprop_loops=None)
+        full.train()
+        full.forward_with_loss(tokens, tokens).loss.backward()
+        assert torch.isfinite(full.shared[0].ffn.down.weight.grad).all()
+
     def test_lora_up_starts_at_zero(self):
         model = _tiny(
             LoopedTransformer, embedding_rank=16, max_loops_table=4, train_loops=2, min_loops=1

@@ -62,6 +62,7 @@ def _poisson(rate: float) -> int:
         if product <= limit:
             return k - 1
 
+
 #: Default values for every key the architecture understands. The YAML templates
 #: only need to specify what they change.
 LoopedTransformerConfig: dict[str, Any] = {
@@ -204,9 +205,7 @@ class LoopedTransformer(BaseLanguageModel):
         self.shared = nn.ModuleList(
             [TransformerBlock(**block_kwargs) for _ in range(self.n_shared_blocks)]
         )
-        self.coda = nn.ModuleList(
-            [TransformerBlock(**block_kwargs) for _ in range(self.n_coda)]
-        )
+        self.coda = nn.ModuleList([TransformerBlock(**block_kwargs) for _ in range(self.n_coda)])
 
         # Per-iteration conditioning tables. Iterations beyond `max_loops_table`
         # reuse the last entry, so asking for more loops at inference is safe.
@@ -361,7 +360,9 @@ class LoopedTransformer(BaseLanguageModel):
             gated = x + self.loop_embed.weight[table_index]
             delta = self._loop_delta(gated, table_index)
             block = self.shared[step % self.n_shared_blocks]
-            tau = self.timestep_scale[table_index].view(1, 1, -1) if self.use_timestep_scale else None
+            tau = (
+                self.timestep_scale[table_index].view(1, 1, -1) if self.use_timestep_scale else None
+            )
             x_new, v_prev = block(
                 gated,
                 cos,
@@ -416,7 +417,9 @@ class LoopedTransformer(BaseLanguageModel):
             + dim * 2 * hidden  # gate_up
             + hidden * dim  # down
         )
-        n_blocks = int(cfg["prelude_layers"]) + int(cfg["n_shared_blocks"]) + int(cfg["coda_layers"])
+        n_blocks = (
+            int(cfg["prelude_layers"]) + int(cfg["n_shared_blocks"]) + int(cfg["coda_layers"])
+        )
         loop_tables = tables * (lora_rank * dim + 3 * dim * lora_rank)
         return (
             embed

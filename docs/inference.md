@@ -75,6 +75,34 @@ why CoT training has `enforce_think_close`). Reasoning samples slightly hot,
 answers slightly cold - exploration while thinking, determinism when
 committing.
 
+## Effort ladder (test-time compute)
+
+For a fixed model you can spend more *search* to reach its quality ceiling more
+often. `effort_generate` runs a six-level ladder — `low`/`medium` (one sample),
+`high` (best-of-N, reranked), `xhigh`/`max` (chunked beam), `ultra` (repeated
+search) — scoring candidates by
+`mean log-prob - repetition - length-shortfall + P(real)`:
+
+```python
+from minimodel.inference import effort_generate
+effort_generate(model, tokenizer, "The river", level="high", max_new_tokens=64)
+```
+
+## Quality probe (honest reranking)
+
+Self-log-prob reranking drifts toward confident boilerplate under heavy search.
+A tiny (~3 KB) linear probe over the model's mean-pooled hidden state, trained to
+tell real corpus text from the model's own output, fixes this — pass it to
+`effort_generate(..., probe=probe)`:
+
+```python
+from minimodel.inference import train_quality_probe
+probe = train_quality_probe(model, tokenizer, real_texts)   # seconds on CPU
+```
+
+Both techniques are architecture-agnostic and add no training cost to the model
+itself. See `research/reports/08_inference_wins.md` for measured lift.
+
 ## Practical numbers
 
 CPU decode for a 30M model runs in the tens of tokens/second - fine for

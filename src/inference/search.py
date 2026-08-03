@@ -20,7 +20,7 @@ ultra   several independent `max` searches, best final wins
 ======  ==============================================================
 
 The rerank score is
-``mean token log-prob − rep_weight·(4-gram repetition) − shortfall + probe_weight·P(real)``.
+``mean token log-prob - rep_weight*(4-gram repetition) - shortfall + probe_weight*P(real)``.
 The repetition and length terms are cheap, general anti-degeneracy penalties;
 the probe term (when a quality probe is supplied) stops self-log-prob reranking
 from Goodharting toward confident boilerplate.
@@ -29,7 +29,7 @@ from Goodharting toward confident boilerplate.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 import torch
@@ -82,7 +82,11 @@ def _instance_temp(fixed: float | None, index: int) -> float:
 
 @torch.no_grad()
 def _sample_next(
-    logits: Tensor, temp: float, top_k: int, rep: float, recent: Sequence[int],
+    logits: Tensor,
+    temp: float,
+    top_k: int,
+    rep: float,
+    recent: Sequence[int],
     generator: torch.Generator | None,
 ) -> int:
     """Top-k temperature sample with a CTRL-style repetition penalty."""
@@ -96,8 +100,15 @@ def _sample_next(
 
 @torch.no_grad()
 def _sample_continuation(
-    model: nn.Module, tokens: list[int], n: int, cfg: EffortConfig, temp: float,
-    eos_id: int, generator: torch.Generator | None, no_eos_until: int, model_kwargs: dict,
+    model: nn.Module,
+    tokens: list[int],
+    n: int,
+    cfg: EffortConfig,
+    temp: float,
+    eos_id: int,
+    generator: torch.Generator | None,
+    no_eos_until: int,
+    model_kwargs: dict,
     rep_window: int = 128,
 ) -> list[int]:
     """Autoregressively extend `tokens` by up to `n` tokens (no KV cache: search
@@ -108,8 +119,9 @@ def _sample_continuation(
         if len(out) < no_eos_until:
             logits = logits.clone()
             logits[eos_id] = float("-inf")
-        nxt = _sample_next(logits, temp, cfg.top_k, cfg.repetition_penalty,
-                           out[-rep_window:], generator)
+        nxt = _sample_next(
+            logits, temp, cfg.top_k, cfg.repetition_penalty, out[-rep_window:], generator
+        )
         if nxt == eos_id:
             break
         out.append(nxt)
@@ -118,8 +130,14 @@ def _sample_continuation(
 
 @torch.no_grad()
 def score_continuation(
-    model: nn.Module, tokens: list[int], prompt_len: int, *, cfg: EffortConfig,
-    target_len: int = 0, probe: Any = None, model_kwargs: dict | None = None,
+    model: nn.Module,
+    tokens: list[int],
+    prompt_len: int,
+    *,
+    cfg: EffortConfig,
+    target_len: int = 0,
+    probe: Any = None,
+    model_kwargs: dict | None = None,
 ) -> float:
     """Rerank score for a full sequence (see module docstring for the formula)."""
     if len(tokens) <= prompt_len:
@@ -141,8 +159,14 @@ def score_continuation(
 
 @torch.no_grad()
 def _search(
-    model: nn.Module, prompt: list[int], cfg: EffortConfig, max_new: int, eos_id: int,
-    seed: int, probe: Any, model_kwargs: dict,
+    model: nn.Module,
+    prompt: list[int],
+    cfg: EffortConfig,
+    max_new: int,
+    eos_id: int,
+    seed: int,
+    probe: Any,
+    model_kwargs: dict,
 ) -> tuple[list[int], float]:
     """One search pass (single-shot best-of-N or chunked beam)."""
     prompt_len = len(prompt)
@@ -153,11 +177,29 @@ def _search(
         best, best_score = None, float("-inf")
         for i in range(cfg.instances):
             cand = _sample_continuation(
-                model, prompt, max_new, cfg, _instance_temp(cfg.temperature, i),
-                eos_id, generator, no_eos_until, model_kwargs,
+                model,
+                prompt,
+                max_new,
+                cfg,
+                _instance_temp(cfg.temperature, i),
+                eos_id,
+                generator,
+                no_eos_until,
+                model_kwargs,
             )
-            s = score_continuation(model, cand, prompt_len, cfg=cfg, target_len=max_new,
-                                   probe=probe, model_kwargs=model_kwargs) if cfg.instances > 1 else 0.0
+            s = (
+                score_continuation(
+                    model,
+                    cand,
+                    prompt_len,
+                    cfg=cfg,
+                    target_len=max_new,
+                    probe=probe,
+                    model_kwargs=model_kwargs,
+                )
+                if cfg.instances > 1
+                else 0.0
+            )
             if s > best_score:
                 best, best_score = cand, s
         return best, best_score
@@ -170,24 +212,41 @@ def _search(
                 pool.append(beam)
                 continue
             for i in range(cfg.instances):
-                pool.append(_sample_continuation(
-                    model, beam, cfg.chunk, cfg, _instance_temp(cfg.temperature, i),
-                    eos_id, generator, no_eos_until, model_kwargs,
-                ))
+                pool.append(
+                    _sample_continuation(
+                        model,
+                        beam,
+                        cfg.chunk,
+                        cfg,
+                        _instance_temp(cfg.temperature, i),
+                        eos_id,
+                        generator,
+                        no_eos_until,
+                        model_kwargs,
+                    )
+                )
         target = min(max_new, (round_idx + 1) * cfg.chunk)
         unique = {tuple(c): c for c in pool}
         scored = sorted(
             unique.values(),
-            key=lambda c: score_continuation(model, c, prompt_len, cfg=cfg, target_len=target,
-                                              probe=probe, model_kwargs=model_kwargs),
+            key=lambda c: score_continuation(
+                model,
+                c,
+                prompt_len,
+                cfg=cfg,
+                target_len=target,
+                probe=probe,
+                model_kwargs=model_kwargs,
+            ),
             reverse=True,
         )
         frontier = scored[: cfg.beams]
         if all(len(b) - prompt_len >= max_new for b in frontier):
             break
     best = frontier[0]
-    return best, score_continuation(model, best, prompt_len, cfg=cfg, target_len=max_new,
-                                    probe=probe, model_kwargs=model_kwargs)
+    return best, score_continuation(
+        model, best, prompt_len, cfg=cfg, target_len=max_new, probe=probe, model_kwargs=model_kwargs
+    )
 
 
 @torch.no_grad()
@@ -219,7 +278,11 @@ def effort_generate(
         raise ValueError(f"unknown effort level {level!r}; choose from {list(EFFORT_LEVELS)}")
     cfg = EFFORT_LEVELS[level]
     eos_id = getattr(tokenizer, "eos_id", 0)
-    prompt_ids = tokenizer.encode(prompt, add_bos=False) if _accepts_bos(tokenizer) else tokenizer.encode(prompt)
+    prompt_ids = (
+        tokenizer.encode(prompt, add_bos=False)
+        if _accepts_bos(tokenizer)
+        else tokenizer.encode(prompt)
+    )
     prompt_ids = list(prompt_ids)
 
     was_training = model.training
@@ -229,16 +292,31 @@ def effort_generate(
             single = EffortConfig(**{**cfg.__dict__, "runs": 1})
             best, best_score = None, float("-inf")
             for r in range(cfg.runs):
-                cand, _ = _search(model, prompt_ids, single, max_new_tokens, eos_id,
-                                  seed + 1000 * (r + 1), probe, model_kwargs)
-                s = score_continuation(model, cand, len(prompt_ids), cfg=cfg,
-                                       target_len=max_new_tokens, probe=probe,
-                                       model_kwargs=model_kwargs)
+                cand, _ = _search(
+                    model,
+                    prompt_ids,
+                    single,
+                    max_new_tokens,
+                    eos_id,
+                    seed + 1000 * (r + 1),
+                    probe,
+                    model_kwargs,
+                )
+                s = score_continuation(
+                    model,
+                    cand,
+                    len(prompt_ids),
+                    cfg=cfg,
+                    target_len=max_new_tokens,
+                    probe=probe,
+                    model_kwargs=model_kwargs,
+                )
                 if s > best_score:
                     best, best_score = cand, s
         else:
-            best, best_score = _search(model, prompt_ids, cfg, max_new_tokens, eos_id,
-                                       seed, probe, model_kwargs)
+            best, best_score = _search(
+                model, prompt_ids, cfg, max_new_tokens, eos_id, seed, probe, model_kwargs
+            )
     finally:
         model.train(was_training)
 

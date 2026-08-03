@@ -12,12 +12,6 @@ from minimodel.inference.run import (
     load_for_inference,
     stream_completion,
 )
-from minimodel.inference.search import (
-    EFFORT_LEVELS,
-    EffortConfig,
-    effort_generate,
-    score_continuation,
-)
 from minimodel.inference.sampling import (
     SamplingConfig,
     apply_penalties,
@@ -26,6 +20,12 @@ from minimodel.inference.sampling import (
     generate_batch,
     generate_text,
     stream_generate,
+)
+from minimodel.inference.search import (
+    EFFORT_LEVELS,
+    EffortConfig,
+    effort_generate,
+    score_continuation,
 )
 
 __all__ = [

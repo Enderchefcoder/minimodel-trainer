@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-import torch
 
 from minimodel.inference.quality_probe import QualityProbe, train_quality_probe
 from minimodel.inference.search import (
@@ -24,8 +23,9 @@ class TestEffortLadder:
 
     @pytest.mark.parametrize("level", ["low", "medium", "high", "xhigh"])
     def test_generates_text(self, tiny_model, tokenizer, level):
-        text = effort_generate(tiny_model, tokenizer, "The river", level=level,
-                               max_new_tokens=12, seed=0)
+        text = effort_generate(
+            tiny_model, tokenizer, "The river", level=level, max_new_tokens=12, seed=0
+        )
         assert isinstance(text, str)
         assert text.startswith("The river")
 
@@ -34,8 +34,9 @@ class TestEffortLadder:
             effort_generate(tiny_model, tokenizer, "hi", level="turbo")
 
     def test_return_score(self, tiny_model, tokenizer):
-        text, score = effort_generate(tiny_model, tokenizer, "The", level="high",
-                                      max_new_tokens=8, seed=1, return_score=True)
+        text, score = effort_generate(
+            tiny_model, tokenizer, "The", level="high", max_new_tokens=8, seed=1, return_score=True
+        )
         assert isinstance(text, str)
         assert isinstance(score, float)
 
@@ -58,8 +59,9 @@ class TestQualityProbe:
     """The learned real-vs-generated reranking probe."""
 
     def test_train_and_predict(self, tiny_model, tokenizer, texts):
-        probe = train_quality_probe(tiny_model, tokenizer, texts[:24], n_prompts=24,
-                                    max_new_tokens=16, epochs=120)
+        probe = train_quality_probe(
+            tiny_model, tokenizer, texts[:24], n_prompts=24, max_new_tokens=16, epochs=120
+        )
         assert isinstance(probe, QualityProbe)
         assert probe.dim == tiny_model.dim
         ids = tokenizer.encode(texts[0], add_bos=False)
@@ -67,8 +69,9 @@ class TestQualityProbe:
         assert 0.0 <= p <= 1.0
 
     def test_save_load_roundtrip(self, tiny_model, tokenizer, texts, tmp_path):
-        probe = train_quality_probe(tiny_model, tokenizer, texts[:16], n_prompts=16,
-                                    max_new_tokens=12, epochs=60)
+        probe = train_quality_probe(
+            tiny_model, tokenizer, texts[:16], n_prompts=16, max_new_tokens=12, epochs=60
+        )
         path = probe.save(tmp_path / "probe.pt")
         assert path.exists()
         # A few-KB artifact, like Glint-2's 3.5 KB probe.
@@ -84,8 +87,9 @@ class TestQualityProbe:
             train_quality_probe(tiny_model, tokenizer, ["hi"], n_prompts=1)
 
     def test_probe_used_in_effort_score(self, tiny_model, tokenizer, texts):
-        probe = train_quality_probe(tiny_model, tokenizer, texts[:16], n_prompts=16,
-                                    max_new_tokens=12, epochs=60)
+        probe = train_quality_probe(
+            tiny_model, tokenizer, texts[:16], n_prompts=16, max_new_tokens=12, epochs=60
+        )
         cfg = EffortConfig(probe_weight=2.0)
         ids = tokenizer.encode("The river runs east", add_bos=False)
         with_probe = score_continuation(tiny_model, ids, 2, cfg=cfg, probe=probe)
