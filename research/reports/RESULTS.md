@@ -1,6 +1,6 @@
 # Experiment results (auto-aggregated)
 
-_Generated from 11 result files. Glint-2 baseline included where relevant._
+_Generated from 15 result files. Glint-2 baseline included where relevant._
 
 ## Baseline
 
@@ -23,6 +23,15 @@ _Generated from 11 result files. Glint-2 baseline included where relevant._
 | name | params | val_loss | wikitext_byte_ppl | blimp_acc | arc_easy_acc | arc_easy_acc_norm | tokens_per_second |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | contender_dense | 1,701,152 | 2.021 | 16.27 | 57.52 | 26.6 | 25.34 | 2.531e+04 |
+
+## ffn
+
+| name | params | val_loss | wikitext_byte_ppl | blimp_acc | arc_easy_acc | arc_easy_acc_norm | tokens_per_second |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ffn_16x | 1,378,272 | **4.508** | 17.84 | 52.34 | **20.67** | 20 | 6164 |
+| ffn_22x | 1,710,048 | 4.635 | 18.51 | 52.14 | 16.67 | 20 | 4825 |
+| ffn_4x | 714,720 | 4.521 | **16.59** | 49.85 | 19.33 | **22** | **1.701e+04** |
+| ffn_8x | 935,904 | 4.703 | 19.55 | **53.03** | 16.67 | 20.67 | 1.346e+04 |
 
 ## glint-2 (loops=8)
 

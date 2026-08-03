@@ -140,6 +140,20 @@ minimodel vision train --config configs/vision/pixelgpt_24x24.yaml
 minimodel vision sample -m runs/pixelgpt-24x24/model -n 16 -o sprites.png --scale 8
 ```
 
+## Research: beating Glint-2
+
+The [`research/`](research/) directory holds a full study that uses this toolkit
+to reverse-engineer and beat Glint-Research's [Glint-2](https://huggingface.co/Glint-Research/Glint-2)
+(a ~1M-class looped model). Headline: on a matched head-to-head — same ~1.7M
+parameters, same byte-normalised perplexity, same eval harness, same
+distribution — our dense contender reaches **byte-ppl 1.525 vs Glint-2's 2.405
+(37% better)**, trained in 32 minutes on 4 CPU cores. We also show Glint-2's
+test-time loop scaling is broken (byte-ppl 3.5 → 125 gibberish from 8 → 16
+loops) while our stabilised, Poisson-loop-sampled models stay flat or improve.
+See [`research/reports/09_synthesis.md`](research/reports/09_synthesis.md) for
+the bottom line and [`research/README.md`](research/README.md) for the full
+program. Everything is reproducible and every claim is a committed result JSON.
+
 ## Documentation
 
 | | |

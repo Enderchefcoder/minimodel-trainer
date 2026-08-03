@@ -67,9 +67,10 @@ The design levers our ablations test are each grounded:
   path through a deep weight-shared stack. Glint-2 omits these; report 04
   measures their effect on the *identical* shape.
 - **Muon optimizer** (Jordan et al., 2024) — orthogonalised momentum; the
-  small-model speedrun optimizer. Report 05.
+  small-model speedrun optimizer. Report 04.
 - **WSD schedule** (MiniCPM, Hu et al., 2024,
-  [arXiv:2404.06395](https://arxiv.org/abs/2404.06395)). Report 06.
+  [arXiv:2404.06395](https://arxiv.org/abs/2404.06395)) — used by the contender
+  and in the recipe (report 09).
 - **Data quality** — TinyStories (Eldan & Li, 2023,
   [arXiv:2305.07759](https://arxiv.org/abs/2305.07759)) is Glint-2's evident
   training distribution (its samples are pure TinyStories). Textbook/synthetic
@@ -95,7 +96,7 @@ implemented them for our own models in `src/inference/search.py` and
 | Truncated backprop through loops | Iso-depth 2026 | training-efficiency option |
 | Effort ladder (best-of-N + chunked beam) | Glint-2 / Snell 2024 | `inference/search.py` |
 | Quality / correctness probe | Glint-2 | `inference/quality_probe.py` |
-| Value residuals, QK-norm, Muon, WSD | as cited | ablations, reports 03–06 |
+| Value residuals, QK-norm, Muon, WSD | as cited | ablations, reports 03, 04, 07 |
 | Byte-normalised perplexity for fair comparison | (our methodology) | `eval_harness.py` |
 
 The experimental reports (03–07) measure each lever on real runs; report 09

@@ -14,6 +14,7 @@ and written up in `reports/`.
 | 02 | [slm_techniques](reports/02_slm_techniques.md) | Literature + the techniques we adopt, with citations |
 | 03 | [architecture_bakeoff](reports/03_architecture_bakeoff.md) | At a fixed token budget, dense beats looped per-token |
 | 04 | [stabilizers_optimizer](reports/04_stabilizers_optimizer.md) | Value residuals + Muon; what helps looped training |
+| 05 | [ffn_ratio](reports/05_ffn_ratio.md) | Is Glint-2's 22× FFN the right allocation? |
 | 07 | [loop_robustness](reports/07_loop_robustness.md) | Glint-2 breaks off 8 loops (35×); ours span 1.04–1.19× and scale up |
 | 08 | [inference_wins](reports/08_inference_wins.md) | Effort ladder + quality probe: architecture-agnostic upside |
 | 09 | [synthesis](reports/09_synthesis.md) | The recipe to beat Glint-2, and the CPU-budget contender |

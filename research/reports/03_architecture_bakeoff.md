@@ -45,8 +45,8 @@ training distribution — are the sensitive discriminators at this budget.)
    (loop+coda, tied embed, 22× FFN) is the worst looped variant on byte-ppl
    *except* supra2, and by far the slowest. The pure-loop variant (no coda,
    wider-but-fewer) edges it out (17.94 vs 18.51), suggesting the coda block's
-   params would be better spent elsewhere at this budget. (Report 05 sweeps FFN
-   width directly.)
+   params would be better spent elsewhere at this budget. (Report 05, the
+   FFN-width sweep, tests whether the 22× ratio is the right allocation.)
 
 4. **MoE matches dense quality at equal *active* params** (byte-ppl 16.29 vs
    16.28) but needs 2.85M total params to do it — no advantage at this scale,
