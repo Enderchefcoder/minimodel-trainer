@@ -56,6 +56,9 @@ notes: reusable lessons first, then a scratchpad for the active task.
   and provide ASCII fallbacks so nothing hard-requires it.
 - Generated-artifact pattern that works: generator script + committed output
   + `--check` mode wired into tests/CI (used for both template families).
+- Root `.gitignore` pattern `data/` matches *any* path segment named `data/`
+  (including `src/vision/data/` and `research/data/`). Re-include package trees with
+  `!src/vision/data/**` (and `git check-ignore -v` before assuming files track).
 
 # Scratchpad
 
