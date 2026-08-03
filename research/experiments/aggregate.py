@@ -22,8 +22,11 @@ LOWER_BETTER = {"val_loss", "wikitext_byte_ppl", "wikitext_ppl", "final_loss"}
 def load_results() -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
     for path in sorted(RESULTS.glob("*.json")):
+        if path.name in {"loops_scaling.json", "loop_robustness.json"}:
+            continue  # nested structures, handled separately
         data = json.loads(path.read_text())
-        out[data.get("name", path.stem)] = data
+        data.setdefault("name", data.get("model", path.stem))
+        out[data["name"]] = data
     return out
 
 

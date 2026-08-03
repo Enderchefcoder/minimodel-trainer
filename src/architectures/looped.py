@@ -30,6 +30,7 @@ or fewer loops.
 
 from __future__ import annotations
 
+import math
 import random
 from collections.abc import Mapping
 from typing import Any
@@ -48,6 +49,18 @@ from minimodel.architectures.layers import (
 )
 
 __all__ = ["LoopedTransformer", "LoopedTransformerConfig"]
+
+
+def _poisson(rate: float) -> int:
+    """Sample a Poisson variate via Knuth's algorithm (rate is small here)."""
+    rate = max(1e-6, min(rate, 60.0))
+    limit = math.exp(-rate)
+    k, product = 0, 1.0
+    while True:
+        k += 1
+        product *= random.random()
+        if product <= limit:
+            return k - 1
 
 #: Default values for every key the architecture understands. The YAML templates
 #: only need to specify what they change.
@@ -74,6 +87,17 @@ LoopedTransformerConfig: dict[str, Any] = {
     "train_loops": 8,
     "min_loops": 4,
     "variable_loops": True,
+    #: How to sample the loop count during training when variable_loops is on.
+    #: ``uniform`` = U{min..train}; ``poisson`` = clipped log-normal Poisson
+    #: centred on train_loops (Huginn/Geiping 2025), which trains the model to
+    #: work at loop counts beyond train_loops and is more robust to test-time
+    #: loop scaling.
+    "loop_sampling": "uniform",
+    "loop_poisson_sigma": 0.5,
+    #: Truncated backprop through the loop: gradients flow only through the last
+    #: N iterations (0 / None = all). ~30% backward-FLOP saving per skipped loop
+    #: (iso-depth scaling laws, 2026). Inference is unaffected.
+    "backprop_loops": None,
     "max_loops_table": 16,
     "loop_lora_rank": 4,
     "outer_gate_init": 0.1,
@@ -150,6 +174,9 @@ class LoopedTransformer(BaseLanguageModel):
         self.embedding_type = str(cfg["embedding_type"]).lower()
         self.use_timestep_scale = bool(cfg["use_timestep_scale"])
         self.use_outer_residual = bool(cfg["use_outer_residual"])
+        self.loop_sampling = str(cfg["loop_sampling"]).lower()
+        self.loop_poisson_sigma = float(cfg["loop_poisson_sigma"])
+        self.backprop_loops = cfg["backprop_loops"]
 
         if self.embedding_type == "factorized":
             self.embedding = FactorizedEmbedding(self.vocab_size, int(cfg["embedding_rank"]), dim)
@@ -255,6 +282,16 @@ class LoopedTransformer(BaseLanguageModel):
                 raise ValueError(f"loops must be >= 1, got {loops}")
             return int(loops)
         if self.training and self.variable_loops and self.min_loops < self.train_loops:
+            if self.loop_sampling == "poisson":
+                # Log-normal Poisson centred on train_loops (Huginn 2025): draw
+                # tau ~ N(log(mean) - sigma^2/2, sigma), r ~ Poisson(e^tau).
+                # Clipped to [min_loops, max_loops_table] so the extra table
+                # slots are actually exercised during training.
+                mean = float(self.train_loops)
+                sigma = self.loop_poisson_sigma
+                tau = math.log(mean) - 0.5 * sigma * sigma + sigma * random.gauss(0.0, 1.0)
+                sampled = _poisson(math.exp(tau)) + self.min_loops
+                return max(self.min_loops, min(sampled, self.max_loops_table))
             return random.randint(self.min_loops, self.train_loops)
         return self.train_loops
 
@@ -305,11 +342,21 @@ class LoopedTransformer(BaseLanguageModel):
         sin = sin_full[:, :, q_offset : q_offset + seq_len]
 
         n_loops = self.resolve_loops(loops)
+        # Truncated backprop: detach the stream so gradients flow only through
+        # the last `backprop_loops` iterations (training only; ~30% backward
+        # FLOP saving per skipped loop).
+        stop_grad_before = -1
+        if self.training and self.backprop_loops:
+            stop_grad_before = max(0, n_loops - int(self.backprop_loops))
 
         for block in self.prelude:
             x, v_prev = block(x, cos, sin, v_prev=v_prev, cache=cache, q_offset=q_offset)
 
         for step in range(n_loops):
+            if step == stop_grad_before and step > 0:
+                x = x.detach()
+                if v_prev is not None:
+                    v_prev = v_prev.detach()
             table_index = min(step, self.max_loops_table - 1)
             gated = x + self.loop_embed.weight[table_index]
             delta = self._loop_delta(gated, table_index)
