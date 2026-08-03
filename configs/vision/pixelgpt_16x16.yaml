@@ -1,0 +1,15 @@
+# Small pixel-art model that trains in minutes. Good for checking a new dataset.
+extends: pixelgpt_24x24.yaml
+
+run_name: pixelgpt-16x16
+
+model:
+  template: pixelgpt_16x16_3m
+
+data:
+  train: data/images/sprites16
+
+training:
+  max_steps: 5000
+  seq_len: 256
+  lr: 1.0e-3

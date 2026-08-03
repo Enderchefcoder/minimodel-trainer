@@ -1,0 +1,35 @@
+# Reasoning distillation from OpenThoughts-style traces.
+#
+# For models under ~50M parameters, traces are usually too long to imitate
+# faithfully. Two knobs control that:
+#   reasoning_loss_weight  < 1 spends more capacity on the answer than the trace
+#   max_length             truncates traces at tokenization time
+
+stage: cot
+tokenizer: artifacts/tokenizer.json
+
+model:
+  checkpoint: runs/dense-30m-instruct/model
+
+data:
+  train: data/tokenized/openthoughts3
+  eval: data/tokenized/openthoughts3-val
+
+training:
+  run_name: dense-30m-reasoning
+  max_steps: 4000
+  batch_size: 8
+  seq_len: 1024
+  grad_accum_steps: 4
+  lr: 1.0e-5
+  warmup: 0.03
+
+  reasoning_loss_weight: 0.5
+  answer_loss_weight: 1.0
+  # Keeps the <|/think|> transition sharp, which is what makes budget-forced
+  # decoding work at inference time.
+  enforce_think_close: 0.1
+
+  log_every: 20
+  eval_every: 250
+  save_every: 500

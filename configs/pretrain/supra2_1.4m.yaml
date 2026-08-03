@@ -1,0 +1,26 @@
+# The 1.4M looped transformer from src/architectures/templates/supra2_1406240.yaml.
+# Trains on a single GPU in a few hours; runs on CPU overnight.
+extends: _base.yaml
+
+run_name: supra2-1.4m
+
+model:
+  template: supra2_1406240
+
+data:
+  # A 4096-token vocabulary is what the template assumes; train the tokenizer
+  # with `minimodel tokenizer train --vocab-size 4096`.
+  train: data/tokenized/fineweb-edu
+  eval: data/tokenized/fineweb-edu-val
+
+training:
+  max_steps: 40000
+  batch_size: 64
+  seq_len: 128
+  lr: 3.0e-3
+  optimizer: adamw
+  weight_decay: 0.1
+  lr_schedule: cosine
+  warmup: 0.02
+  eval_every: 1000
+  save_every: 2000

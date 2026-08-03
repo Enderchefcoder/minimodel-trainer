@@ -1,0 +1,36 @@
+# Class-conditional diffusion transformer on CIFAR-10.
+#
+#   minimodel vision data prepare --dataset cifar10 --size 32 -o data/images/cifar
+#   minimodel vision train --config configs/vision/dit_cifar.yaml
+#   minimodel vision sample -m runs/dit-cifar/model --label 3 -n 16 --guidance 3
+
+kind: diffusion
+run_name: dit-cifar
+
+model:
+  template: dit_tiny_32
+  overrides:
+    condition: class
+    num_classes: 10
+
+data:
+  train: data/images/cifar
+  eval: data/images/cifar-val
+
+training:
+  max_steps: 60000
+  batch_size: 128
+  lr: 3.0e-4
+  weight_decay: 0.0
+  warmup: 0.02
+  grad_clip: 1.0
+
+  objective: flow              # rectified flow; 25-50 sampling steps
+  timestep_distribution: logit_normal
+  ema_decay: 0.9995            # sampling uses the EMA weights
+  horizontal_flip: true
+
+  log_every: 100
+  eval_every: 2000
+  sample_every: 5000
+  save_every: 5000

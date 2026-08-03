@@ -1,0 +1,26 @@
+# Instruction-based image editing.
+#
+# Recipe: pretrain on the large synthetic InstructPix2Pix corpus, then
+# fine-tune on the small human-annotated MagicBrush set.
+kind: edit
+run_name: edit-64
+tokenizer: artifacts/tokenizer.json
+
+model:
+  template: edit_small_64
+
+data:
+  train: data/images/instructpix2pix
+  eval: data/images/magicbrush
+
+training:
+  max_steps: 100000
+  batch_size: 32
+  grad_accum_steps: 2
+  lr: 1.0e-4
+  ema_decay: 0.9995
+  # Flipping breaks left/right instructions ("move it to the left").
+  horizontal_flip: false
+  log_every: 100
+  eval_every: 2000
+  save_every: 5000

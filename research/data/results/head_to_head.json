@@ -1,0 +1,9 @@
+{
+  "note": "Matched head-to-head: same harness, same byte-ppl metric, same TinyStories distribution, ~equal params.",
+  "distribution": "TinyStories validation (first 120k chars), byte-normalised perplexity",
+  "models": {
+    "glint-2": {"params": 1710049, "tinystories_byte_ppl": 2.405, "bits_per_byte": 1.2663, "loops": 8},
+    "contender_dense_ours": {"params": 1701152, "tinystories_byte_ppl": 1.525, "bits_per_byte": 0.6088, "train_tokens": 49152000, "train_minutes_4cpu": 32}
+  },
+  "improvement_pct": 36.6
+}

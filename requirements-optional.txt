@@ -1,0 +1,14 @@
+# Optional integrations. Nothing in the core trainer requires these, but the
+# corresponding features light up automatically when they are installed.
+#
+#   datasets        -> `minimodel data pull` can stream Hugging Face datasets
+#   tokenizers      -> fast Rust BPE training instead of the pure-Python trainer
+#   huggingface-hub -> `minimodel card push` and hub checkpoint upload/download
+#   safetensors     -> safetensors checkpoint format
+#   matplotlib      -> loss curves and benchmark charts
+
+datasets>=2.14
+tokenizers>=0.15
+huggingface-hub>=0.20
+safetensors>=0.4
+matplotlib>=3.7

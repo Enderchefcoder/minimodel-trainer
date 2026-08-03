@@ -1,0 +1,17 @@
+# Griffin-style hybrid at 8K context. Only one layer in three keeps a KV cache,
+# so long-context decoding stays cheap.
+extends: _base.yaml
+
+run_name: hybrid-35m-8k
+
+model:
+  template: hybrid_35m
+
+training:
+  max_steps: 60000
+  batch_size: 8
+  seq_len: 2048
+  grad_accum_steps: 16
+  lr: 1.2e-3
+  lr_schedule: wsd
+  warmup: 0.01

@@ -1,0 +1,229 @@
+# Image dataset registry.
+#
+# Same shape as datasets.yaml, for image corpora. `minimodel vision data prepare
+# --dataset <name>` materialises one into an image corpus directory.
+#
+# Field reference
+#   source              huggingface | local
+#   repo                Hugging Face dataset id
+#   image_field         column holding the image
+#   source_image_field  column holding the "before" image (edit datasets)
+#   caption_field       column holding the caption or edit instruction
+#   label_field         column holding a class label
+#   kind                generation | pixelart | edit | classification
+#   image_size          the resolution the recipe is written for
+
+version: 1
+
+datasets:
+  # ==========================================================================
+  # Pixel art
+  # ==========================================================================
+  pixelgpt-24x24:
+    source: huggingface
+    repo: unstonio/pixelgpt-24x24-20k
+    split: train
+    image_field: image
+    kind: pixelart
+    image_size: 24
+    images: 20K
+    license: unknown
+    description: >-
+      20K 24x24 pixel-art sprites. The reference corpus for the bundled
+      PixelGPT configuration: small, consistent palette, strong vertical
+      symmetry, and small enough that a 10M-parameter model can fit it well.
+
+  pixel-art-sprites:
+    source: huggingface
+    repo: Norod78/Pixel-Art-Sprites
+    split: train
+    image_field: image
+    kind: pixelart
+    image_size: 32
+    images: 90K
+    license: cc-by-4.0
+    description: Character sprites at 32x32. Wider palette than the 24x24 set.
+
+  diffusiondb-pixelart:
+    source: huggingface
+    repo: jainr3/diffusiondb-pixelart
+    split: train
+    image_field: image
+    caption_field: text
+    kind: pixelart
+    image_size: 64
+    images: 20K
+    license: cc0-1.0
+    description: Captioned pixel-art images; use for text-conditioned pixel art.
+
+  tiny-hero-sprites:
+    source: huggingface
+    repo: pixparse/tiny-hero-sprites
+    split: train
+    image_field: image
+    kind: pixelart
+    image_size: 16
+    images: 12K
+    license: unknown
+    description: 16x16 hero sprites. Fast enough to iterate on in minutes.
+
+  # ==========================================================================
+  # General image generation
+  # ==========================================================================
+  cifar10:
+    source: huggingface
+    repo: uoft-cs/cifar10
+    split: train
+    image_field: img
+    label_field: label
+    kind: generation
+    image_size: 32
+    images: 50K
+    license: unknown
+    description: >-
+      The standard 32x32 diffusion benchmark. Ten classes, small enough to
+      train a usable class-conditional model in a couple of GPU-hours.
+
+  mnist:
+    source: huggingface
+    repo: ylecun/mnist
+    split: train
+    image_field: image
+    label_field: label
+    kind: generation
+    image_size: 28
+    images: 60K
+    license: mit
+    description: Handwritten digits. Useful as a correctness check for a new sampler.
+
+  fashion-mnist:
+    source: huggingface
+    repo: zalando-datasets/fashion_mnist
+    split: train
+    image_field: image
+    label_field: label
+    kind: generation
+    image_size: 28
+    images: 60K
+    license: mit
+    description: Clothing items; harder than MNIST, still tiny.
+
+  celeba-hq-64:
+    source: huggingface
+    repo: student/celebA
+    split: train
+    image_field: image
+    kind: generation
+    image_size: 64
+    images: 30K
+    license: unknown
+    description: Faces at 64x64. The classic test of whether a model gets structure right.
+
+  flowers102:
+    source: huggingface
+    repo: nelorth/oxford-flowers
+    split: train
+    image_field: image
+    label_field: label
+    kind: generation
+    image_size: 64
+    images: 8K
+    license: unknown
+    description: 102 flower categories. Small corpus - use the UNet, not the DiT.
+
+  pokemon-blip:
+    source: huggingface
+    repo: lambdalabs/pokemon-blip-captions
+    split: train
+    image_field: image
+    caption_field: text
+    kind: generation
+    image_size: 64
+    images: 833
+    license: unknown
+    description: >-
+      Captioned Pokemon sprites. Tiny, which makes it the fastest way to check
+      that a text-conditioned pipeline is wired up correctly end to end.
+
+  anime-faces:
+    source: huggingface
+    repo: huggan/anime-faces
+    split: train
+    image_field: image
+    kind: generation
+    image_size: 64
+    images: 21K
+    license: unknown
+    description: Anime face crops at 64x64.
+
+  butterflies:
+    source: huggingface
+    repo: huggan/smithsonian_butterflies_subset
+    split: train
+    image_field: image
+    kind: generation
+    image_size: 64
+    images: 1K
+    license: cc0-1.0
+    description: 1K butterfly photographs. The standard diffusion tutorial corpus.
+
+  # ==========================================================================
+  # Instruction-based editing
+  # ==========================================================================
+  instructpix2pix:
+    source: huggingface
+    repo: timbrooks/instructpix2pix-clip-filtered
+    split: train
+    image_field: edited_image
+    source_image_field: original_image
+    caption_field: edit_prompt
+    kind: edit
+    image_size: 64
+    images: 313K
+    license: unknown
+    description: >-
+      The dataset instruction editing was invented on: synthetic before/after
+      pairs with an edit instruction, CLIP-filtered for consistency.
+
+  magicbrush:
+    source: huggingface
+    repo: osunlp/MagicBrush
+    split: train
+    image_field: target_img
+    source_image_field: source_img
+    caption_field: instruction
+    kind: edit
+    image_size: 64
+    images: 10K
+    license: cc-by-4.0
+    description: >-
+      Human-annotated edits. Much smaller than InstructPix2Pix but real rather
+      than synthetic; fine-tuning on it after pretraining on IP2P is the recipe.
+
+  emu-edit-test:
+    source: huggingface
+    repo: facebook/emu_edit_test_set
+    split: validation
+    image_field: edited_image
+    source_image_field: image
+    caption_field: instruction
+    kind: edit
+    image_size: 64
+    images: 3K
+    license: cc-by-nc-4.0
+    description: Evaluation set for instruction editing, covering seven edit types.
+
+  # ==========================================================================
+  # Local / offline
+  # ==========================================================================
+  synthetic-sprites:
+    source: local
+    path: ""
+    kind: pixelart
+    image_size: 24
+    images: 512
+    license: mit
+    description: >-
+      Procedurally generated symmetric sprites, produced in-process by
+      `minimodel vision data prepare --synthetic`. Requires no download and is
+      what the vision quickstart and test suite use.

@@ -1,0 +1,18 @@
+# SFT for models under ~20M parameters. Short answers only: a model this small
+# that learns to write five paragraphs writes five paragraphs of nothing.
+extends: instruct.yaml
+
+model:
+  checkpoint: runs/looped-16m/model
+
+data:
+  train: data/tokenized/sft-small
+  eval: data/tokenized/sft-small-val
+
+training:
+  run_name: looped-16m-instruct
+  max_steps: 1500
+  batch_size: 32
+  seq_len: 512
+  lr: 5.0e-5
+  replay_fraction: 0.15

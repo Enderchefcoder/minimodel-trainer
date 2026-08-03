@@ -1,0 +1,9 @@
+# IPO variant: does not saturate, so it overfits less on small preference sets.
+# Prefer this when you have fewer than ~10K pairs.
+extends: dpo.yaml
+
+training:
+  run_name: dense-30m-ipo
+  loss_type: ipo
+  beta: 0.3
+  lr: 1.0e-6

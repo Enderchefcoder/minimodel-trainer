@@ -1,0 +1,28 @@
+# Self-play fine-tuning: turns SFT data into preference data with no labels.
+#
+# Two or three iterations is the useful range; after that the model's own
+# samples are too close to the data for the gradient to say anything.
+
+stage: spin
+tokenizer: artifacts/tokenizer.json
+
+model:
+  checkpoint: runs/dense-30m-instruct/model
+
+data:
+  pairs: data/raw/alpaca-cleaned.jsonl   # prompt/answer records, not pairs
+
+training:
+  run_name: dense-30m-spin
+  max_steps: 900
+  iterations: 3
+  steps_per_iteration: 300
+  batch_size: 4
+  lr: 5.0e-7
+  beta: 0.1
+  sample_temperature: 0.9
+  max_new_tokens: 256
+  prompts_per_iteration: 2000
+
+  log_every: 10
+  save_every: 300

@@ -1,0 +1,58 @@
+{
+  "loop_grid": [
+    2,
+    4,
+    6,
+    8,
+    10,
+    12,
+    16
+  ],
+  "glint": {
+    "name": "glint-2",
+    "rows": [
+      {
+        "loops": 2,
+        "wikitext_byte_ppl": 82.029,
+        "blimp_acc": 51.54,
+        "seconds": 1.9
+      },
+      {
+        "loops": 4,
+        "wikitext_byte_ppl": 38.077,
+        "blimp_acc": 54.73,
+        "seconds": 2.4
+      },
+      {
+        "loops": 6,
+        "wikitext_byte_ppl": 13.114,
+        "blimp_acc": 59.1,
+        "seconds": 2.9
+      },
+      {
+        "loops": 8,
+        "wikitext_byte_ppl": 3.516,
+        "blimp_acc": 70.75,
+        "seconds": 3.7
+      },
+      {
+        "loops": 10,
+        "wikitext_byte_ppl": 5.879,
+        "blimp_acc": 55.22,
+        "seconds": 4.2
+      },
+      {
+        "loops": 12,
+        "wikitext_byte_ppl": 29.291,
+        "blimp_acc": 52.54,
+        "seconds": 4.8
+      },
+      {
+        "loops": 16,
+        "wikitext_byte_ppl": 125.369,
+        "blimp_acc": 50.65,
+        "seconds": 6.0
+      }
+    ]
+  }
+}

@@ -1,6 +1,12 @@
 name: supra2_1.4m
 params: 1406240
 family: looped-transformer
+description: >-
+  Looped transformer, 1.4M params. The reference annotated template: unlike the
+  generated ones, every section below is the written specification of the
+  architecture, and the builder reads the model config directly out of it.
+recommended_tokens: 0.3-1B
+training_defaults: {lr: 3.0e-3, batch_tokens: 8192, seq_len: 128}
 
 tokenizer:
   type: bpe

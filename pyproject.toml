@@ -1,0 +1,139 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minimodel-trainer"
+version = "0.1.0"
+description = "An end-to-end toolkit for training small language models from scratch: tokenizer, data, pretraining, post-training, RL, evaluation, merging and inference."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Enderchefcoder" }]
+keywords = [
+    "language-model",
+    "pretraining",
+    "post-training",
+    "rlhf",
+    "dpo",
+    "transformer",
+    "looped-transformer",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.1",
+    "numpy>=1.24",
+    "pyyaml>=6.0",
+    "tqdm>=4.65",
+    "requests>=2.28",
+]
+
+[project.optional-dependencies]
+# Plotting for loss curves, benchmark charts and comparison reports.
+viz = ["matplotlib>=3.7"]
+# Faster tokenizer training and Hugging Face interop.
+hf = ["datasets>=2.14", "tokenizers>=0.15", "huggingface-hub>=0.20", "safetensors>=0.4"]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.4",
+]
+all = [
+    "minimodel-trainer[viz,hf,dev]",
+]
+
+[project.urls]
+Homepage = "https://github.com/Enderchefcoder/minimodel-trainer"
+Repository = "https://github.com/Enderchefcoder/minimodel-trainer"
+Documentation = "https://github.com/Enderchefcoder/minimodel-trainer/tree/main/docs"
+
+[project.scripts]
+minimodel = "minimodel.cli:main"
+mmt = "minimodel.cli:main"
+
+[tool.setuptools]
+# The repository keeps its sources in `src/`, but they are importable under the
+# single top-level package name `minimodel` so that directories such as
+# `src/datasets/` never shadow third-party packages.
+package-dir = { minimodel = "src" }
+packages = [
+    "minimodel",
+    "minimodel.core",
+    "minimodel.architectures",
+    "minimodel.tokenization",
+    "minimodel.datasets",
+    "minimodel.training",
+    "minimodel.training.rl",
+    "minimodel.checkpointing",
+    "minimodel.inference",
+    "minimodel.benchmarking",
+    "minimodel.merging",
+    "minimodel.cardgen",
+    "minimodel.vision",
+    "minimodel.vision.architectures",
+    "minimodel.vision.data",
+    "minimodel.vision.training",
+    "minimodel.vision.sampling",
+]
+
+[tool.setuptools.package-data]
+minimodel = [
+    "architectures/templates/*.yaml",
+    "datasets/config/*.yaml",
+    "cardgen/templates/*.md",
+    "vision/templates/*.yaml",
+]
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "slow: marks tests that take more than a couple of seconds",
+    "needs_network: marks tests that require internet access",
+]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.coverage.run]
+branch = true
+source = ["minimodel"]
+omit = ["*/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks", "venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # function calls in argument defaults are used for config factories
+    "RUF012", # mutable class attributes are fine for config containers
+    "SIM108", # ternaries are not always more readable
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["minimodel"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

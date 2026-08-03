@@ -1,0 +1,25 @@
+# Sparse MoE: 28M total parameters, 16M active per token.
+extends: _base.yaml
+
+run_name: moe-28m
+
+model:
+  template: moe_28m_a16m
+
+data:
+  mixture:
+    - { path: data/tokenized/fineweb-edu-dedup, weight: 0.70 }
+    - { path: data/tokenized/cosmopedia-v2, weight: 0.30 }
+  eval: data/tokenized/fineweb-edu-val
+
+training:
+  max_steps: 80000
+  batch_size: 32
+  seq_len: 1024
+  grad_accum_steps: 8
+  lr: 1.5e-3
+  # Muon and MoE routers do not mix: the router is a tiny matrix whose updates
+  # should stay small and well-conditioned, so AdamW is the safer choice here.
+  optimizer: adamw
+  lr_schedule: wsd
+  warmup: 0.01

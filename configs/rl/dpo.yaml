@@ -1,0 +1,37 @@
+# Direct preference optimization on UltraFeedback.
+#
+#   minimodel data pull ultrafeedback-binarized --limit 20000
+#   minimodel data tokenize ultrafeedback-binarized -t artifacts/tokenizer.json \
+#       --format preference -o data/tokenized/prefs
+#   minimodel posttrain --config configs/rl/dpo.yaml
+
+stage: dpo
+tokenizer: artifacts/tokenizer.json
+
+model:
+  checkpoint: runs/dense-30m-instruct/model
+
+data:
+  pairs: data/tokenized/prefs/pairs.jsonl
+
+training:
+  run_name: dense-30m-dpo
+  max_steps: 1000
+  batch_size: 4
+  grad_accum_steps: 4
+  # DPO learning rates are ~100x lower than SFT. Anything higher collapses the
+  # policy within a few hundred steps.
+  lr: 5.0e-7
+  warmup: 0.1
+  weight_decay: 0.0
+
+  beta: 0.1
+  loss_type: sigmoid      # sigmoid | ipo | hinge | cpo
+  label_smoothing: 0.0
+  sft_weight: 0.0
+  length_normalize: false
+  max_pair_length: 768
+
+  log_every: 10
+  eval_every: 100
+  save_every: 250
