@@ -18,6 +18,7 @@ and written up in `reports/`.
 | 07 | [loop_robustness](reports/07_loop_robustness.md) | Glint-2 breaks off 8 loops (35×); ours span 1.04–1.19× and scale up |
 | 08 | [inference_wins](reports/08_inference_wins.md) | Effort ladder + quality probe: architecture-agnostic upside |
 | 09 | [synthesis](reports/09_synthesis.md) | The recipe to beat Glint-2, and the CPU-budget contender |
+| 10 | [glint2_verification](reports/10_glint2_verification.md) | Fresh Hub proof: shipped weights are 1.71M loop+coda; README mislabels params + WikiText ppl |
 | — | [RESULTS](reports/RESULTS.md) | Auto-aggregated tables + figures from all runs |
 
 ## Experiments (`experiments/`)
@@ -29,6 +30,7 @@ and written up in `reports/`.
 | `setup_corpus.py` | Train the 4096-BPE tokenizer, tokenize corpora to shards |
 | `eval_harness.py` | Model-agnostic BLiMP / ARC / byte-ppl scorer (shared by all) |
 | `eval_glint2.py` | Run the released Glint-2 through the harness |
+| `prove_glint2_claims.py` | Fresh download + param audit; proves 1.71M vs advertised 1.06M |
 | `run_experiment.py` | Train one config, evaluate, save a result JSON |
 | `ablations.py` | Grouped compute-matched ablations (arch, stabilizers, optimizer, ffn, ...) |
 | `loops_scaling.py` | Evaluate a model across loop counts |

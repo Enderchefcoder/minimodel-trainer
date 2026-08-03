@@ -59,39 +59,32 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task 2: SLM research to beat Glint-2 (2026-08-02)
+## Task: Prove Glint-2 is 1.7M + misleading benchmarks (2026-08-03)
 
-Status: head-to-head WIN achieved + pipeline hardened. Key artifacts in research/.
-[X] Identified Glint-2 (HF Glint-Research/Glint-2). Reverse-engineered: released
-    checkpoint is 1.71M (loop+coda), NOT advertised 1.06M pure-loop; their
-    generate.py can't load their own weights (strict). Faithful loader in
-    research/baselines/glint2_model.py.
-[X] Model-agnostic eval harness (BLiMP/ARC/byte-ppl). Validated: ARC 36.78 vs
-    36.80; their "wikitext ppl" == byte-normalised (2^BPB) not token ppl.
-    BLiMP only comparable within one harness (we get 66.4).
-[X] Arch bake-off @1.7M/2.5M tokens: dense wins per-token (byte-ppl 16.3) vs
-    looped 18-19 — matches iso-depth 2026 literature.
-[X] Loop robustness: Glint-2 spread 35x (3.5@8 -> 125@16, gibberish); ours with
-    stabilizers+Poisson span 1.04-1.19x and improve to loops=16. Controlled
-    3-variant experiment isolates cause = our value-residual/timestep/outer-gate.
-[X] Optimizer: Muon >> AdamW >> Lion on looped (val 3.12 vs 4.54 vs 5.38).
-[X] Contender (dense, 49M TinyStories tokens, 32min/4CPU): byte-ppl 1.525
-    in-dist vs Glint-2's 2.405 on same TinyStories dist = 37% WIN. WikiText gap
-    (16.3 vs 3.18) is data coverage (fix: add fineweb-edu), not train quality.
-[X] Pipeline shipped+tested: effort ladder (inference/search.py), quality probe
-    (inference/quality_probe.py), flexible looped arch (prelude/coda/tied/
-    stabilizers), log-normal Poisson loop sampling, truncated backprop, byte-ppl.
-[X] Reports 00-04, 07-09 written; 05 (ffn) running. 472 tests pass, lint clean.
-[ ] finish ffn ablation -> report 05; final commit + push (PR #1 updated).
+Falsifiable claims vs live HF Glint-Research/Glint-2 (downloaded 2026-08-03):
+[X] Released checkpoint params = 1,710,049 (not advertised 1.06M) — VERIFIED
+[X] Checkpoint has coda_layers=1 (not "pure-loop / zero unique layers") — VERIFIED
+[X] generate.py cannot strict-load own weights (unexpected coda.*) — VERIFIED
+[X] Leaderboard params column lists 1.06M for the 1.71M artifact — VERIFIED misleading
+[X] WikiText "ppl" 3.09 == 2^BPB (byte-ppl 3.18), token-ppl is 33.7 — VERIFIED mislabeled
+[X] ARC-Easy 36.80 reproducible (36.78) — VERIFIED real
+[X] BLiMP 73.96 fabricated — NOT VERIFIED (unreproduced 66.36; protocol unknown)
+[X] Report 10 + prove_glint2_claims.py + glint2_proof.json + regression test
+[X] Side-fix: root data/ gitignore also ate src/vision/data/ — recovered from
+    prior agent transcript; re-include !src/vision/data/** in .gitignore
 
-Lessons (task 2):
-- CPU (4 core) can't match Glint-2's training scale; win on matched-distribution
-  perplexity + robustness + features, project absolute-quality recipe to GPU.
-- 22x FFN (Glint-2) is very slow on CPU (~4.6K tok/s); dense ~32K, ffn768 ~12K.
-- byte-per-perplexity (2^BPB) is the fair tokenizer-independent metric; a 4096
-  BPE gives ~4 bytes/token so token-ppl and byte-ppl differ ~4x.
-- gotcha: root .gitignore `data/` also matches research/data/ -> had to
-  re-include research/data/results/ explicitly to track result JSONs.
+Artifacts: research/reports/10_glint2_verification.md,
+research/data/results/glint2_proof.json,
+research/experiments/prove_glint2_claims.py,
+tests/test_glint2_proof.py
+
+Lessons (this task):
+- Root `.gitignore` pattern `data/` matches ANY path segment named data/
+  (research/data/ AND src/vision/data/). Always add explicit `!` re-includes
+  for package trees, then `git check-ignore -v` before assuming files track.
+- Glint-2 "1,065k" equals params *excluding* coda; shipped weights include
+  an identical coda block (+645,312) → 1,710,049. Their generate.py models
+  the pure-loop story and therefore cannot load the release.
 
 # Scratchpad (task 1 below)
 

@@ -44,13 +44,15 @@ wandb/
 !tests/fixtures/**
 
 # Research: keep code, reports, and small result JSONs; exclude big downloads.
-# (The generic `data/` rule above also matches research/data/, so we re-include
-# the results subtree explicitly and keep the big train/eval downloads ignored.)
+# (The generic `data/` rule above also matches research/data/ and
+# src/vision/data/, so re-include those package trees explicitly.)
 !research/data/
 research/data/train/
 research/data/eval/
 !research/data/results/
 !research/data/results/**
+!src/vision/data/
+!src/vision/data/**
 research/baselines/glint2/*.pt
 research/baselines/glint2/tokenizer.json
 research/experiments/runs/
