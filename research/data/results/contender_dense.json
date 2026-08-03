@@ -1,0 +1,36 @@
+{
+  "name": "contender_dense",
+  "params": 1701152,
+  "train_tokens": 49152000,
+  "final_loss": 1.9288,
+  "train_seconds": 1941.6,
+  "tokens_per_second": 25314.8,
+  "val_loss": 2.0207,
+  "blimp_acc": 57.52,
+  "blimp_n_paradigms": 67,
+  "arc_easy_acc": 26.6,
+  "arc_easy_acc_norm": 25.34,
+  "arc_easy_n": 2376,
+  "wikitext_ppl": 933.129,
+  "wikitext_bits_per_byte": 4.0245,
+  "wikitext_byte_ppl": 16.273,
+  "wikitext_n_tokens": 39843,
+  "wikitext_n_bytes": 97675,
+  "inference_lift": {
+    "low": {
+      "mean_repetition": 0.0044,
+      "mean_p_real": 0.0244
+    },
+    "high": {
+      "mean_repetition": 0.0022,
+      "mean_p_real": 0.2304
+    },
+    "xhigh": {
+      "mean_repetition": 0.0067,
+      "mean_p_real": 0.2718
+    }
+  },
+  "probe_bytes": 4333,
+  "tinystories_byte_ppl": 1.525,
+  "tinystories_bits_per_byte": 0.6088
+}

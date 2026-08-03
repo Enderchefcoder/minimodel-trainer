@@ -1,0 +1,130 @@
+{
+  "loop_grid": [
+    4,
+    6,
+    8,
+    10,
+    12,
+    16
+  ],
+  "steps": 800,
+  "variants": {
+    "fixed8": {
+      "params": 937552,
+      "final_loss": 3.6388,
+      "rows": [
+        {
+          "loops": 4,
+          "byte_ppl": 18.422,
+          "blimp": 50.25
+        },
+        {
+          "loops": 6,
+          "byte_ppl": 16.241,
+          "blimp": 49.5
+        },
+        {
+          "loops": 8,
+          "byte_ppl": 15.565,
+          "blimp": 51.37
+        },
+        {
+          "loops": 10,
+          "byte_ppl": 15.668,
+          "blimp": 51.87
+        },
+        {
+          "loops": 12,
+          "byte_ppl": 16.401,
+          "blimp": 52.24
+        },
+        {
+          "loops": 16,
+          "byte_ppl": 18.45,
+          "blimp": 52.36
+        }
+      ],
+      "best_loops": 8,
+      "best_byte_ppl": 15.565,
+      "ppl_spread": 1.19
+    },
+    "uniform": {
+      "params": 937552,
+      "final_loss": 3.5963,
+      "rows": [
+        {
+          "loops": 4,
+          "byte_ppl": 16.783,
+          "blimp": 48.63
+        },
+        {
+          "loops": 6,
+          "byte_ppl": 16.626,
+          "blimp": 49.0
+        },
+        {
+          "loops": 8,
+          "byte_ppl": 16.492,
+          "blimp": 48.38
+        },
+        {
+          "loops": 10,
+          "byte_ppl": 16.618,
+          "blimp": 48.26
+        },
+        {
+          "loops": 12,
+          "byte_ppl": 16.791,
+          "blimp": 49.25
+        },
+        {
+          "loops": 16,
+          "byte_ppl": 17.133,
+          "blimp": 49.0
+        }
+      ],
+      "best_loops": 8,
+      "best_byte_ppl": 16.492,
+      "ppl_spread": 1.04
+    },
+    "poisson": {
+      "params": 937552,
+      "final_loss": 3.7097,
+      "rows": [
+        {
+          "loops": 4,
+          "byte_ppl": 19.342,
+          "blimp": 49.88
+        },
+        {
+          "loops": 6,
+          "byte_ppl": 18.415,
+          "blimp": 50.75
+        },
+        {
+          "loops": 8,
+          "byte_ppl": 17.951,
+          "blimp": 52.11
+        },
+        {
+          "loops": 10,
+          "byte_ppl": 17.546,
+          "blimp": 51.99
+        },
+        {
+          "loops": 12,
+          "byte_ppl": 17.375,
+          "blimp": 52.36
+        },
+        {
+          "loops": 16,
+          "byte_ppl": 17.119,
+          "blimp": 51.99
+        }
+      ],
+      "best_loops": 16,
+      "best_byte_ppl": 17.119,
+      "ppl_spread": 1.13
+    }
+  }
+}

@@ -43,16 +43,19 @@ wandb/
 # Keep tiny fixtures that tests depend on
 !tests/fixtures/**
 
-# Research: keep code, reports, and small result JSONs; exclude big downloads
+# Research: keep code, reports, and small result JSONs; exclude big downloads.
+# (The generic `data/` rule above also matches research/data/, so we re-include
+# the results subtree explicitly and keep the big train/eval downloads ignored.)
+!research/data/
 research/data/train/
-research/data/eval/*.jsonl
-research/data/eval/*.txt
+research/data/eval/
+!research/data/results/
+!research/data/results/**
 research/baselines/glint2/*.pt
 research/baselines/glint2/tokenizer.json
 research/experiments/runs/
 research/artifacts/
 *.pt
-!research/**/*.result.json
 
 # OS noise
 .DS_Store
