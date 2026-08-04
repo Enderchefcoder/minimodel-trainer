@@ -1,0 +1,510 @@
+{"id": 1, "category": "math", "text": "1 + 1 =two. This basic addition fact says that one and one gives two. In binary it is 10."}
+{"id": 2, "category": "story", "text": "Once upon a time there was a little girl named Lilywho lived in a small cottage deep in the woods. Every morning she would wander outside to play."}
+{"id": 3, "category": "knowledge", "text": "Artificial intelligence isthe field of computer science dedicated to building systems that can learn, reason, and solve problems."}
+{"id": 4, "category": "science", "text": "The sun isa star at the center of our solar system. It provides the light and heat Earth needs."}
+{"id": 5, "category": "math", "text": "The number that comes after 999 is1000, also known as one thousand. It is the next whole number in the counting sequence."}
+{"id": 6, "category": "math", "text": "The square root of 64 is8, because 8 times 8 equals 64. It is a perfect square result."}
+{"id": 7, "category": "math", "text": "Complete the pattern: 2, 4, 8, 16,32. Each number is double the one before it, so the sequence continues with 64, 128."}
+{"id": 8, "category": "logic", "text": "If Monday is the first day of the week, the fourth day isThursday. Counting forward: Monday is first, Tuesday second, Wednesday third, Thursday fourth."}
+{"id": 9, "category": "knowledge", "text": "A century consists of exactly100 years. The word comes from the Latin centum, which means one hundred."}
+{"id": 10, "category": "code_python", "text": "In Python, to print \"Hello World\" to the console, you write: print(\"Hello World\"). The built-in print function sends that text to standard output."}
+{"id": 11, "category": "story", "text": "The old clock struck midnight, and suddenly the bedroom doorcreaked open all by itself. A cold draft swept through the dark and silent room."}
+{"id": 12, "category": "story", "text": "It was a dark and stormy night when the phone began toring. No one was supposed to call at this hour, yet it rang again and again."}
+{"id": 13, "category": "story", "text": "As the magician pulled off his top hat, out flew awhite dove, soaring over the amazed crowd. The audience burst into loud applause."}
+{"id": 14, "category": "geography", "text": "The capital city of France isParis. It sits along the Seine River and is famous for the Eiffel Tower."}
+{"id": 15, "category": "geography", "text": "The largest ocean on Planet Earth is thePacific Ocean. It covers more than a third of the planet's surface."}
+{"id": 16, "category": "geography", "text": "The currency used in Japan is theyen. Its symbol is ¥, and it is one of the most traded currencies."}
+{"id": 17, "category": "science", "text": "The planet closest to the Sun isMercury. It completes an orbit in just 88 Earth days, the shortest year of any planet."}
+{"id": 18, "category": "science", "text": "The chemical symbol for water isH2O. Each molecule has two hydrogen atoms bonded to one oxygen atom."}
+{"id": 19, "category": "knowledge", "text": "An apple a day keeps thedoctor away. This old proverb encourages healthy eating as a simple path to good health."}
+{"id": 20, "category": "grammar", "text": "The opposite of the word \"beautiful\" isugly. While beautiful describes something pleasing to the eye, ugly describes the exact reverse."}
+{"id": 21, "category": "grammar", "text": "The past tense of the verb \"to run\" isran. For example: \"She ran home before the rain started.\" The past participle is run."}
+{"id": 22, "category": "grammar", "text": "The plural form of the word \"child\" ischildren. It is an irregular plural, so no simple -s ending is added."}
+{"id": 23, "category": "knowledge", "text": "Better late thannever. This proverb means arriving late is still better than not arriving at all."}
+{"id": 24, "category": "grammar", "text": "The punctuation mark used to separate items in a list is acomma. For example, \"apples, bananas, and grapes\" uses commas between items."}
+{"id": 25, "category": "knowledge", "text": "The opposite of the cardinal direction North isSouth. On most maps, North points up while South points down."}
+{"id": 26, "category": "commonsense", "text": "When driving a car, a red traffic light indicates that you muststop. You should wait until the light turns green before proceeding carefully."}
+{"id": 27, "category": "commonsense", "text": "The best way to prevent the spread of common germs is to wash yourhands. Use soap and water for at least twenty seconds."}
+{"id": 28, "category": "commonsense", "text": "To log into a secure website, you must provide a username and apassword. Strong passwords mix letters, numbers, and symbols to stay secure."}
+{"id": 29, "category": "commonsense", "text": "Before boarding an international flight, you must present a validpassport. Airlines check it at the gate to confirm your identity and citizenship."}
+{"id": 30, "category": "commonsense", "text": "To keep fresh milk from spoiling quickly, you must store it inside arefrigerator. Cold temperatures slow the bacteria that cause milk to go bad."}
+{"id": 31, "category": "science", "text": "The color of the sky isblue on clear days. Sunlight scatters in the atmosphere, spreading blue light everywhere."}
+{"id": 32, "category": "knowledge", "text": "Ice is cold, fire ishot. These opposites show how temperature ranges from freezing to burning."}
+{"id": 33, "category": "knowledge", "text": "A, B, C, D,E, F, G. These are the first seven letters of the English alphabet."}
+{"id": 34, "category": "knowledge", "text": "Cats meow, dogsbark. Each animal has its own sound: cows moo, ducks quack, sheep baa."}
+{"id": 35, "category": "geography", "text": "The capital of the USA is Washington,D.C. It is where the White House and the U.S. Capitol are located."}
+{"id": 36, "category": "knowledge", "text": "Black andwhite are opposite ends of the brightness scale. Together they form classic monochrome design."}
+{"id": 37, "category": "knowledge", "text": "Boys andgirls often play together at school. Everyone deserves equal respect and the same chances."}
+{"id": 38, "category": "knowledge", "text": "Yes orno are the two simplest answers. A yes-or-no question expects exactly one of them."}
+{"id": 39, "category": "knowledge", "text": "Up anddown are opposite directions. An elevator moves up and down between floors all day."}
+{"id": 40, "category": "knowledge", "text": "Salt andpepper sit together on most dinner tables. They are the classic seasoning pair."}
+{"id": 41, "category": "math", "text": "Two plus two equalsfour. This basic addition fact is one of the first children learn in school."}
+{"id": 42, "category": "science", "text": "Fish live in thewater. They breathe through gills and swim using fins and tails."}
+{"id": 43, "category": "science", "text": "Birds fly in thesky. Their light bones and strong wings help them stay airborne."}
+{"id": 44, "category": "science", "text": "The moon shines atnight. It reflects sunlight, which is why it glows in the dark sky."}
+{"id": 45, "category": "commonsense", "text": "Open thedoor and step inside. Please close it gently behind you when you enter."}
+{"id": 46, "category": "commonsense", "text": "Close youreyes and take a deep breath. Relax your shoulders and count slowly to ten."}
+{"id": 47, "category": "knowledge", "text": "A cow saysmoo. On the farm, you might also hear hens cluck and pigs oink."}
+{"id": 48, "category": "knowledge", "text": "Happy birthday toyou! This classic song is sung at parties while everyone gathers around the cake."}
+{"id": 49, "category": "conversation", "text": "Thank you verymuch for your help. It is a polite way to show real gratitude."}
+{"id": 50, "category": "conversation", "text": "Hello, world! My name isSam, and I am learning how to introduce myself. It is nice to meet you."}
+{"id": 51, "category": "math", "text": "2 + 3 =five. Adding two and three gives a total of five."}
+{"id": 52, "category": "math", "text": "10 - 4 =six. Taking four away from ten leaves six."}
+{"id": 53, "category": "math", "text": "3 × 3 =nine. Multiplying three by itself gives nine."}
+{"id": 54, "category": "math", "text": "12 / 4 =three. Twelve divided by four equals three."}
+{"id": 55, "category": "math", "text": "5 squared is25. Squaring means multiplying a number by itself."}
+{"id": 56, "category": "math", "text": "Half of 50 is25. Splitting fifty into two equal parts gives twenty-five."}
+{"id": 57, "category": "math", "text": "The next prime number after 7 is11. Eight, nine, and ten are not prime."}
+{"id": 58, "category": "math", "text": "A dozen meanstwelve items. Bakers sometimes sell a \"baker's dozen\" of thirteen."}
+{"id": 59, "category": "measurement", "text": "There are 60 minutes in onehour. Each minute holds sixty seconds."}
+{"id": 60, "category": "measurement", "text": "A leap year has366 days. The extra day falls on February 29."}
+{"id": 61, "category": "science", "text": "Water freezes at0 degrees Celsius. At that point, it becomes ice."}
+{"id": 62, "category": "science", "text": "Water boils at100 degrees Celsius at sea level. Then it turns to steam."}
+{"id": 63, "category": "science", "text": "Humans need oxygen tobreathe. Our lungs take it from the air."}
+{"id": 64, "category": "science", "text": "Plants make their food usingsunlight. This process is called photosynthesis."}
+{"id": 65, "category": "science", "text": "The Earth revolves around theSun. One full trip takes about 365 days."}
+{"id": 66, "category": "science", "text": "The force that pulls objects toward Earth is calledgravity. It keeps us on the ground."}
+{"id": 67, "category": "science", "text": "Sound travels fastest throughsolids. Molecules are closest together there."}
+{"id": 68, "category": "science", "text": "The closest star to Earth isthe Sun. Its light reaches us in eight minutes."}
+{"id": 69, "category": "science", "text": "The colors of the rainbow are red, orange, yellow, green, blue, indigo andviolet. Together they spell the order of visible light."}
+{"id": 70, "category": "science", "text": "The powerhouse of the cell is themitochondria. It turns nutrients into usable energy."}
+{"id": 71, "category": "geography", "text": "The capital of Japan isTokyo. It is one of the world's largest cities."}
+{"id": 72, "category": "geography", "text": "The capital of Italy isRome. Ancient ruins and the Colosseum stand there."}
+{"id": 73, "category": "geography", "text": "The longest river in the world is generally considered theNile. It flows north through Africa."}
+{"id": 74, "category": "geography", "text": "The tallest mountain on Earth is MountEverest. It rises in the Himalayas."}
+{"id": 75, "category": "geography", "text": "The number of continents on Earth isseven. They include Asia, Africa, and Europe."}
+{"id": 76, "category": "geography", "text": "The largest hot desert on Earth is theSahara. It covers much of North Africa."}
+{"id": 77, "category": "geography", "text": "The capital of Canada isOttawa. Many guess Toronto, but Ottawa is correct."}
+{"id": 78, "category": "geography", "text": "The capital of Australia isCanberra. Sydney is larger, but Canberra is the capital."}
+{"id": 79, "category": "geography", "text": "The ocean between the Americas and Europe is theAtlantic Ocean. Ships have crossed it for centuries."}
+{"id": 80, "category": "geography", "text": "There are 50 states in theUnited States. The newest one is Hawaii."}
+{"id": 81, "category": "grammar", "text": "The opposite of \"hot\" iscold. Warm and cool sit between them."}
+{"id": 82, "category": "grammar", "text": "The comparative form of \"big\" isbigger. Double the final consonant before adding -er."}
+{"id": 83, "category": "grammar", "text": "The past tense of \"go\" iswent. It is irregular, not \"goed.\""}
+{"id": 84, "category": "grammar", "text": "The plural of \"mouse\" ismice. It changes the vowel instead of adding -s."}
+{"id": 85, "category": "grammar", "text": "A word that describes a noun is called anadjective. Examples include \"red\" and \"tall.\""}
+{"id": 86, "category": "grammar", "text": "Words like \"quickly\" and \"softly\" are usuallyadverbs. They often modify verbs in a sentence."}
+{"id": 87, "category": "grammar", "text": "The first person singular pronoun in English is\"I\". The plural counterpart is \"we.\""}
+{"id": 88, "category": "grammar", "text": "Every complete sentence begins with a capitalletter. For example, \"The dog runs.\""}
+{"id": 89, "category": "grammar", "text": "The contraction for \"do not\" isdon't. The apostrophe replaces the missing \"o.\""}
+{"id": 90, "category": "grammar", "text": "A synonym for \"fast\" isquick. Both words describe something moving quickly."}
+{"id": 91, "category": "logic", "text": "If all roses are flowers, and this is a rose, then this is aflower. This is a valid logical deduction."}
+{"id": 92, "category": "logic", "text": "Which weighs more: a kilogram of feathers or a kilogram of steel?Neither. Both weigh exactly one kilogram."}
+{"id": 93, "category": "logic", "text": "If today is Tuesday, tomorrow isWednesday. The day after Wednesday is Thursday."}
+{"id": 94, "category": "logic", "text": "The day after Sunday isMonday. It starts the new week."}
+{"id": 95, "category": "logic", "text": "The month that comes after March isApril. It is the fourth month."}
+{"id": 96, "category": "logic", "text": "Odd one out: car, bus, train, banana. The odd one isbanana. It is a fruit, not a vehicle."}
+{"id": 97, "category": "geometry", "text": "A shape with three sides is called atriangle. The prefix \"tri-\" means three."}
+{"id": 98, "category": "geometry", "text": "A shape with four equal sides is called asquare. A rectangle has four sides too."}
+{"id": 99, "category": "math", "text": "If you flip a fair coin, the chance of heads is50 percent. Tails has the same chance."}
+{"id": 100, "category": "math", "text": "The next number in 1, 1, 2, 3, 5, 8 is13. Each term adds the previous two."}
+{"id": 101, "category": "commonsense", "text": "You use a key to open adoor. Keys also start cars and unlock padlocks."}
+{"id": 102, "category": "commonsense", "text": "To see in the dark, you can use aflashlight. It shines a beam of light."}
+{"id": 103, "category": "commonsense", "text": "When it rains, people often carry anumbrella. It keeps their clothes dry."}
+{"id": 104, "category": "commonsense", "text": "You wear shoes on yourfeet. Socks usually go on first."}
+{"id": 105, "category": "commonsense", "text": "You read a book with youreyes. Some people listen to audiobooks instead."}
+{"id": 106, "category": "commonsense", "text": "Soup is usually eaten with aspoon. Its bowl shape holds the liquid."}
+{"id": 107, "category": "commonsense", "text": "To cut paper, you usescissors. The two blades slide past each other."}
+{"id": 108, "category": "commonsense", "text": "A baby dog is called apuppy. Puppies are born blind and helpless."}
+{"id": 109, "category": "commonsense", "text": "A baby cat is called akitten. Kittens love to play and pounce."}
+{"id": 110, "category": "commonsense", "text": "Bees makehoney. They store it in wax honeycombs."}
+{"id": 111, "category": "conversation", "text": "\"Good morning!\" is a friendly way to sayhello. People use it before noon."}
+{"id": 112, "category": "conversation", "text": "When someone asks \"How are you?\", a common reply is\"I'm fine, thanks.\" Short and polite works best."}
+{"id": 113, "category": "conversation", "text": "When someone helps you, you should say\"thank you\". Gratitude makes people feel appreciated."}
+{"id": 114, "category": "conversation", "text": "When you meet someone new, you can say \"Nice tomeet you\". A smile makes it warmer."}
+{"id": 115, "category": "conversation", "text": "To apologize for a mistake, you say\"I'm sorry\". A sincere apology helps mend trust."}
+{"id": 116, "category": "conversation", "text": "\"Please\" and \"thank you\" are often called magicwords. They make everyday requests sound kinder."}
+{"id": 117, "category": "conversation", "text": "Before ending a phone call, people usually saygoodbye. \"Talk soon\" is another option."}
+{"id": 118, "category": "conversation", "text": "When you don't know an answer, it's honest to say \"I'm notsure\". Then you can look it up."}
+{"id": 119, "category": "conversation", "text": "To ask someone's name, you say \"What is yourname?\" They will answer and introduce themselves."}
+{"id": 120, "category": "conversation", "text": "If you need help with something, you shouldask politely. Most people are happy to help."}
+{"id": 121, "category": "safety", "text": "Before crossing the street, look bothways. Check left, right, then left again."}
+{"id": 122, "category": "safety", "text": "Never touch a hot stove because it canburn you. Use oven mitts for hot pans."}
+{"id": 123, "category": "safety", "text": "In a fire, leave the building and call911. Never go back inside for things."}
+{"id": 124, "category": "safety", "text": "Always wear a helmet when riding abike. It protects your head in falls."}
+{"id": 125, "category": "safety", "text": "When you get into a car, first fasten yourseatbelt. It keeps you safe if the car stops suddenly."}
+{"id": 126, "category": "safety", "text": "Children should never accept candy fromstrangers. Tell a trusted adult right away."}
+{"id": 127, "category": "safety", "text": "If you get lost in a store, find astaff member. Stay calm and stay put."}
+{"id": 128, "category": "safety", "text": "Never swim alone; always have anadult nearby. Lifeguards add another layer of safety."}
+{"id": 129, "category": "safety", "text": "Medicine should only be taken as directed by adoctor or trusted adult. Never guess doses."}
+{"id": 130, "category": "safety", "text": "If a stranger online asks for your address, you shouldnever share it. Tell a trusted adult immediately."}
+{"id": 131, "category": "measurement", "text": "There areseven days in a week. They cycle without stopping."}
+{"id": 132, "category": "measurement", "text": "A year hastwelve months. Each month has its own name."}
+{"id": 133, "category": "measurement", "text": "The third month of the year isMarch. January and February come before it."}
+{"id": 134, "category": "measurement", "text": "There are 100 cents in onedollar. Four quarters make a dollar."}
+{"id": 135, "category": "measurement", "text": "A U.S. quarter is worth25 cents. Four of them equal one dollar."}
+{"id": 136, "category": "measurement", "text": "One meter equals100 centimeters. A meter is slightly longer than a yard."}
+{"id": 137, "category": "measurement", "text": "One kilogram is about2.2 pounds. Kilograms are used in most countries."}
+{"id": 138, "category": "measurement", "text": "There are 24 hours in oneday. Each hour contains 60 minutes."}
+{"id": 139, "category": "measurement", "text": "The first day of the year isJanuary 1. Many people call it New Year's Day."}
+{"id": 140, "category": "measurement", "text": "Christmas is celebrated in the month ofDecember. It falls on December 25."}
+{"id": 141, "category": "knowledge", "text": "The fastest land animal is thecheetah. It can sprint over 100 km/h."}
+{"id": 142, "category": "knowledge", "text": "The largest animal on Earth is theblue whale. Its heart alone weighs hundreds of kilograms."}
+{"id": 143, "category": "knowledge", "text": "An animal that eats only plants is called aherbivore. Cows and rabbits are examples."}
+{"id": 144, "category": "knowledge", "text": "Animals that are active at night are callednocturnal. Owls and bats are classic examples."}
+{"id": 145, "category": "knowledge", "text": "The person who flies an airplane is called apilot. Copilots and crew assist them."}
+{"id": 146, "category": "knowledge", "text": "A doctor who treats children is called apediatrician. They care for kids from birth through the teens."}
+{"id": 147, "category": "knowledge", "text": "A person who writes books is called anauthor. Novelists and poets are types of authors."}
+{"id": 148, "category": "knowledge", "text": "A place where you can borrow books is alibrary. Librarians help you find them."}
+{"id": 149, "category": "knowledge", "text": "A building where art is displayed is called amuseum. Galleries show paintings and sculptures."}
+{"id": 150, "category": "knowledge", "text": "The imaginary line circling Earth's middle is theequator. It divides the planet into north and south."}
+{"id": 151, "category": "code_python", "text": "In Python, print(\"Hello!\") willdisplay Hello! in the console. print is a built-in function."}
+{"id": 152, "category": "code_python", "text": "In Python, the line x = 5 willstore the value 5 in x. x is a variable."}
+{"id": 153, "category": "code_python", "text": "In Python, if x > 3: print(\"big\") prints \"big\" only whenx is greater than 3. Otherwise nothing prints."}
+{"id": 154, "category": "code_python", "text": "In Python, nums = [1, 2, 3] createsa list of three numbers. Lists keep order and allow duplicates"}
+{"id": 155, "category": "code_python", "text": "In Python, for i in range(3): print(i) prints0, 1, 2. range(3) starts at zero"}
+{"id": 156, "category": "code_python", "text": "In Python, a function is defined with thedef keyword. For example: def greet(): return \"Hi.\""}
+{"id": 157, "category": "code_python", "text": "In Python, len(\"hello\") returns5. len counts the characters in a string."}
+{"id": 158, "category": "code_python", "text": "In Python, d = {\"a\": 1} createsa dictionary. It maps key \"a\" to value 1."}
+{"id": 159, "category": "code_javascript", "text": "In JavaScript, console.log(\"Hi\") willprint Hi to the console. Developers use it for debugging"}
+{"id": 160, "category": "code_javascript", "text": "In JavaScript, let count = 3; declaresa variable named count. let allows reassignment later."}
+{"id": 161, "category": "code_javascript", "text": "In JavaScript, const PI = 3.14; declaresa constant. Its value cannot be reassigned."}
+{"id": 162, "category": "code_javascript", "text": "In JavaScript, const add = (a, b) => a + b; definesan arrow function. It returns the sum of a and b."}
+{"id": 163, "category": "code_javascript", "text": "In JavaScript, arr.push(4) willappend 4 to the end of arr. The array grows by one"}
+{"id": 164, "category": "code_javascript", "text": "In JavaScript, `Hello ${name}` isa template literal. It inserts name into the string."}
+{"id": 165, "category": "code_java", "text": "In Java, every program starts with aclass named Main. Its main method runs first"}
+{"id": 166, "category": "code_java", "text": "In Java, System.out.println(\"Hello\"); willprint Hello followed by a newline. println means \"print line.\""}
+{"id": 167, "category": "code_java", "text": "In Java, int age = 30; declaresan integer variable. Java requires a type for every variable"}
+{"id": 168, "category": "code_c", "text": "In C, printf(\"Hello\\n\"); prints text becauseprintf is from stdio.h. Include it at the top"}
+{"id": 169, "category": "code_c", "text": "In C, the entry point of a program isint main(void). Returning 0 signals success."}
+{"id": 170, "category": "code_cpp", "text": "In C++, std::cout << \"Hi\"; willprint Hi to the console. cout streams output via <<"}
+{"id": 171, "category": "code_cpp", "text": "In C++, std::vector<int> v = {1, 2}; createsa dynamic array. It can grow with push_back."}
+{"id": 172, "category": "code_csharp", "text": "In C#, Console.WriteLine(\"Hello\"); willprint Hello plus a newline. It is the .NET equivalent of println"}
+{"id": 173, "category": "code_go", "text": "In Go, fmt.Println(\"Hello\") prints a line becausefmt is Go's formatting package. Import it first"}
+{"id": 174, "category": "code_go", "text": "In Go, func add(a, b int) int definesa function. It returns a + b as an int."}
+{"id": 175, "category": "code_rust", "text": "In Rust, println!(\"Hello\"); uses an exclamation mark becauseprintln! is a macro. Macros generate code at compile time"}
+{"id": 176, "category": "code_rust", "text": "In Rust, let x = 5; createsan immutable binding. Use let mut x to allow changes."}
+{"id": 177, "category": "code_rust", "text": "In Rust, String::from(\"hi\") createsa heap-allocated string. Ownership moves when assigned"}
+{"id": 178, "category": "code_ruby", "text": "In Ruby, puts \"Hello\" willprint Hello and a newline. puts is short for \"put string.\""}
+{"id": 179, "category": "code_php", "text": "In PHP, echo \"Hello\"; willoutput Hello to the page. PHP runs server-side."}
+{"id": 180, "category": "code_swift", "text": "In Swift, print(\"Hello\") willdisplay Hello in the console. Swift needs no semicolon here"}
+{"id": 181, "category": "code_kotlin", "text": "In Kotlin, fun main() { println(\"Hello\") } definesthe program entry point. Kotlin infers types automatically."}
+{"id": 182, "category": "code_typescript", "text": "In TypeScript, let msg: string = \"hi\"; addsa type annotation. msg must stay a string."}
+{"id": 183, "category": "code_sql", "text": "In SQL, SELECT * FROM users; willreturn every row and column from users. Use it carefully on large tables"}
+{"id": 184, "category": "code_sql", "text": "In SQL, SELECT name FROM users WHERE id = 1; returnsthe name of the user with id 1. WHERE filters rows"}
+{"id": 185, "category": "code_sql", "text": "In SQL, INSERT INTO users (name) VALUES ('Ada'); willadd a new row. The name column gets 'Ada'."}
+{"id": 186, "category": "code_html", "text": "In HTML, <h1>Title</h1> createsa top-level heading. h1 is the largest heading tag."}
+{"id": 187, "category": "code_html", "text": "In HTML, <a href=\"url\">text</a> createsa hyperlink. Clicking it opens the URL."}
+{"id": 188, "category": "code_css", "text": "In CSS, h1 { color: blue; } willmake every h1 text blue. The selector targets all h1 elements"}
+{"id": 189, "category": "code_bash", "text": "In Bash, echo \"Hello\" willprint Hello to the terminal. echo is a shell builtin"}
+{"id": 190, "category": "code_bash", "text": "In Bash, NAME=\"Ada\"; echo $NAME printsAda. The $ expands the variable's value."}
+{"id": 191, "category": "code_lua", "text": "In Lua, print(\"Hello\") willoutput Hello to stdout. Lua is popular in game scripting"}
+{"id": 192, "category": "code_r", "text": "In R, print(\"Hello\") or cat(\"Hello\") willdisplay Hello in the console. R is used for statistics"}
+{"id": 193, "category": "code_dart", "text": "In Dart, void main() => print('Hello'); definesthe entry point. The arrow is shorthand for a return."}
+{"id": 194, "category": "code_haskell", "text": "In Haskell, main = putStrLn \"Hello\" definesthe program entry point. putStrLn prints a line of text"}
+{"id": 195, "category": "code_python", "text": "In Python, the line # this is a comment isignored by the interpreter. Comments explain code to humans."}
+{"id": 196, "category": "code_javascript", "text": "In JavaScript, // marksa single-line comment. /* starts a multi-line one"}
+{"id": 197, "category": "code_python", "text": "In Python, the boolean values are writtenTrue and False. Note the capital first letters."}
+{"id": 198, "category": "code_python", "text": "In Python, import math gives access tomath functions like math.sqrt(16), which returns 4.0."}
+{"id": 199, "category": "code_javascript", "text": "In JavaScript, JSON.parse('{\"a\":1}') returnsan object with property a equal to 1. parse converts text to data"}
+{"id": 200, "category": "code_python", "text": "In Python, while x > 0: x -= 1 willdecrement x until it reaches 0. The loop then stops"}
+{"id": 201, "category": "code_python", "text": "In Python, list.append(x) is used toadd an item to the end of the list. It modifies the list in place."}
+{"id": 202, "category": "code_python", "text": "In Python, a dictionary is defined usingcurly braces. It stores key-value pairs for quick lookups."}
+{"id": 203, "category": "code_javascript", "text": "In JavaScript, console.log('Hi') willprint Hi to the debugging console. It is the most common debug tool."}
+{"id": 204, "category": "code_javascript", "text": "In JavaScript, the const keyword declaresa read-only constant. Its value cannot be reassigned after definition."}
+{"id": 205, "category": "code_java", "text": "In Java, public static void main is theprogram entry point. The Java virtual machine calls it first."}
+{"id": 206, "category": "code_java", "text": "In Java, a class name must match thefile name exactly. For example, Main class goes in Main.java."}
+{"id": 207, "category": "code_c", "text": "In C, the function used to print output isprintf. It is part of the stdio.h header library."}
+{"id": 208, "category": "code_cpp", "text": "In C++, std::cout is used to sendoutput to the console. It belongs to the iostream library namespace."}
+{"id": 209, "category": "code_sql", "text": "In SQL, SELECT * FROM users returnsall rows and columns from the users table. Use it with care."}
+{"id": 210, "category": "code_sql", "text": "In SQL, the WHERE clause is used tofilter rows based on a specified search condition."}
+{"id": 211, "category": "code_html", "text": "In HTML, the <a> tag is used to create ahyperlink. The href attribute specifies the destination URL."}
+{"id": 212, "category": "code_css", "text": "In CSS, color: red; is used tochange the text color to red. It styles matching HTML elements."}
+{"id": 213, "category": "code_bash", "text": "In Bash, the command to list files isls. It displays files and folders in the current directory."}
+{"id": 214, "category": "code_rust", "text": "In Rust, the fn keyword is used todeclare a new function. It can return values using -> notation."}
+{"id": 215, "category": "code_rust", "text": "In Rust, variables are by defaultimmutable. You must use let mut to make them mutable."}
+{"id": 216, "category": "code_go", "text": "In Go, the package main declaration indicatesthat this file belongs to the main executable package."}
+{"id": 217, "category": "code_go", "text": "In Go, variables can be declared using theshort variable declaration operator := for type inference."}
+{"id": 218, "category": "code_ruby", "text": "In Ruby, the def keyword is used to start amethod definition. It ends with the end keyword."}
+{"id": 219, "category": "code_php", "text": "In PHP, all variable names must start with adollar sign. For example, $txt stores a string."}
+{"id": 220, "category": "code_swift", "text": "In Swift, let is used to declare aconstant, whereas var is used to declare a mutable variable."}
+{"id": 221, "category": "code_kotlin", "text": "In Kotlin, fun is the keyword used todeclare a function. Kotlin is fully interoperable with Java."}
+{"id": 222, "category": "code_typescript", "text": "In TypeScript, interfaces are used to definethe shape of an object. They help enforce type safety."}
+{"id": 223, "category": "code_lua", "text": "In Lua, table is the primary data structurerepresenting arrays, dictionaries, and objects all in one."}
+{"id": 224, "category": "code_r", "text": "In R, the arrow operator <- is used forvariable assignment. It is highly popular in data science."}
+{"id": 225, "category": "code_haskell", "text": "In Haskell, functions are pure by default, which meansthey have no side effects and always return the same output."}
+{"id": 226, "category": "story", "text": "The brave knight searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 227, "category": "story", "text": "The brave knight climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 228, "category": "story", "text": "The brave knight closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 229, "category": "story", "text": "The brave knight packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 230, "category": "story", "text": "The brave knight sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 231, "category": "story", "text": "The brave knight ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 232, "category": "story", "text": "The brave knight heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 233, "category": "story", "text": "The brave knight gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 234, "category": "story", "text": "The brave knight noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 235, "category": "story", "text": "The brave knight practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 236, "category": "story", "text": "The young princess searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 237, "category": "story", "text": "The young princess climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 238, "category": "story", "text": "The young princess closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 239, "category": "story", "text": "The young princess packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 240, "category": "story", "text": "The young princess sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 241, "category": "story", "text": "The young princess ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 242, "category": "story", "text": "The young princess heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 243, "category": "story", "text": "The young princess gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 244, "category": "story", "text": "The young princess noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 245, "category": "story", "text": "The young princess practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 246, "category": "story", "text": "The curious explorer searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 247, "category": "story", "text": "The curious explorer climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 248, "category": "story", "text": "The curious explorer closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 249, "category": "story", "text": "The curious explorer packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 250, "category": "story", "text": "The curious explorer sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 251, "category": "story", "text": "The curious explorer ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 252, "category": "story", "text": "The curious explorer heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 253, "category": "story", "text": "The curious explorer gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 254, "category": "story", "text": "The curious explorer noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 255, "category": "story", "text": "The curious explorer practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 256, "category": "story", "text": "A clever wizard searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 257, "category": "story", "text": "A clever wizard climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 258, "category": "story", "text": "A clever wizard closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 259, "category": "story", "text": "A clever wizard packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 260, "category": "story", "text": "A clever wizard sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 261, "category": "story", "text": "A clever wizard ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 262, "category": "story", "text": "A clever wizard heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 263, "category": "story", "text": "A clever wizard gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 264, "category": "story", "text": "A clever wizard noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 265, "category": "story", "text": "A clever wizard practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 266, "category": "story", "text": "A friendly elf searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 267, "category": "story", "text": "A friendly elf climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 268, "category": "story", "text": "A friendly elf closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 269, "category": "story", "text": "A friendly elf packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 270, "category": "story", "text": "A friendly elf sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 271, "category": "story", "text": "A friendly elf ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 272, "category": "story", "text": "A friendly elf heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 273, "category": "story", "text": "A friendly elf gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 274, "category": "story", "text": "A friendly elf noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 275, "category": "story", "text": "A friendly elf practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 276, "category": "story", "text": "The daring pirate searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 277, "category": "story", "text": "The daring pirate climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 278, "category": "story", "text": "The daring pirate closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 279, "category": "story", "text": "The daring pirate packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 280, "category": "story", "text": "The daring pirate sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 281, "category": "story", "text": "The daring pirate ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 282, "category": "story", "text": "The daring pirate heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 283, "category": "story", "text": "The daring pirate gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 284, "category": "story", "text": "The daring pirate noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 285, "category": "story", "text": "The daring pirate practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 286, "category": "story", "text": "A little girl named Mia searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 287, "category": "story", "text": "A little girl named Mia climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 288, "category": "story", "text": "A little girl named Mia closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 289, "category": "story", "text": "A little girl named Mia packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 290, "category": "story", "text": "A little girl named Mia sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 291, "category": "story", "text": "A little girl named Mia ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 292, "category": "story", "text": "A little girl named Mia heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 293, "category": "story", "text": "A little girl named Mia gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 294, "category": "story", "text": "A little girl named Mia noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 295, "category": "story", "text": "A little girl named Mia practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 296, "category": "story", "text": "A tiny mouse searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 297, "category": "story", "text": "A tiny mouse climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 298, "category": "story", "text": "A tiny mouse closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 299, "category": "story", "text": "A tiny mouse packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 300, "category": "story", "text": "A tiny mouse sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 301, "category": "story", "text": "A tiny mouse ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 302, "category": "story", "text": "A tiny mouse heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 303, "category": "story", "text": "A tiny mouse gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 304, "category": "story", "text": "A tiny mouse noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 305, "category": "story", "text": "A tiny mouse practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 306, "category": "story", "text": "A wild tiger searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 307, "category": "story", "text": "A wild tiger climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 308, "category": "story", "text": "A wild tiger closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 309, "category": "story", "text": "A wild tiger packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 310, "category": "story", "text": "A wild tiger sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 311, "category": "story", "text": "A wild tiger ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 312, "category": "story", "text": "A wild tiger heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 313, "category": "story", "text": "A wild tiger gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 314, "category": "story", "text": "A wild tiger noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 315, "category": "story", "text": "A wild tiger practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 316, "category": "story", "text": "The old sailor searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 317, "category": "story", "text": "The old sailor climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 318, "category": "story", "text": "The old sailor closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 319, "category": "story", "text": "The old sailor packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 320, "category": "story", "text": "The old sailor sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 321, "category": "story", "text": "The old sailor ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 322, "category": "story", "text": "The old sailor heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 323, "category": "story", "text": "The old sailor gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 324, "category": "story", "text": "The old sailor noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 325, "category": "story", "text": "The old sailor practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 326, "category": "story", "text": "A cheerful bird searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 327, "category": "story", "text": "A cheerful bird climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 328, "category": "story", "text": "A cheerful bird closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 329, "category": "story", "text": "A cheerful bird packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 330, "category": "story", "text": "A cheerful bird sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 331, "category": "story", "text": "A cheerful bird ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 332, "category": "story", "text": "A cheerful bird heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 333, "category": "story", "text": "A cheerful bird gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 334, "category": "story", "text": "A cheerful bird noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 335, "category": "story", "text": "A cheerful bird practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 336, "category": "story", "text": "The clever fox searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 337, "category": "story", "text": "The clever fox climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 338, "category": "story", "text": "The clever fox closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 339, "category": "story", "text": "The clever fox packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 340, "category": "story", "text": "The clever fox sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 341, "category": "story", "text": "The clever fox ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 342, "category": "story", "text": "The clever fox heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 343, "category": "story", "text": "The clever fox gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 344, "category": "story", "text": "The clever fox noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 345, "category": "story", "text": "The clever fox practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 346, "category": "story", "text": "A wise owl searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 347, "category": "story", "text": "A wise owl climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 348, "category": "story", "text": "A wise owl closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 349, "category": "story", "text": "A wise owl packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 350, "category": "story", "text": "A wise owl sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 351, "category": "story", "text": "A wise owl ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 352, "category": "story", "text": "A wise owl heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 353, "category": "story", "text": "A wise owl gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 354, "category": "story", "text": "A wise owl noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 355, "category": "story", "text": "A wise owl practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 356, "category": "story", "text": "A playful puppy searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 357, "category": "story", "text": "A playful puppy climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 358, "category": "story", "text": "A playful puppy closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 359, "category": "story", "text": "A playful puppy packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 360, "category": "story", "text": "A playful puppy sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 361, "category": "story", "text": "A playful puppy ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 362, "category": "story", "text": "A playful puppy heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 363, "category": "story", "text": "A playful puppy gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 364, "category": "story", "text": "A playful puppy noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 365, "category": "story", "text": "A playful puppy practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 366, "category": "story", "text": "The young inventor searched the deep cave and discovered a hiddentreasure. Sparkling gold coins and ancient jewels filled the wooden chest to the brim."}
+{"id": 367, "category": "story", "text": "The young inventor climbed to the very top of the mountain and met agiant. The friendly creature smiled and offered to help carry the heavy bags."}
+{"id": 368, "category": "story", "text": "The young inventor closed their eyes and carefully focused on the magicspell. Within seconds, a beautiful glow surrounded them and lifted them into the air."}
+{"id": 369, "category": "story", "text": "The young inventor packed a small bag and set off on a long journey through theforest. The tall green trees whispered softly in the gentle morning breeze."}
+{"id": 370, "category": "story", "text": "The young inventor sat quietly on the soft green grass to watch the beautifulsunset. The sky turned shades of bright orange, pink, and deep purple."}
+{"id": 371, "category": "story", "text": "The young inventor ran across the wide open field to play a lively game oftag. Everyone laughed and cheered as they chased each other under the warm sun."}
+{"id": 372, "category": "story", "text": "The young inventor heard a strange whispering sound and followed the glowingfootprints. They led to a secret door that was hidden behind a thick green bush."}
+{"id": 373, "category": "story", "text": "The young inventor gathered some sweet fresh berries to bake a deliciouspie. Soon, the warm and wonderful smell filled every single corner of the house."}
+{"id": 374, "category": "story", "text": "The young inventor noticed a shivering little squirrel and decided to share somenuts. The grateful little animal ate quickly and then chirped a happy thank you."}
+{"id": 375, "category": "story", "text": "The young inventor practiced diligently every afternoon to master the beautifulpiano. Soon, they could play complete songs without making a single mistake."}
+{"id": 376, "category": "math", "text": "2 + 2 =four. This simple addition is one of the first math facts taught."}
+{"id": 377, "category": "math", "text": "5 + 5 =ten. Adding five to itself gives a total of ten."}
+{"id": 378, "category": "math", "text": "10 + 10 =twenty. This is double ten, which is a basic base-ten fact."}
+{"id": 379, "category": "math", "text": "50 + 50 =100. Adding fifty and fifty results in exactly one hundred."}
+{"id": 380, "category": "math", "text": "100 + 100 =200. Two hundred is the sum of these two equal values."}
+{"id": 381, "category": "math", "text": "10 - 3 =seven. Subtracting three from ten leaves a remainder of seven."}
+{"id": 382, "category": "math", "text": "20 - 5 =15. Taking away five from twenty results in fifteen."}
+{"id": 383, "category": "math", "text": "100 - 1 =99. Subtracting one from one hundred gives ninety-nine."}
+{"id": 384, "category": "math", "text": "3 * 3 =nine. Three multiplied by three is equal to nine."}
+{"id": 385, "category": "math", "text": "4 * 4 =16. Four times four equals sixteen, which is a perfect square."}
+{"id": 386, "category": "math", "text": "5 * 5 =25. Five multiplied by itself is twenty-five."}
+{"id": 387, "category": "math", "text": "6 * 6 =36. Six times six is thirty-six, another perfect square."}
+{"id": 388, "category": "math", "text": "7 * 7 =49. Seven multiplied by seven equals forty-nine."}
+{"id": 389, "category": "math", "text": "9 * 9 =81. Nine times nine is equal to eighty-one."}
+{"id": 390, "category": "math", "text": "10 * 10 =100. Ten multiplied by ten equals exactly one hundred."}
+{"id": 391, "category": "math", "text": "12 / 4 =three. Twelve divided by four yields a quotient of three."}
+{"id": 392, "category": "math", "text": "20 / 5 =four. Twenty split into five equal parts gives four."}
+{"id": 393, "category": "math", "text": "50 / 2 =25. Fifty divided in half equals twenty-five."}
+{"id": 394, "category": "math", "text": "100 / 4 =25. One hundred split into four quarters is twenty-five."}
+{"id": 395, "category": "math", "text": "The square root of 9 is3, because 3 multiplied by 3 equals 9."}
+{"id": 396, "category": "math", "text": "The square root of 16 is4, because 4 times 4 is equal to 16."}
+{"id": 397, "category": "math", "text": "The square root of 25 is5, because 5 times 5 is twenty-five."}
+{"id": 398, "category": "math", "text": "The square root of 36 is6, because 6 multiplied by itself is thirty-six."}
+{"id": 399, "category": "math", "text": "The square root of 49 is7, since 7 times 7 is forty-nine."}
+{"id": 400, "category": "math", "text": "The square root of 100 is10, because 10 times 10 is one hundred."}
+{"id": 401, "category": "math", "text": "Complete the pattern: 1, 3, 5, 7,9. This is a sequence of consecutive odd numbers."}
+{"id": 402, "category": "math", "text": "Complete the pattern: 5, 10, 15, 20,25. This sequence increases by five at each step."}
+{"id": 403, "category": "math", "text": "Complete the pattern: 10, 20, 30, 40,50. This sequence increases by ten at each step."}
+{"id": 404, "category": "math", "text": "Complete the pattern: 100, 90, 80, 70,60. The numbers are decreasing by ten in each step."}
+{"id": 405, "category": "math", "text": "Complete the pattern: 1, 4, 9, 16,25. These are the perfect squares of consecutive integers."}
+{"id": 406, "category": "math", "text": "The prime number that comes after 2 is3. It is the only even prime number's immediate successor."}
+{"id": 407, "category": "math", "text": "The prime number that comes after 3 is5. It is the next number divisible only by 1 and itself."}
+{"id": 408, "category": "math", "text": "The prime number that comes after 5 is7. The sequence of primes starts with 2, 3, 5, 7."}
+{"id": 409, "category": "math", "text": "The prime number that comes after 7 is11. Note that 9 is not prime because 3 times 3 is 9."}
+{"id": 410, "category": "math", "text": "In math, a triangle has exactlythree sides. The sum of its interior angles is 180 degrees."}
+{"id": 411, "category": "math", "text": "In geometry, a square has exactlyfour equal sides. All of its corners are right angles."}
+{"id": 412, "category": "math", "text": "In geometry, a pentagon has exactlyfive sides. It is a five-sided polygon."}
+{"id": 413, "category": "math", "text": "In geometry, a hexagon has exactlysix sides. A beehive cell is a famous example."}
+{"id": 414, "category": "math", "text": "In geometry, an octagon has exactlyeight sides. A stop sign is a common octagon shape."}
+{"id": 415, "category": "math", "text": "Half of 50 is25. Dividing fifty by two gives twenty-five."}
+{"id": 416, "category": "math", "text": "Half of 100 is50. Fifty is exactly one-half of one hundred."}
+{"id": 417, "category": "math", "text": "Half of 1000 is500. Five hundred is half of one thousand."}
+{"id": 418, "category": "math", "text": "Double of 15 is30. Multiplying fifteen by two yields three."}
+{"id": 419, "category": "math", "text": "Double of 25 is50. Fifty is the result of doubling twenty-five."}
+{"id": 420, "category": "math", "text": "Double of 250 is500. Five hundred is the result of multiplying 250 by two."}
+{"id": 421, "category": "math", "text": "The sum of 8 and 2 is10. Adding eight and two gives a total of ten."}
+{"id": 422, "category": "math", "text": "The product of 2 and 5 is10. Multiplying two and five results in ten."}
+{"id": 423, "category": "math", "text": "The product of 3 and 4 is12. Three multiplied by four equals twelve."}
+{"id": 424, "category": "math", "text": "The number of degrees in a circle is360. A full turn represents three hundred and sixty degrees."}
+{"id": 425, "category": "math", "text": "The number of degrees in a right angle is90. A right angle is formed by perpendicular lines."}
+{"id": 426, "category": "logic", "text": "If a is larger than b, and b is larger than c, then a islarger than c. This is the transitive property of inequality."}
+{"id": 427, "category": "logic", "text": "If today is Tuesday, then tomorrow isWednesday. Tuesday is followed immediately by Wednesday."}
+{"id": 428, "category": "logic", "text": "If today is Saturday, then yesterday wasFriday. Saturday is preceded immediately by Friday."}
+{"id": 429, "category": "logic", "text": "If all humans are mortal, and Socrates is human, then Socrates ismortal. This is a classic syllogism in formal logic."}
+{"id": 430, "category": "logic", "text": "If a figure is a square, then it must also be arectangle. All squares are rectangles, but not all rectangles are squares."}
+{"id": 431, "category": "logic", "text": "If a number is divisible by 10, it must also be divisible by5. Any multiple of ten is also a multiple of five."}
+{"id": 432, "category": "logic", "text": "If water is heated to 100 degrees Celsius at sea level, it begins toboil. This is the boiling point of pure water."}
+{"id": 433, "category": "logic", "text": "If you turn a left glove inside out, it becomes aright glove. Its orientation is mirrored by the inversion."}
+{"id": 434, "category": "logic", "text": "If John is taller than Mary, and Mary is taller than Dave, the tallest isJohn. Dave is the shortest among the three."}
+{"id": 435, "category": "logic", "text": "If you mix red and yellow paint, you getorange. Orange is a secondary color made from these primaries."}
+{"id": 436, "category": "logic", "text": "If you mix blue and yellow paint, you getgreen. Yellow and blue combine to form green."}
+{"id": 437, "category": "logic", "text": "If you mix red and blue paint, you getpurple. Red and blue are the primary ingredients for purple."}
+{"id": 438, "category": "logic", "text": "If a box contains only red balls, and you pick one, its color isred. There are no other colors in the box to choose."}
+{"id": 439, "category": "logic", "text": "If all birds can fly, and a penguin is a bird, then logically a penguincan fly. Even though in reality penguins are flightless."}
+{"id": 440, "category": "logic", "text": "If a light switch is currently off, and you flip it once, it becomeson. Flipping the switch toggles its current state."}
+{"id": 441, "category": "logic", "text": "If something is not true, then logically it isfalse. In binary logic, statements are either true or false."}
+{"id": 442, "category": "logic", "text": "If a container is completely full of water, and you add more, it willoverflow. The extra water has nowhere else to go."}
+{"id": 443, "category": "logic", "text": "If you look directly into a flat mirror, your image isreversed. Left and right are swapped in the reflection."}
+{"id": 444, "category": "logic", "text": "If an object is solid ice, warming it up will cause it tomelt. Ice transitions into liquid water when heated."}
+{"id": 445, "category": "logic", "text": "If you double a positive number, the result is alwayslarger than the original number. It becomes twice as big."}
+{"id": 446, "category": "geography", "text": "The capital of France isParis. It is also the country's most populous city."}
+{"id": 447, "category": "geography", "text": "The capital of the United Kingdom isLondon. It sits on the famous River Thames."}
+{"id": 448, "category": "geography", "text": "The capital of Japan isTokyo. It is a major global financial center."}
+{"id": 449, "category": "geography", "text": "The largest continent on Earth isAsia. It covers about thirty percent of Earth's land area."}
+{"id": 450, "category": "geography", "text": "The continent that is home to the Nile River isAfrica. It is the second-largest continent on Earth."}
+{"id": 451, "category": "geography", "text": "The country famous for its ancient pyramids isEgypt. The pyramids of Giza are located near Cairo."}
+{"id": 452, "category": "geography", "text": "The largest ocean on Earth is thePacific. It covers more than thirty percent of the planet."}
+{"id": 453, "category": "geography", "text": "The country that is shaped like a boot isItaly. It is located in Southern Europe on the Mediterranean."}
+{"id": 454, "category": "geography", "text": "The capital of Germany isBerlin. It is known for its rich history and culture."}
+{"id": 455, "category": "geography", "text": "The capital of Canada isOttawa. It is located in the province of Ontario."}
+{"id": 456, "category": "geography", "text": "The capital of Australia isCanberra. It was selected as a compromise between Sydney and Melbourne."}
+{"id": 457, "category": "geography", "text": "The mountain range that contains Mount Everest is theHimalayas. It spans across several Asian countries."}
+{"id": 458, "category": "geography", "text": "The country that has the largest population in the world isIndia. It surpassed China recently in total population."}
+{"id": 459, "category": "geography", "text": "The desert that covers much of North Africa is theSahara. It is the largest hot desert in the world."}
+{"id": 460, "category": "geography", "text": "The river that flows through the Amazon rainforest is theAmazon. It is the largest river by water volume."}
+{"id": 461, "category": "science", "text": "The force that pulls objects toward the center of the Earth isgravity. It gives weight to physical objects."}
+{"id": 462, "category": "science", "text": "The planet closest to the sun isMercury. It is a small rocky planet with extreme temperatures."}
+{"id": 463, "category": "science", "text": "The largest planet in our solar system isJupiter. It is a gas giant known for its Great Red Spot."}
+{"id": 464, "category": "science", "text": "The red planet is commonly known asMars. It has a thin atmosphere and two small moons."}
+{"id": 465, "category": "science", "text": "The gas that humans need to breathe to survive isoxygen. It is produced by plants during photosynthesis."}
+{"id": 466, "category": "science", "text": "The chemical symbol for water isH2O. It stands for two hydrogen atoms and one oxygen."}
+{"id": 467, "category": "science", "text": "The liquid metal used in old thermometers ismercury. It is the only metal that is liquid at room temperature."}
+{"id": 468, "category": "science", "text": "The organ that pumps blood throughout the human body is theheart. It is a powerful muscular organ in the chest."}
+{"id": 469, "category": "science", "text": "The process by which plants make their own food is calledphotosynthesis. It requires sunlight, water, and carbon dioxide."}
+{"id": 470, "category": "science", "text": "The center of an atom is called thenucleus. It contains protons and neutrons."}
+{"id": 471, "category": "science", "text": "The main gas that makes up Earth's atmosphere isnitrogen. It accounts for about seventy-eight percent of the air."}
+{"id": 472, "category": "science", "text": "The scientist who developed the theory of relativity wasEinstein. He is famous for the equation E equals mc squared."}
+{"id": 473, "category": "science", "text": "The type of rock formed from cooled lava isigneous. Examples include basalt and obsidian."}
+{"id": 474, "category": "science", "text": "The main source of energy for Earth's climate system is thesun. It emits electromagnetic radiation that warms our planet."}
+{"id": 475, "category": "science", "text": "The part of the cell that contains the genetic material is thenucleus. It acts as the control center of the cell."}
+{"id": 476, "category": "commonsense", "text": "The best place to store milk to keep it fresh is therefrigerator. Cold temperatures slow down the growth of bacteria."}
+{"id": 477, "category": "commonsense", "text": "When the sky is dark and you hear thunder, it is likely torain. You should seek shelter indoors immediately."}
+{"id": 478, "category": "commonsense", "text": "Before eating fresh fruits and vegetables, you should alwayswash them. This removes dirt and harmful bacteria from the skin."}
+{"id": 479, "category": "commonsense", "text": "To protect your head while riding a bicycle, you should wear ahelmet. It absorbs impact during a fall to prevent injury."}
+{"id": 480, "category": "commonsense", "text": "If you leave a piece of bread in the toaster too long, it willburn. It becomes black and emits a smoky smell."}
+{"id": 481, "category": "commonsense", "text": "The tool used to write on a blackboard is calledchalk. It can be easily erased with a cloth or felt eraser."}
+{"id": 482, "category": "commonsense", "text": "To cut paper in a straight line, you should use a pair ofscissors. Be careful to keep your fingers away from the sharp blades."}
+{"id": 483, "category": "commonsense", "text": "When you are tired and want to sleep, you go tobed. It helps your body and mind recover for the next day."}
+{"id": 484, "category": "commonsense", "text": "To clean your teeth after eating, you should use atoothbrush. Dentists recommend doing this twice every day."}
+{"id": 485, "category": "commonsense", "text": "If you put an ice cube in a cup of hot coffee, the ice willmelt. It turns from a solid into liquid water quickly."}
+{"id": 486, "category": "commonsense", "text": "To keep your hands warm in freezing winter weather, you weargloves. They insulate your fingers from the cold air."}
+{"id": 487, "category": "commonsense", "text": "To keep rain from wetting your clothes while walking, you use anumbrella. It blocks the falling raindrops from above."}
+{"id": 488, "category": "commonsense", "text": "A clock is an instrument used to measuretime. It displays hours, minutes, and sometimes seconds."}
+{"id": 489, "category": "commonsense", "text": "To write a letter on paper, you can use a pen or apencil. Pencil marks can be erased if you make a mistake."}
+{"id": 490, "category": "commonsense", "text": "A dog is a popular household pet known for its ability tobark. It is often referred to as man's best friend."}
+{"id": 491, "category": "grammar", "text": "The opposite of the word 'heavy' islight. Something that is light has very little weight."}
+{"id": 492, "category": "grammar", "text": "The opposite of the word 'hot' iscold. These two words describe extreme ends of temperature."}
+{"id": 493, "category": "grammar", "text": "The plural form of the word 'mouse' ismice. It is an irregular plural that changes spelling."}
+{"id": 494, "category": "grammar", "text": "The past tense of the verb 'to go' iswent. For example, he went to the store yesterday."}
+{"id": 495, "category": "grammar", "text": "The past tense of the verb 'to eat' isate. He ate a delicious lunch an hour ago."}
+{"id": 496, "category": "grammar", "text": "A word that has the same meaning as 'happy' isjoyful. Both words describe feeling great pleasure or content."}
+{"id": 497, "category": "grammar", "text": "A word that has the same meaning as 'quick' isfast. Both words refer to moving at high speed."}
+{"id": 498, "category": "grammar", "text": "A noun is a word that represents a person, place, orthing. Examples include teacher, city, and book."}
+{"id": 499, "category": "grammar", "text": "A verb is a word that describes an action, state, oroccurrence. Examples include run, exist, and happen."}
+{"id": 500, "category": "grammar", "text": "An adjective is a word that describes or modifies anoun. It adds details like color, size, or quality."}
+{"id": 501, "category": "conversation", "text": "When someone says 'Thank you', a polite response isYou are welcome. It is a standard way to accept thanks."}
+{"id": 502, "category": "conversation", "text": "When you meet someone for the first time, you sayNice to meet you. It is a polite and friendly greeting."}
+{"id": 503, "category": "conversation", "text": "When you want to ask for something politely, you sayPlease. This word shows respect and good manners."}
+{"id": 504, "category": "conversation", "text": "When you accidentally bump into someone, you sayExcuse me. It acknowledges the minor accident politely."}
+{"id": 505, "category": "conversation", "text": "When you leave a friend and expect to see them soon, you saySee you later. It is an informal way to say goodbye."}
+{"id": 506, "category": "measurement", "text": "The number of centimeters in a meter is exactly100. The metric system is based on powers of ten."}
+{"id": 507, "category": "measurement", "text": "The number of minutes in a single hour is exactly60. This base-sixty division comes from ancient civilizations."}
+{"id": 508, "category": "measurement", "text": "The number of days in a standard year is365. Leap years have an extra day, making three hundred and sixty-six."}
+{"id": 509, "category": "measurement", "text": "The number of items in a dozen is exactly12. People often buy eggs or donuts by the dozen."}
+{"id": 510, "category": "measurement", "text": "The freezing point of pure water in Celsius is0 degrees. It is where liquid water transitions into solid ice."}

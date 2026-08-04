@@ -19,6 +19,7 @@ and written up in `reports/`.
 | 08 | [inference_wins](reports/08_inference_wins.md) | Effort ladder + quality probe: architecture-agnostic upside |
 | 09 | [synthesis](reports/09_synthesis.md) | The recipe to beat Glint-2, and the CPU-budget contender |
 | 10 | [glint2_verification](reports/10_glint2_verification.md) | Fresh Hub proof: shipped weights are 1.71M loop+coda; README mislabels params + WikiText ppl |
+| 11 | [crush_glint2_recipe](reports/11_crush_glint2_recipe.md) | Locked 1.4M dense GQA recipe + Colab T4 one-cell notebook (FineWeb-Edu/DCLM/TinyStories/soft-QA) |
 | — | [RESULTS](reports/RESULTS.md) | Auto-aggregated tables + figures from all runs |
 
 ## Experiments (`experiments/`)

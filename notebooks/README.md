@@ -8,6 +8,7 @@ minutes.
 | --- | --- |
 | [01_train_a_language_model.ipynb](01_train_a_language_model.ipynb) | Tokenizer → corpus → pretrain → SFT → evaluate → generate, all in-process |
 | [02_pixel_art_generator.ipynb](02_pixel_art_generator.ipynb) | Sprites → palette corpus → PixelGPT → sampling grids, plus a DiT comparison |
+| [03_crush_glint2_colab.ipynb](03_crush_glint2_colab.ipynb) | **One-cell Colab T4**: train `dense_1_4m` on FineWeb-Edu/DCLM/TinyStories/soft-QA for ≤4h with Drive backup (recipe report 11) |
 
 Setup from the repo root:
 

@@ -1,0 +1,39 @@
+{
+  "note": "Sandbox bake-off at ~1.4M params, vocab≈4096 arch, builtin+augmented corpus, 600 steps AdamW. Relative ranking only.",
+  "winner": {
+    "name": "dense_gqa_128x5_f352",
+    "params": 1406506,
+    "arch": {
+      "dim": 128,
+      "n_layers": 5,
+      "n_heads": 8,
+      "head_dim": 16,
+      "n_kv_heads": 2,
+      "ffn_hidden": 352,
+      "qk_norm": true,
+      "tie_embeddings": true,
+      "value_residual": true
+    },
+    "rationale": "Tied with MHA/deep variants on val loss; GQA preferred for T4 throughput. Thin-deep 96x7 worse. Wide 160x3 slightly better but 1.47M (over budget)."
+  },
+  "lr_sweep_on_winner": {
+    "1e-3": {"val": 0.0423},
+    "3e-3": {"val": 0.0364},
+    "6e-3": {"val": 0.037},
+    "1e-2": {"val": 0.0373},
+    "best": 0.003
+  },
+  "seq_ablation_equal_tokens": {
+    "bs64_seq64": {"val": 0.0636},
+    "bs32_seq128": {"val": 0.0366},
+    "bs16_seq256": {"val": 0.0199},
+    "takeaway": "Prefer longer context windows at equal token budget."
+  },
+  "results": [
+    {"name": "dense_gqa_128x5_f352", "params": 1406506, "final": 0.0356, "val": 0.0364, "tok_s": 29874},
+    {"name": "dense_mha_128x5_f288", "params": 1406676, "final": 0.0358, "val": 0.0363, "tok_s": 29744},
+    {"name": "dense_deep_112x6", "params": 1406744, "final": 0.0357, "val": 0.0363, "tok_s": 27957},
+    {"name": "dense_thin_96x7", "params": 1405582, "final": 0.0375, "val": 0.0374, "tok_s": 26850},
+    {"name": "dense_wide_160x3", "params": 1470767, "final": 0.035, "val": 0.0357, "tok_s": 35289}
+  ]
+}
