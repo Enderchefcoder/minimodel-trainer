@@ -54,9 +54,9 @@ Each entry: the source, what we took, what we skipped.
 - **RG-LRU / Griffin** (De et al., 2024, arXiv:2402.19427) — the gated
   real-diagonal recurrence and the 2:1 recurrent:attention pattern, both taken
   directly. Our parallel form uses a log-space cumsum scan.
-- **Mamba** (Gu & Dao, 2023, arXiv:2312.00752) — considered; skipped because
-  its selective scan needs a custom kernel to be fast, and RG-LRU gets most of
-  the benefit in pure PyTorch.
+- **Mamba** (Gu & Dao, 2023, arXiv:2312.00752) — implemented as ``mamba-lm``
+  in pure PyTorch (sequential selective scan + streamable depthwise conv) for
+  the ~1M Glint-2 candidate ladder; still no custom CUDA kernel.
 
 ## Optimizers & schedules
 

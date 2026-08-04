@@ -16,7 +16,8 @@ faithful description of the code:
 * :class:`MoEFeedForward` - sparse mixture-of-experts FFN with a shared expert
   and bias-based, auxiliary-loss-free load balancing.
 * :class:`GatedRecurrentUnit` - a real-diagonal gated linear recurrence (the
-  Hawk/Griffin RG-LRU) evaluated with a parallel log-space scan.
+  Hawk/Griffin RG-LRU) evaluated with a sequential float32 scan (the log-space
+  parallel form overflows on moderate lengths at init).
 * :class:`KVCache` - incremental decoding cache shared by all architectures.
 """
 
@@ -600,17 +601,12 @@ class GatedRecurrentUnit(nn.Module):
 
     The recurrence is ``h_t = a_t * h_{t-1} + sqrt(1 - a_t^2) * (i_t * x_t)``
     with ``a_t = exp(-8 * softplus(Lambda) * r_t)`` where ``r_t`` and ``i_t`` are
-    input-dependent sigmoid gates. Because ``a`` is diagonal, positive and
-    strictly less than one, the whole sequence can be solved in parallel with a
-    log-space cumulative sum instead of a sequential loop:
-
-    ``h_t = A_t * sum_{s<=t} (b_s / A_s)`` where ``A_t = prod_{s<=t} a_s``.
-
-    That formulation is numerically safe here because ``a`` is bounded away from
-    zero over practical sequence lengths, and it means the block trains at
-    attention-like speed on GPU without a custom kernel. Cost is O(T) in
-    sequence length rather than attention's O(T^2), which is what makes hybrid
-    stacks attractive for long-context small models.
+    input-dependent sigmoid gates. Evaluation is a sequential float32 scan so
+    chunked streaming matches a full forward pass and moderate sequence lengths
+    stay finite (a log-space parallel cumsum form overflows once the cumulative
+    product of decays underflows). Cost is O(T) in sequence length rather than
+    attention's O(T^2), which is what makes hybrid stacks attractive for
+    long-context small models.
     """
 
     #: Matches the Griffin paper's `c` constant in `a = exp(-c * softplus(L) * r)`.
@@ -629,7 +625,14 @@ class GatedRecurrentUnit(nn.Module):
         self.log_lambda = nn.Parameter(torch.linspace(-4.0, 0.0, self.inner))
 
     def forward(self, x: Tensor, state: Tensor | None = None) -> tuple[Tensor, Tensor]:
-        """Return ``(output, final_state)`` for ``x`` shaped ``[B, T, dim]``."""
+        """Return ``(output, final_state)`` for ``x`` shaped ``[B, T, dim]``.
+
+        The recurrence is evaluated **sequentially** in float32. An earlier
+        log-space parallel scan is algebraically equivalent but overflows once
+        the cumulative product of decays underflows (~16-32 tokens at init),
+        which silently NaN'd every hybrid model; the sequential form matches
+        chunked streaming exactly and stays finite.
+        """
         gate = F.gelu(self.gate_proj(x))
         u = self.input_proj(x)
 
@@ -638,16 +641,20 @@ class GatedRecurrentUnit(nn.Module):
         decay = torch.exp(-self.DECAY_SCALE * F.softplus(self.log_lambda) * r)
         driven = torch.sqrt((1.0 - decay.pow(2)).clamp(min=1e-8)) * (i * u)
 
-        log_decay = torch.log(decay.clamp(min=1e-8).float())
-        cumulative = torch.cumsum(log_decay, dim=1)
-        # h_t = exp(C_t) * (h_0 + sum_{s<=t} exp(-C_s) * b_s)
-        scaled = driven.float() * torch.exp(-cumulative)
-        running = torch.cumsum(scaled, dim=1)
-        if state is not None:
-            running = running + state.unsqueeze(1).float()
-        h = (torch.exp(cumulative) * running).to(x.dtype)
-
-        return self.out_proj(h * gate), h[:, -1]
+        batch, seq_len, inner = u.shape
+        h = (
+            torch.zeros(batch, inner, device=x.device, dtype=torch.float32)
+            if state is None
+            else state.float()
+        )
+        outputs: list[Tensor] = []
+        decay_f = decay.float()
+        driven_f = driven.float()
+        for t in range(seq_len):
+            h = decay_f[:, t] * h + driven_f[:, t]
+            outputs.append(h)
+        stacked = torch.stack(outputs, dim=1).to(x.dtype)
+        return self.out_proj(stacked * gate), h.to(x.dtype)
 
     def extra_repr(self) -> str:
         return f"dim={self.dim}, inner={self.inner}"

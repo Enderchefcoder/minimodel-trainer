@@ -28,7 +28,7 @@ every stage scales up when you get GPUs.
 
 ## What's inside
 
-### Four language-model architectures, one interface
+### Six language-model architectures, one interface
 
 | Family | What it is | When to pick it |
 | --- | --- | --- |
@@ -36,10 +36,14 @@ every stage scales up when you get GPUs.
 | `looped-transformer` | Weight-shared recurrent depth with per-iteration LoRA/gain conditioning | Best quality per *parameter*; adjustable depth at inference |
 | `moe-transformer` | Sparse mixture-of-experts, shared expert, aux-loss-free balancing | Best quality per training *FLOP* at 30M+ |
 | `hybrid-recurrent` | Griffin-style gated linear recurrences + occasional attention | Long context with a constant-size decode state |
+| `experimental-transformer` | Novel wirings (ResiMix, KV-inherit, braid, echo-FFN, dual-RoPE) | ~1M Glint-2 bake-offs |
+| `mamba-lm` | Pure-PyTorch selective SSM (+ attention hybrid variants) | Long context / SSM experiments at ~1M |
 
-13 bundled size templates from **1.4M** (`supra2_1406240`, whose annotated YAML
+33+ bundled size templates from **~1M** (`mm1m_r01_dense_gqa_vr` … `mm1m_r20_*`,
+ordered Glint-2 candidates) and **1.4M** (`supra2_1406240`, whose annotated YAML
 is also the architecture's written spec) to **343M** (`dense_350m`). Every
 template's declared parameter count is verified against the built model in CI.
+List the ordered ~1M ladder with `list_glint2_candidates()`.
 
 ### Five image-model architectures
 

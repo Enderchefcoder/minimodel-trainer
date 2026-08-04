@@ -9,9 +9,11 @@ from __future__ import annotations
 
 from minimodel.architectures.base import BaseLanguageModel
 from minimodel.architectures.dense import DenseTransformer
+from minimodel.architectures.experimental import ExperimentalTransformer
 from minimodel.architectures.hybrid import HybridRecurrentTransformer
 from minimodel.architectures.looped import LoopedTransformer
 from minimodel.architectures.moe import MoETransformer
+from minimodel.architectures.ssm import MambaLM
 from minimodel.core.registry import Registry
 
 __all__ = ["ARCHITECTURES", "list_architectures", "register_architecture"]
@@ -37,7 +39,17 @@ ARCHITECTURES.add(
 ARCHITECTURES.add(
     HybridRecurrentTransformer.architecture_name,
     HybridRecurrentTransformer,
-    aliases=("hybrid", "griffin", "recurrent", "ssm"),
+    aliases=("hybrid", "griffin", "recurrent"),
+)
+ARCHITECTURES.add(
+    ExperimentalTransformer.architecture_name,
+    ExperimentalTransformer,
+    aliases=("experimental", "novel", "variant"),
+)
+ARCHITECTURES.add(
+    MambaLM.architecture_name,
+    MambaLM,
+    aliases=("mamba", "ssm", "selective_ssm"),
 )
 
 

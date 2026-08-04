@@ -59,10 +59,30 @@ notes: reusable lessons first, then a scratchpad for the active task.
 - Root `.gitignore` pattern `data/` matches *any* path segment named `data/`
   (including `src/vision/data/` and `research/data/`). Re-include package trees with
   `!src/vision/data/**` (and `git check-ignore -v` before assuming files track).
+- RG-LRU log-space parallel scan NaNs past ~16–32 tokens at init (cumsum of
+  `log(a)` underflows → `exp(-C)` overflows). Prefer a sequential float32 scan
+  for hybrid recurrence so streaming matches full forward.
 
 # Scratchpad
 
-## Task: Crush Glint-2 Colab recipe (2026-08-04)
+## Task: 20 × ~1M arch candidates to beat Glint-2 (2026-08-04)
+
+Goal: ship 20 ~1M-param architectures, add to the template ladder, order by
+Glint-2-beating prior (then sandbox bakeoff). Mix:
+- 10 researched/optimized (lit + prior reports)
+- 5 novel Transformer improvements (original)
+- 5 novel Mamba/SSM variants (original, pure PyTorch)
+
+Plan:
+[X] Branch + env
+[X] Novel layers (ResiMix, KV-inherit, braid, echo-FFN, dual-RoPE) + Mamba SSM
+[X] Register families; 20 SPECS in generate_templates.py; regenerate
+[X] Ranked candidate list + report 12 + bakeoff script (offline/smoke)
+[X] Tests / ruff / smoke / commit / PR
+
+Lessons:
+- RG-LRU log-space parallel scan NaNs past ~16–32 tokens at init (cumsum log
+  underflow → exp overflow). Use sequential float32 scan for hybrid models.
 
 Goal: best 1.4M recipe (arch/tok/data/hparams/tokens) on FineWeb-Edu +
 TinyStories + DCLM-100BT, crush Glint-2 on ARC-E/C, BLiMP, WikiText,

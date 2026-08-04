@@ -1,8 +1,10 @@
 # Architectures
 
-Four language-model families share one interface
+Four core language-model families share one interface
 (`minimodel.architectures.BaseLanguageModel`), one decoding cache protocol and
-one trainer. This page explains what each is, why it exists, and how to pick.
+one trainer — plus two experimental families aimed at the ~1M Glint-2 budget
+(`experimental-transformer`, `mamba-lm`). This page explains what each is, why
+it exists, and how to pick.
 
 ## The families
 
@@ -99,6 +101,18 @@ is the whole point: `hybrid_35m` holds an 8K context with the KV cache of a
 
 Pick it for long documents, streaming, or memory-constrained decoding.
 
+### `experimental-transformer` - novel wirings at ~1M
+
+Five original Transformer compositions for Glint-2 bake-offs (ResiMix residual
+mix, KV-inherit depth routing, braid local/global heads, dual-RoPE, echo-FFN).
+Not production defaults — see `research/reports/12_arch_1m_candidates.md`.
+
+### `mamba-lm` - selective SSM in pure PyTorch
+
+Mamba-style selective state space without custom kernels, with hybrid variants
+(attention tail, SSM/attention braid, multi-head SSM). Streamable via
+`KVCache.recurrent_states`.
+
 ## Choosing, in one table
 
 | Constraint | Choice |
@@ -106,7 +120,10 @@ Pick it for long documents, streaming, or memory-constrained decoding.
 | "Just train me a good model" | `dense` |
 | Model file size / parameter budget | `looped` |
 | Training compute budget, memory is fine | `moe` |
-| Long context or tiny decode memory | `hybrid` |
+| Long context or tiny decode memory | `hybrid` / `mamba-lm` |
+| Novel ~1M Glint-2 experiments | `experimental` / `mm1m_r*` templates |
+
+The ordered ~1M candidate ladder is `list_glint2_candidates()` (ranks 1–20).
 
 ## Templates
 
