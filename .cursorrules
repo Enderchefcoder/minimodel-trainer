@@ -82,11 +82,16 @@ Research lock (sandbox + lit + prior reports):
 
 Plan:
 [X] Research + sandbox arch/LR/seq bakeoff
-[ ] dense_1_4m template + mixture + soft-label corpus + config
-[ ] Report 11 + results JSON
-[ ] One-cell Colab notebook (Drive backup)
-[ ] Tests / ruff / smoke / commit / PR
+[X] dense_1_4m template + mixture + soft-label corpus + config
+[X] Report 11 + results JSON
+[X] One-cell Colab notebook (Drive backup)
+[X] Tests / ruff / smoke / commit / PR (#3)
 
+Lessons:
+- Soft-label HF-style JSON is not a list of {text} records — emit a derived
+  JSONL for the dataset registry and keep the full JSON for KL alignment.
+- At ~1.4M, GQA dense matches MHA quality and is the better T4 choice; prefer
+  seq≥256 over short windows at equal token budget.
 ## Task: Prove Glint-2 is 1.7M + misleading benchmarks (2026-08-03)
 
 Falsifiable claims vs live HF Glint-Research/Glint-2 (downloaded 2026-08-03):
