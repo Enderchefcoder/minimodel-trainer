@@ -1,0 +1,76 @@
+{
+  "repo_id": "Glint-Research/Glint-2",
+  "checkpoint": "/tmp/glint2-fresh/checkpoints/glint-2.pt",
+  "file_bytes": 6855881,
+  "model_config": {
+    "prelude_layers": 0,
+    "coda_layers": 1,
+    "shared_loops": 16,
+    "dim": 96,
+    "ffn_hidden": 2112,
+    "vocab_size": 4096,
+    "n_heads": 8
+  },
+  "training_step": 12178000,
+  "advertised_params": 1065000,
+  "actual_params": 1710049,
+  "params_excluding_coda": 1064737,
+  "params_coda_only": 645312,
+  "by_prefix": {
+    "embed": 393216,
+    "indexer": 1,
+    "shared": 645312,
+    "loop_lora": 24576,
+    "loop_embed": 1536,
+    "coda": 645312,
+    "final_norm": 96
+  },
+  "readme_claims_sample": [
+    "one transformer block, looped 8 times, 1.06 million parameters. the pure-loop model: we deleted every unique layer and kept one wide block that iterates. the release: weights, tokenizer, two inference scripts, a 3.5 KB corrective probe, this readme. the sft chat variant arrices soon in the same repo.",
+    "- 1,065k parameters total. one shared block of about 645k (dim 96, ffn hidden 2112, 8 heads), iterated 8 times with a tiny per-loop lora and a loop embedding telling it which iteration it is on. tied embeddings over a 4096-token bpe vocab make up most of the rest.",
+    "- zero unique layers before or after the loop. the loop is the model.",
+    "house rule, same as always: real scores, no dressing. comparison scores are from the tiny-ml leaderboard. glint-0.1 and 0.2 are excluded because their wikitext perplexities are in the millions and they break the y-axis, and honestly they break my heart too.",
+    "| **glint-2** | **1.06M** | **73.96** | **36.80** | **3.09** |",
+    "`effort.py` runs the same 1.06M weights at six effort levels. the levels scale search compute, never the model: low is one sample, ultra is ten independent beam searches with the best final output winning. loops stays 8 at every level. here is the full ladder on one simple prompt, \"The sun is\", 60 tokens, unedited, timed on cpu:",
+    "glint research, 2026, one block, eight loops, 1.06M parameters, six effort levels, one 3.5 KB probe keeping the search honest, sft variant inbound"
+  ],
+  "generate_py": {
+    "constructed_params": 1064737,
+    "strict_load_ok": false,
+    "strict_error": "Error(s) in loading state_dict for Glint2:\n\tUnexpected key(s) in state_dict: \"coda.0.attn_norm.weight\", \"coda.0.attn.qkv.weight\", \"coda.0.attn.out.weight\", \"coda.0.ffn_norm.weight\", \"coda.0.ffn.gate_up.weight\", \"coda.0.ffn.down.weight\". ",
+    "non_strict_unexpected_keys": [
+      "coda.0.attn_norm.weight",
+      "coda.0.attn.qkv.weight",
+      "coda.0.attn.out.weight",
+      "coda.0.ffn_norm.weight",
+      "coda.0.ffn.gate_up.weight",
+      "coda.0.ffn.down.weight"
+    ],
+    "coda_params_silently_dropped_if_non_strict": 645312
+  },
+  "faithful_loader": {
+    "params": 1710049,
+    "matches_checkpoint": true
+  },
+  "benchmark_labeling_from_prior_eval": {
+    "source": "/workspace/research/data/results/glint2.json",
+    "advertised_wikitext_ppl": 3.09,
+    "measured_token_ppl": 33.687,
+    "measured_byte_ppl_2bpb": 3.179,
+    "measured_bpb": 1.6684,
+    "advertised_arc_easy": 36.8,
+    "measured_arc_easy": 36.78,
+    "advertised_blimp": 73.96,
+    "measured_blimp": 66.36,
+    "advertised_params_on_leaderboard": "1.06M",
+    "actual_params_evaluated": 1710049
+  },
+  "verdicts": {
+    "param_count_misreported": true,
+    "not_pure_loop": true,
+    "generate_py_cannot_strict_load": true,
+    "wikitext_ppl_is_byte_normalised": true,
+    "arc_reproducible": true,
+    "blimp_not_reproduced_in_independent_harness": true
+  }
+}
