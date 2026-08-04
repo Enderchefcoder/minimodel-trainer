@@ -111,6 +111,36 @@ SPECS: list[TemplateSpec] = [
     ),
     # ---------------- dense ----------------
     TemplateSpec(
+        name="dense_1_4m",
+        family="dense-transformer",
+        description=(
+            "Dense GQA transformer at ~1.406M params — the Glint-2 crusher. "
+            "Matched to the 1.4M budget with QK-norm, tied embeddings and value "
+            "residuals; preferred over looped at fixed training tokens."
+        ),
+        arch={
+            "vocab_size": 4096,
+            "dim": 128,
+            "n_layers": 5,
+            "n_heads": 8,
+            "head_dim": 16,
+            "n_kv_heads": 2,
+            "ffn_hidden": 352,
+            "window": 512,
+            "max_seq_len": 1024,
+            "qk_norm": True,
+            "tie_embeddings": True,
+            "value_residual": True,
+        },
+        recommended_tokens="0.4-1B",
+        training_defaults={"lr": 3.0e-3, "batch_tokens": 65536, "seq_len": 512},
+        notes=[
+            "Sandbox bake-off winner near 1.4M (tied with MHA/deep variants; "
+            "GQA chosen for T4 throughput). Train on FineWeb-Edu 50% + "
+            "DCLM-100BT 32% + TinyStories 15% + soft-label QA 3%.",
+        ],
+    ),
+    TemplateSpec(
         name="dense_3m",
         family="dense-transformer",
         description="Tiny dense transformer, ~3M params. Fast to train end-to-end for debugging.",

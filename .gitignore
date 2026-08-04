@@ -51,6 +51,8 @@ research/data/train/
 research/data/eval/
 !research/data/results/
 !research/data/results/**
+!research/data/corpus/
+!research/data/corpus/**
 !src/vision/data/
 !src/vision/data/**
 research/baselines/glint2/*.pt

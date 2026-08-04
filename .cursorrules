@@ -62,6 +62,36 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
+## Task: Crush Glint-2 Colab recipe (2026-08-04)
+
+Goal: best 1.4M recipe (arch/tok/data/hparams/tokens) on FineWeb-Edu +
+TinyStories + DCLM-100BT, crush Glint-2 on ARC-E/C, BLiMP, WikiText,
+HellaSwag; one-cell Colab T4 4h + Drive backup; include soft-label JSON.
+
+Research lock (sandbox + lit + prior reports):
+- Arch: dense GQA dim=128 L=5 H=8 kv=2 ffn=352 qk_norm tied VR → 1,406,506
+  (report 03: dense >> loop at fixed tokens; sandbox: GQA≈MHA, thin-deep worse)
+- Tok: 4096 byte-BPE (match Glint; fair WikiText; proven at this scale)
+- Mix: FineWeb-Edu 50% / DCLM-100BT 32% / TinyStories 15% / soft-JSON 3%
+  (SmolLM2 60/40 edu/dclm + TinyStories fluency + JSON oversample)
+- Opt: AdamW lr=3e-3 wd=0.1 betas=(0.9,0.95) — Muon wins on *looped*, AdamW
+  wins on dense in sandbox; WSD decay_ratio=0.2 for extendable runs
+- Seq: 512, batch_tokens≈65k (T4), grad_clip=1.0
+- Tokens: target 400–800M in 4h (~300–570 tok/param); Chinchilla floor 28M
+  is not enough for ARC; stop on wall-clock
+
+Plan:
+[X] Research + sandbox arch/LR/seq bakeoff
+[X] dense_1_4m template + mixture + soft-label corpus + config
+[X] Report 11 + results JSON
+[X] One-cell Colab notebook (Drive backup)
+[X] Tests / ruff / smoke / commit / PR (#3)
+
+Lessons:
+- Soft-label HF-style JSON is not a list of {text} records — emit a derived
+  JSONL for the dataset registry and keep the full JSON for KL alignment.
+- At ~1.4M, GQA dense matches MHA quality and is the better T4 choice; prefer
+  seq≥256 over short windows at equal token budget.
 ## Task: Prove Glint-2 is 1.7M + misleading benchmarks (2026-08-03)
 
 Falsifiable claims vs live HF Glint-Research/Glint-2 (downloaded 2026-08-03):
