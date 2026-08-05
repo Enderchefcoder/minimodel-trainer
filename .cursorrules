@@ -88,11 +88,10 @@ strength.
 
 Plan:
 [X] formatVersion 4: float64 fields + continuous book scores + full float moves
-[X] Stronger phased PST / king safety / threats / mobility; tactical search leaves
-[X] Diagnose: trail hits die by ply ~10; depth-2 search blunders → ~1860 Elo
-[X] gm_oracle_fit.py: SF-MAX oracle games + opponent reply fanout + miss refill
-[X] Search fallback: min 350ms, hang avoidance at root
-[ ] Train gm_oracle until honest probe Elo >= 2500 (tmux stigmergy-oracle)
+[X] Diagnose: exact trails die by ply ~10; 1-ply fanout insufficient; search ~1k Elo
+[X] Coarse pawn/material trails for middlegame policy transfer
+[X] gm_farm.py: high-throughput SF-MAX vs Elo (exact+coarse), gated probes
+[ ] Farm until honest probe Elo >= 2500 (tmux stigmergy-farm)
 [ ] Ship gm_weights.json + elo report; commit; PR
 
 Success gate: probe ladder score >= 50% vs SF UCI_Elo 2500 (GM floor)
@@ -101,13 +100,12 @@ and estimated Elo >= 2500.
 Lessons:
 - Ternary quantize of learnedMoves on save erased overnight learning — v4
   stores float64 values.
-- Polluted low-mass book from losing SF games tanks Elo; scrub w>=5.
-- Field diffusion inside every search node is too slow/weak; use tactical_floor
-  in alpha-beta, trails at root for oracle policy.
-- Random multipv trails miss UCI_Elo offbeat lines — need MAX-vs-Elo ladder cover.
-- Filling only the positions we visit is not enough: must fanout opponent
-  replies (captures/checks/MultiPV/random quiets) or honest SF Elo leaves
-  the trail tree by ply 10 and depth-2 search loses to SF1320.
+- Exact zobrist trails cannot cover stochastic SF Elo middlegames; one miss
+  leaves the SF-MAX distribution and subsequent hits collapse.
+- Coarse keys (pawns+material+castling+side) transfer teacher policy across
+  piece-placement noise; combine with exact trails at root.
+- Prefer many on-distribution SF-MAX games over expensive reply fanout for
+  hit-rate growth; use depth-limited SF (go depth N) for bulk fills.
 - Multipv additive trails fight each other — use set_trail_policy (single move).
 
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)

@@ -29,6 +29,7 @@ NOVEL_FEATURES = {
     "ternary_move_pheromone_bias": 6,
     "continuous_float64_trails": 8,
     "high_precision_float64_weights": 5,
+    "coarse_pawn_material_trails": 7,
     "harmonic_board_channel": 8,
     "spectral_attack_graph": 8,
     "chemical_reaction_eval": 8,

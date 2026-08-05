@@ -312,6 +312,7 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "king_resonance_coupling",
             "continuous_float64_trails",
             "high_precision_float64_weights",
+            "coarse_pawn_material_trails",
             "ternary_ant_trail_book",
             "ternary_move_pheromone_bias",
             "harmonic_board_channel",
