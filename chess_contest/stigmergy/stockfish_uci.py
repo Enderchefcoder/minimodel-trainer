@@ -121,21 +121,29 @@ class StockfishEngine:
             return best
 
     def analyse_top(
-        self, board: chess.Board, movetime_ms: int = 300, multipv: int = 3
+        self,
+        board: chess.Board,
+        movetime_ms: int = 300,
+        multipv: int = 3,
+        depth: int | None = None,
     ) -> list[dict[str, Any]]:
-        """Return top multipv moves with scores (SF POV for side to move)."""
+        """Return top multipv moves with scores (SF POV for side to move).
+
+        Prefer ``depth`` for bulk trail densification (much faster than movetime
+        for shallow oracles). ``movetime_ms`` is used when depth is None.
+        """
         with self._lock:
             self._cmd(f"setoption name MultiPV value {multipv}")
             self._cmd(f"position fen {board.fen()}")
-            self._cmd(f"go movetime {movetime_ms}")
+            if depth is not None:
+                self._cmd(f"go depth {int(depth)}")
+            else:
+                self._cmd(f"go movetime {movetime_ms}")
             infos: dict[int, dict[str, Any]] = {}
             lines = self._wait_for("bestmove")
             for line in lines:
                 if not line.startswith("info") or " pv " not in line:
                     continue
-                if " multipv " not in line and multipv > 1:
-                    # Still accept single-pv lines.
-                    pass
                 mpv = 1
                 score_cp = None
                 score_mate = None

@@ -74,6 +74,25 @@ def test_legacy_ternary_learned_moves_load(tmp_path: Path) -> None:
     assert w2.learned_moves["pe7e5"] < 0
 
 
+def test_coarse_trail_generalizes_pawn_structure() -> None:
+    from chess_contest.stigmergy.coarse import coarse_trail_key, coarse_trail_move
+    from chess_contest.stigmergy.distill import set_trail_policy
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    # Italian: exact trail + coarse key stored together by set_trail_policy.
+    a = chess.Board()
+    for u in ["e2e4", "e7e5", "g1f3", "b8c6", "f1c4", "g8f6"]:
+        a.push(chess.Move.from_uci(u))
+    set_trail_policy(w, a, "d2d3", strength=80.0)
+    assert coarse_trail_key(a).startswith("c")
+    assert Searcher(w).trail_move(a).uci()[:4] == "d2d3"
+    # Drop exact zobrist trail; coarse should still recommend d2d3.
+    del w.trails[trail_key(a)]
+    assert coarse_trail_move(w, a) is not None
+    assert coarse_trail_move(w, a).uci()[:4] == "d2d3"
+
+
 def test_set_trail_policy_decisive() -> None:
     from chess_contest.stigmergy.distill import set_trail_policy
     from chess_contest.stigmergy.search import Searcher
@@ -96,8 +115,10 @@ def test_fanout_opponent_replies_offline() -> None:
     w = default_weights()
     board = chess.Board()
 
-    def fake_analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1):
-        del movetime_ms
+    def fake_analyse(
+        b: chess.Board, movetime_ms: int = 40, multipv: int = 1, depth: int | None = None
+    ):
+        del movetime_ms, depth
         moves = list(b.legal_moves)
         out = []
         for i, m in enumerate(moves[: multipv]):
@@ -105,7 +126,7 @@ def test_fanout_opponent_replies_offline() -> None:
         return out
 
     n = fanout_opponent_replies(
-        w, board, fake_analyse, max_replies=6, fill_ms=1, strength=50.0
+        w, board, fake_analyse, max_replies=6, fill_ms=1, fill_depth=None, strength=50.0
     )
     assert n >= 2
     assert Searcher(w).trail_move(board) is not None

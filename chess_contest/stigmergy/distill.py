@@ -12,6 +12,7 @@ from typing import Any
 import chess
 import numpy as np
 
+from chess_contest.stigmergy.coarse import set_coarse_policy
 from chess_contest.stigmergy.evaluate import evaluate_board
 from chess_contest.stigmergy.weights import StigmergyWeights, mutate_field, trail_key
 
@@ -91,6 +92,7 @@ def set_trail_policy(
     short = full[:4]
     # Store both full and short keys so promo and non-promo lookups hit.
     weights.trails[key] = {full: float(strength), short: float(strength)}
+    set_coarse_policy(weights, board, full, strength)
     path = "".join(m.uci()[:4] for m in board.move_stack)
     _reinforce_book_entry(weights, path, short, strength)
     lm = _lm_key(board, parsed)
@@ -120,84 +122,81 @@ def fanout_opponent_replies(
     board: chess.Board,
     sf_analyse,
     *,
-    max_replies: int = 14,
+    max_replies: int = 60,
     fill_ms: int = 40,
+    fill_depth: int | None = 12,
     strength: float = 90.0,
     rng: np.random.Generator | None = None,
+    ply_depth: int = 1,
 ) -> int:
-    """After our policy move is set, fill SF replies to many opponent answers.
+    """Install SF policy here and fill policies after opponent replies.
 
-    Covers captures, checks, SF MultiPV replies, and random quiets so UCI_Elo
-    offbeat lines still land on a trail on our next turn.
+    ``ply_depth=2`` also fanouts from every 1-ply child so alternate UCI_Elo
+    lines stay covered for an extra move (quadratic SF cost, depth-limited).
     """
-    if board.is_game_over(claim_draw=True):
-        return 0
-    tops = sf_analyse(board, movetime_ms=fill_ms, multipv=1)
-    our_uci = oracle_set_from_sf(weights, board, tops, strength=strength)
-    if our_uci is None:
-        return 0
-    try:
-        our_move = chess.Move.from_uci(our_uci)
-    except ValueError:
-        return 0
-    if our_move not in board.legal_moves:
-        short = our_uci[:4]
-        our_move = next((m for m in board.legal_moves if m.uci()[:4] == short), None)
-        if our_move is None:
-            return 0
+    del rng
 
-    board.push(our_move)
-    filled = 1
-    try:
-        if board.is_game_over(claim_draw=True):
-            return filled
-        replies: list[chess.Move] = []
+    def _analyse(b: chess.Board, *, multipv: int = 1, depth: int | None = None) -> list[dict[str, Any]]:
+        d = fill_depth if depth is None else depth
+        if d is not None:
+            return sf_analyse(b, movetime_ms=fill_ms, multipv=multipv, depth=d)
+        return sf_analyse(b, movetime_ms=fill_ms, multipv=multipv)
+
+    def _replies(b: chess.Board) -> list[chess.Move]:
+        legal = list(b.legal_moves)
+        if len(legal) <= max_replies:
+            return legal
+        priority = [m for m in legal if b.is_capture(m) or b.gives_check(m)]
+        rest = [m for m in legal if m not in priority]
+        tops = _analyse(b, multipv=min(8, max_replies), depth=max(8, (fill_depth or 10) - 2))
+        prefer = {info["uci"] for info in tops if info.get("uci")}
+        rest.sort(key=lambda m: (0 if m.uci() in prefer else 1, m.uci()))
+        ordered = priority + rest
         seen: set[str] = set()
-
-        def _add(move: chess.Move) -> None:
+        out: list[chess.Move] = []
+        for move in ordered:
             u = move.uci()
-            if u not in seen and move in board.legal_moves:
-                seen.add(u)
-                replies.append(move)
+            if u in seen:
+                continue
+            seen.add(u)
+            out.append(move)
+            if len(out) >= max_replies:
+                break
+        return out
 
-        for move in board.legal_moves:
-            if board.is_capture(move) or board.gives_check(move):
-                _add(move)
-        opp_tops = sf_analyse(board, movetime_ms=max(20, fill_ms // 2), multipv=min(5, max_replies))
-        for info in opp_tops:
-            u = info.get("uci")
-            if not u:
-                continue
-            try:
-                _add(chess.Move.from_uci(u))
-            except ValueError:
-                continue
-        quiets = [m for m in board.legal_moves if m.uci() not in seen]
-        if quiets:
-            gen = rng if rng is not None else np.random.default_rng(0)
-            # Near-complete coverage when the reply fan is small (typical UCI_Elo noise).
-            n_legal = len(list(board.legal_moves))
-            if n_legal <= 22:
-                for move in quiets:
-                    _add(move)
-            else:
-                gen.shuffle(quiets)
-                for move in quiets[: max(6, max_replies)]:
-                    _add(move)
-        # Prefer full fan when small; otherwise cap for speed.
-        limit = len(replies) if len(replies) <= 22 else max(max_replies, min(24, len(replies)))
-        for move in replies[:limit]:
-            board.push(move)
-            try:
-                if not board.is_game_over(claim_draw=True):
-                    child_tops = sf_analyse(board, movetime_ms=fill_ms, multipv=1)
-                    if oracle_set_from_sf(weights, board, child_tops, strength=strength * 0.95):
-                        filled += 1
-            finally:
-                board.pop()
-    finally:
-        board.pop()
-    return filled
+    def _fill_node(b: chess.Board, depth_left: int, mass: float) -> int:
+        if b.is_game_over(claim_draw=True):
+            return 0
+        tops = _analyse(b, multipv=1)
+        our_uci = oracle_set_from_sf(weights, b, tops, strength=mass)
+        if our_uci is None:
+            return 0
+        filled = 1
+        if depth_left <= 0:
+            return filled
+        try:
+            our_move = chess.Move.from_uci(our_uci)
+        except ValueError:
+            return filled
+        if our_move not in b.legal_moves:
+            our_move = next((m for m in b.legal_moves if m.uci()[:4] == our_uci[:4]), None)
+            if our_move is None:
+                return filled
+        b.push(our_move)
+        try:
+            if b.is_game_over(claim_draw=True):
+                return filled
+            for reply in _replies(b):
+                b.push(reply)
+                try:
+                    filled += _fill_node(b, depth_left - 1, mass * 0.95)
+                finally:
+                    b.pop()
+        finally:
+            b.pop()
+        return filled
+
+    return _fill_node(board, max(0, ply_depth), strength)
 
 
 def _reinforce_book_entry(

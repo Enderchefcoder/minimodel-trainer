@@ -42,6 +42,41 @@ from chess_contest.stigmergy.stockfish_uci import (  # noqa: E402
 from chess_contest.stigmergy.weights import load_weights, save_weights, trail_key  # noqa: E402
 
 
+def quick_hit_probe(
+    engine: StigmergyEngine,
+    sf: StockfishEngine,
+    *,
+    games: int,
+    target: int,
+    stig_ms: int,
+    stig_depth: int,
+) -> tuple[float, float]:
+    """Return (score_fraction, trail_hit_rate) vs one SF Elo."""
+    hits = 0
+    our = 0
+    score = 0.0
+    searcher = Searcher(engine.weights)
+    for i in range(games):
+        board = chess.Board()
+        stig_white = i % 2 == 0
+        for _ in range(100):
+            if board.is_game_over(claim_draw=True):
+                break
+            stig_turn = (board.turn == chess.WHITE) == stig_white
+            if stig_turn:
+                our += 1
+                if searcher.trail_move(board) is not None or searcher.book_move(board) is not None:
+                    hits += 1
+                mv = engine.choose_move(board, time_ms=stig_ms, max_depth=stig_depth).move
+                board.push(mv)
+            else:
+                sf.set_elo(target)
+                board.push(sf.choose(board, movetime_ms=50))
+        res = _result(board)
+        score += _score_for(stig_white, res)
+    return score / games, hits / max(1, our)
+
+
 def _log(path: Path, msg: str) -> None:
     line = f"[{time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}] {msg}"
     print(line, flush=True)
@@ -80,30 +115,36 @@ def oracle_game(
     board = chess.Board()
     fills = 0
     trail_plies = 0
+    our_moves = 0
 
-    def analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1):
+    def analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1, depth: int | None = None):
         sf.set_elo(None)
-        return sf.analyse_top(b, movetime_ms=movetime_ms, multipv=multipv)
+        return sf.analyse_top(b, movetime_ms=movetime_ms, multipv=multipv, depth=depth)
 
     for _ in range(max_plies):
         if board.is_game_over(claim_draw=True):
             break
         stig_turn = (board.turn == chess.WHITE) == stig_white
         if stig_turn:
+            # Deep fanout early (covers alternate Elo lines); 1-ply later for speed.
+            depth = 2 if our_moves < 14 else 1
             n = fanout_opponent_replies(
                 weights,
                 board,
                 analyse,
                 max_replies=fanout,
                 fill_ms=fill_ms,
+                fill_depth=10 if depth == 2 else 12,
                 strength=120.0,
                 rng=rng,
+                ply_depth=depth,
             )
             fills += n
+            our_moves += 1
             # Play our installed trail (SF-MAX), not search.
             move = Searcher(weights).trail_move(board)
             if move is None:
-                tops = analyse(board, movetime_ms=fill_ms, multipv=1)
+                tops = analyse(board, movetime_ms=fill_ms, multipv=1, depth=12)
                 uci = oracle_set_from_sf(weights, board, tops, strength=120.0)
                 fills += 1 if uci else 0
                 move = Searcher(weights).trail_move(board)
@@ -172,9 +213,9 @@ def fill_misses(
 ) -> int:
     filled = 0
 
-    def analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1):
+    def analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1, depth: int | None = None):
         sf.set_elo(None)
-        return sf.analyse_top(b, movetime_ms=movetime_ms, multipv=multipv)
+        return sf.analyse_top(b, movetime_ms=movetime_ms, multipv=multipv, depth=depth)
 
     seen: set[str] = set()
     for board in misses:
@@ -188,6 +229,7 @@ def fill_misses(
             analyse,
             max_replies=fanout,
             fill_ms=fill_ms,
+            fill_depth=12,
             strength=150.0,
             rng=rng,
         )
@@ -202,8 +244,9 @@ def fill_misses(
                     weights,
                     parent,
                     analyse,
-                    max_replies=max(fanout, 16),
+                    max_replies=max(fanout, 48),
                     fill_ms=fill_ms,
+                    fill_depth=12,
                     strength=140.0,
                     rng=rng,
                 )
@@ -289,9 +332,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--stig-depth", type=int, default=7)
     p.add_argument("--sf-ms", type=int, default=50)
     p.add_argument("--fill-ms", type=int, default=45)
-    p.add_argument("--fanout", type=int, default=12)
-    p.add_argument("--oracle-games", type=int, default=40)
+    p.add_argument("--fanout", type=int, default=48)
+    p.add_argument("--oracle-games", type=int, default=120)
     p.add_argument("--probe-games", type=int, default=6)
+    p.add_argument("--min-hit-rate", type=float, default=0.55)
     p.add_argument("--seed", type=int, default=42)
     args = p.parse_args(argv)
 
@@ -369,6 +413,39 @@ def main(argv: list[str] | None = None) -> int:
                 f"trail_plies={trail_plies}",
             )
             save_weights(weights, out / "latest.json")
+
+            # Cheap hit-rate gate before full ladder (saves hours when coverage is thin).
+            wr1320, hit = quick_hit_probe(
+                engine, sf, games=8, target=1320, stig_ms=args.stig_ms, stig_depth=args.stig_depth
+            )
+            _log(log, f"gate vs1320 wr={wr1320:.0%} hit={hit:.0%}")
+            if hit < args.min_hit_rate or wr1320 < 0.45:
+                # Extra densify burst targeting this Elo before probing higher.
+                for j in range(max(24, args.oracle_games // 2)):
+                    if time.time() >= deadline:
+                        break
+                    elo = schedule[j % 12]
+                    res, fills, tp = oracle_game(
+                        weights,
+                        sf,
+                        stig_white=(cycle + j) % 2 == 0,
+                        sf_elo=elo,
+                        fill_ms=args.fill_ms,
+                        sf_ms=args.sf_ms,
+                        max_plies=100,
+                        fanout=args.fanout,
+                        rng=rng,
+                    )
+                    fills_total += fills
+                prune_trails(weights, keep_positions=900_000)
+                save_weights(weights, out / "latest.json")
+                engine = StigmergyEngine(weights)
+                wr1320, hit = quick_hit_probe(
+                    engine, sf, games=8, target=1320, stig_ms=args.stig_ms, stig_depth=args.stig_depth
+                )
+                _log(log, f"gate2 vs1320 wr={wr1320:.0%} hit={hit:.0%}")
+                if hit < args.min_hit_rate * 0.7:
+                    continue
 
             probe, misses = honest_ladder(
                 engine,

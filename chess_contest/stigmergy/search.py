@@ -12,6 +12,7 @@ from dataclasses import dataclass
 import chess
 import chess.polyglot
 
+from chess_contest.stigmergy.coarse import coarse_trail_move
 from chess_contest.stigmergy.tactics import material_of, see, tactical_floor
 from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
@@ -484,6 +485,10 @@ class Searcher:
         if book is not None:
             return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)
 
+        coarse = coarse_trail_move(self.weights, board)
+        if coarse is not None:
+            return SearchResult(move=coarse, score=0.0, depth=0, nodes=0, book=True, trail=True)
+
         legal = list(board.legal_moves)
         if not legal:
             return SearchResult(move=None, score=0.0, depth=0, nodes=0)
@@ -496,10 +501,10 @@ class Searcher:
                 move=mate, score=float(MATE - 1), depth=1, nodes=len(legal), book=False
             )
 
-        # Out-of-trail: spend at least 350ms so we clear depth 3-4 on CPU.
-        think_ms = max(time_ms, 350)
+        # Out-of-trail: spend enough time to clear shallow tactics, not minutes.
+        think_ms = max(time_ms, 600)
         self.nodes = 0
-        self.deadline = time.perf_counter() + max(0.12, think_ms / 1000.0)
+        self.deadline = time.perf_counter() + max(0.2, think_ms / 1000.0)
         self.tt.clear()
         self.killers.clear()
         self.history.clear()
