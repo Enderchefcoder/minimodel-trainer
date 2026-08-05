@@ -69,13 +69,14 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 Goal: grade all 20 ~1M candidates with the report-03 protocol (TinyStories,
 300 steps, BLiMP/ARC-E/WikiText), merge with the original 5 arch_* results,
-update research docs / RESULTS.md / report 12.
+update research docs / RESULTS.md / report 12 / report 03 (full tables).
 
 Plan:
 [X] Pull TinyStories + eval data; tokenize v4096
 [X] mm1m bakeoff via run_experiment (same DEFAULTS as group_arch)
 [X] Merge original arch_* + mm1m_* into combined ranking JSON
 [X] Update report 12, RESULTS.md, re-rank docs; tests; commit; push; PR
+[ ] Inline all 20 + merged 25 into report 03 (not just a pointer)
 
 Lessons:
 - Selective SSM Python-autograd unrolling is ~300 tok/s; a custom autograd
