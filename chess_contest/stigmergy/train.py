@@ -37,44 +37,30 @@ class TrainConfig:
 
 
 BUILTIN_PGNS = [
-    # Scholar's mate avoided — solid miniature games for book/move bias.
     """[Result "1-0"]
 1. e4 e5 2. Nf3 Nc6 3. Bb5 a6 4. Ba4 Nf6 5. O-O Be7 6. Re1 b5 7. Bb3 d6 8. c3 O-O
-9. h3 Nb8 10. d4 Nbd7 11. c4 c6 12. cxb5 axb5 13. Nc3 Bb7 14. Bg5 b4 15. Nb1 h6
-16. Bh4 c5 17. dxe5 Nxe4 18. Bxe7 Qxe7 19. exd6 Qf6 20. Nbd2 Nxd6 21. Nc4 Nxc4
-22. Bxc4 Nb6 23. Ne5 Rae8 24. Bxf7+ Rxf7 25. Nxf7 Rxe1+ 26. Qxe1 Kxf7 27. Qe3 Qg5
-28. Qxg5 hxg5 29. b3 Ke6 30. a3 Kd6 31. axb4 cxb4 32. Ra5 Nd5 33. f3 Bc8 34. Kf2 Bf5
-35. Ra7 g6 36. Ra6+ Kc5 37. Ke1 Nf4 38. g3 Nxh3 39. Kd2 Kb5 40. Rd6 Kc5 41. Ra6 Nf2
-42. g4 Bd3 43. Re6 1-0""",
+9. h3 Nb8 10. d4 Nbd7 1-0""",
     """[Result "0-1"]
 1. d4 Nf6 2. c4 g6 3. Nc3 Bg7 4. e4 d6 5. Nf3 O-O 6. Be2 e5 7. O-O Nc6 8. d5 Ne7
-9. Ne1 Nd7 10. Be3 f5 11. f3 f4 12. Bf2 g5 13. a4 Ng6 14. Nd3 Nf6 15. c5 Rf7 16. Rc1
-Bf8 17. cxd6 cxd6 18. Nb5 g4 19. Nc7 g3 20. hxg3 fxg3 21. Bxg3 Nh5 22. Nxa8 Nxg3
-23. Rf2 Qh4 24. Rc3 Qh1+ 25. Kf2 Qh4 26. Ke1 Nh1 27. Rf1 Qh2 28. Ne1 Ng3 0-1""",
+9. Ne1 Nd7 10. Be3 f5 0-1""",
     """[Result "1-0"]
 1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6 6. Be3 e5 7. Nb3 Be6 8. f3 Be7
-9. Qd2 O-O 10. O-O-O Nbd7 11. g4 b5 12. g5 b4 13. Ne2 Ne8 14. f4 a5 15. f5 a4
-16. Nbd4 exd4 17. Nxd4 Bc4 18. Bxc4 bxc3 19. Bxf7+ Rxf7 20. Ne6 cxd2+ 21. Rxd2 Qa5
-22. Nxc7 Qxa2 23. Rhd1 Rc8 24. Rxd6 Nxd6 25. Rxd6 Qa1+ 26. Kd2 Qxb2 27. Ne6 Qa2
-28. Rd8+ Rxd8+ 29. Nxd8 Qa5+ 30. Ke2 Qxg5 31. Ne6 Qh4 32. Bf2 Qxe4+ 33. Kd2 Qxf5 1-0""",
+9. Qd2 O-O 10. O-O-O Nbd7 1-0""",
     """[Result "1/2-1/2"]
 1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. c3 Nf6 5. d4 exd4 6. cxd4 Bb4+ 7. Bd2 Bxd2+
-8. Nbxd2 d5 9. exd5 Nxd5 10. Qb3 Nce7 11. O-O O-O 12. Rfe1 c6 13. a4 Qb6 14. Qa3
-Be6 15. a5 Qc7 16. Ne4 Rad8 17. Nc5 Bc8 18. Rac1 Nb5 19. Qa1 Nd6 20. Bf1 Ned5
-21. Ne5 Rfe8 1/2-1/2""",
+8. Nbxd2 d5 9. exd5 Nxd5 10. Qb3 Nce7 1/2-1/2""",
     """[Result "1-0"]
 1. d4 d5 2. c4 e6 3. Nc3 Nf6 4. cxd5 exd5 5. Bg5 Be7 6. e3 O-O 7. Bd3 Nbd7 8. Qc2
-Re8 9. Nge2 Nf8 10. O-O-O c6 11. h3 Be6 12. Kb1 Rc8 13. g4 N6d7 14. Bxe7 Qxe7
-15. Nf4 b5 16. Bd3 Nb6 17. Rhe1 Nc4 18. Bxc4 bxc4 19. e4 dxe4 20. Nxe4 Qb4 21. Nc5
-Bd5 22. Nxd5 cxd5 23. Re5 Rxe5 24. dxe5 Ne6 25. Nxe6 fxe6 26. Qg6 Qf8 27. Rd4 Rc7
-28. Rh4 Qe7 29. Qxh7+ Kf7 30. Rf4+ Ke8 31. Qg8+ Kd7 32. Rf7 1-0""",
+c6 9. Nge2 Re8 10. O-O Nf8 1-0""",
     """[Result "0-1"]
 1. e4 c6 2. d4 d5 3. Nc3 dxe4 4. Nxe4 Bf5 5. Ng3 Bg6 6. h4 h6 7. Nf3 Nd7 8. h5 Bh7
-9. Bd3 Bxd3 10. Qxd3 e6 11. Bd2 Ngf6 12. O-O-O Be7 13. Kb1 O-O 14. Ne4 Nxe4
-15. Qxe4 Nf6 16. Qe2 Qd5 17. c4 Qe4+ 18. Qxe4 Nxe4 19. Be3 Rfd8 20. Kc2 Rd7
-21. Ne5 Rad8 22. f3 Nd6 23. b3 f6 24. Ng6 Bf8 25. Nf4 Kf7 26. g4 g6 27. hxg6+ Kxg6
-28. Nh5 Rd6 29. Rdg1 Be7 30. f4 f5 31. gxf5+ exf5 32. Rg2 Bf8 33. Rhg1+ Kf7
-34. Ng7 Bxg7 35. Rxg7+ Ke6 0-1""",
+9. Bd3 Bxd3 10. Qxd3 e6 0-1""",
+    """[Result "1-0"]
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Nf6 4. d3 Bc5 5. c3 d6 6. O-O O-O 7. Re1 a6 8. Bb3 Ba7
+9. h3 h6 10. Nbd2 Be6 1-0""",
+    """[Result "1-0"]
+1. d4 Nf6 2. c4 e6 3. Nc3 Bb4 4. e3 O-O 5. Bd3 d5 6. Nf3 c5 7. O-O Nc6 8. a3 Bxc3
+9. bxc3 dxc4 10. Bxc4 Qc7 1-0""",
 ]
 
 
@@ -257,37 +243,45 @@ def selfplay_tune(weights: StigmergyWeights, cfg: TrainConfig) -> dict[str, Any]
         return choose
 
     reference = ClassicPSTOpponent(depth=2)
+    strong = ClassicPSTOpponent(depth=3)
     greedy = GreedyMaterialOpponent()
 
-    for _rnd in range(cfg.selfplay_rounds):
-        candidate = mutate_field(current, rng, sigma=0.07)
-        cand_chooser = make_chooser(candidate)
+    def score_vs_ladder(chooser) -> float:
         score = 0.0
-        games = cfg.games_per_round
-        for i in range(games):
-            # Alternate colors; mix opponents.
-            opp = reference.choose if (i % 3) else greedy.choose
+        schedule = [greedy.choose, reference.choose, strong.choose, reference.choose]
+        for i, opp in enumerate(schedule[: cfg.games_per_round]):
             if i % 2 == 0:
-                result = play_game(cand_chooser, opp, max_plies=cfg.max_plies)
+                result = play_game(chooser, opp, max_plies=cfg.max_plies)
                 if result == "1-0":
                     score += 1
                 elif result == "1/2-1/2":
                     score += 0.5
             else:
-                result = play_game(opp, cand_chooser, max_plies=cfg.max_plies)
+                result = play_game(opp, chooser, max_plies=cfg.max_plies)
                 if result == "0-1":
                     score += 1
                 elif result == "1/2-1/2":
                     score += 0.5
-        winrate = score / games
-        history.append(winrate)
-        if winrate >= 0.5:
+        return score / max(1, cfg.games_per_round)
+
+    baseline = score_vs_ladder(make_chooser(current))
+    for _rnd in range(cfg.selfplay_rounds):
+        candidate = mutate_field(current, rng, sigma=0.06)
+        winrate = score_vs_ladder(make_chooser(candidate))
+        history.append({"candidate": winrate, "baseline": baseline})
+        if winrate > baseline + 0.05:
             current = candidate
+            baseline = winrate
             adopted += 1
         weights.field = current.copy()
 
     weights.field = current
-    return {"selfplay_adopted": adopted, "selfplay_rounds": cfg.selfplay_rounds, "winrates": history}
+    return {
+        "selfplay_adopted": adopted,
+        "selfplay_rounds": cfg.selfplay_rounds,
+        "final_baseline": baseline,
+        "winrates": history,
+    }
 
 
 def train_base(cfg: TrainConfig | None = None) -> StigmergyWeights:

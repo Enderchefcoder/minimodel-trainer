@@ -1,0 +1,1213 @@
+{
+  "formatVersion": 2,
+  "engine": "stigmergy-dpfe",
+  "architecture": "diffusive-pheromone-field",
+  "createdAt": "2026-08-05T03:02:25Z",
+  "channels": 10,
+  "channelNames": [
+    "material_mass",
+    "king_heat",
+    "pawn_chain",
+    "file_control",
+    "color_complex",
+    "mobility_mist",
+    "discovery_threat",
+    "blockade",
+    "tempo",
+    "harmonic"
+  ],
+  "diffusionSteps": 3,
+  "pieceOrder": "pnbrqk",
+  "field": {
+    "deposit": [
+      [
+        2.1233995951773177,
+        -0.11147665116481378,
+        2.8112535384777466,
+        0.40678666090814647,
+        0.001521229375731764,
+        0.2522575219504952,
+        0.5003748745659095,
+        0.633146126387772,
+        0.6176047035664255,
+        -0.1277154603972073
+      ],
+      [
+        3.986367062262211,
+        0.44840746075972043,
+        0.8958079449978305,
+        0.42326829601349314,
+        1.1916433713036056,
+        1.2839150421850987,
+        0.9881877937307335,
+        0.22556892364462933,
+        0.8898303119095986,
+        1.1228840505624569
+      ],
+      [
+        3.6782850443808224,
+        0.6249877899369054,
+        -0.3557491060153246,
+        -0.11911467523497767,
+        1.4237957692265457,
+        0.7712998019260774,
+        1.096419316900242,
+        0.43887284274566646,
+        0.4581927552576968,
+        0.7390162868125341
+      ],
+      [
+        5.793909118428459,
+        0.06943811653852663,
+        0.30810464052420095,
+        1.4562147513581385,
+        -0.04826858804584581,
+        0.9297577530677001,
+        0.5569419560136926,
+        0.473197864022585,
+        0.43485286370402376,
+        1.0149562702100055
+      ],
+      [
+        8.9673490538755,
+        0.017512466997291285,
+        -0.06722050974577058,
+        0.753572558761541,
+        0.9461957060933815,
+        1.0917268888634892,
+        0.9699673523523291,
+        0.45589642445550804,
+        0.9917111029665742,
+        0.9498927940244715
+      ],
+      [
+        0.1266628424647337,
+        2.581541775462081,
+        -0.15426688125229035,
+        -0.47378757314261855,
+        0.11514532502521593,
+        0.4028320247285022,
+        0.03789962567854249,
+        -0.16006998855466403,
+        0.5472165787471266,
+        0.7957637449370802
+      ]
+    ],
+    "decay": [
+      0.6877003541347989,
+      0.39595002386092937,
+      0.5962640938635104,
+      0.6193464924109842,
+      0.42613483980121797,
+      0.6675907768210789,
+      0.5697872126849142,
+      0.6570573104565255,
+      0.7139425083123543,
+      0.6163036645322654
+    ],
+    "mix": [
+      0.34633960772478817,
+      0.4142543359963417,
+      0.44552002109704564,
+      0.5962150667670983,
+      0.5043392175437575,
+      0.629807317047299,
+      0.21827683503687134,
+      0.38349597357847653,
+      0.17278446457962132,
+      0.7260931111823019
+    ],
+    "interaction": [
+      [
+        -0.37411722230437133,
+        -0.7936521214102504,
+        0.05465976849419453,
+        0.5195036975515082,
+        -0.15270387120496715,
+        0.0032513923826214463,
+        -0.019134079321321176,
+        -0.02959794204781926,
+        -0.37484621606130997,
+        0.3093616311512944
+      ],
+      [
+        -0.615435793406536,
+        -0.7110583149880054,
+        0.0035370070544628943,
+        0.35104076853983796,
+        -0.406911732167627,
+        0.07902835136569353,
+        -0.4622237121352821,
+        0.16907913965162139,
+        0.07224107104148556,
+        0.003622022775761284
+      ],
+      [
+        0.19445631965471613,
+        0.06691583052578857,
+        -0.3635296749956932,
+        0.12058886756856166,
+        -0.056193463725979456,
+        0.1315022533330141,
+        0.15000693286960623,
+        0.23667223696397613,
+        -0.012697136399012196,
+        -0.29712879623969685
+      ],
+      [
+        0.29188157883153804,
+        0.025537997227227237,
+        0.015101135251826405,
+        -0.2653982995697042,
+        0.14028765514638097,
+        -0.01031712297977626,
+        -0.24306049997338175,
+        0.15000938368223912,
+        -0.030669747001230815,
+        0.13867988300662457
+      ],
+      [
+        -0.08156951430811323,
+        -0.23171467808463136,
+        0.03996611377301747,
+        0.13095783993122478,
+        -0.2312729053629234,
+        -0.05437033268392804,
+        -0.22966518644335862,
+        0.2962008640212745,
+        -0.3107638031612701,
+        -0.044226400345115054
+      ],
+      [
+        -0.07769218058734177,
+        0.06092170791168224,
+        0.036339009331285185,
+        0.2152654408254418,
+        -0.08977498370708005,
+        0.20166707981348916,
+        -0.11633496022131692,
+        0.1736598602587115,
+        -0.16711598174685,
+        -0.026924629236883074
+      ],
+      [
+        0.17277500267855814,
+        -0.19884404065490763,
+        0.23727096944647685,
+        0.0046564342759898274,
+        0.08187878350847465,
+        -0.049048739741698474,
+        -0.32743210720676075,
+        0.07676077854290334,
+        -0.03896854694047252,
+        -0.0029063121922143515
+      ],
+      [
+        -0.20066300861439285,
+        -0.12812188671674282,
+        0.35081455114145427,
+        -0.39699423779965637,
+        0.18587731968792273,
+        0.14767647610216653,
+        -0.2839558486988662,
+        -0.08968627662288514,
+        0.4256887241411522,
+        -0.2542736548800901
+      ],
+      [
+        -0.38424271098354457,
+        -0.15284197322286,
+        0.067081777598393,
+        0.02109233971699187,
+        0.36445552359489347,
+        -0.12755827252152627,
+        -0.06352913650092998,
+        0.5333567460146373,
+        -0.535043284352712,
+        0.1380541959513635
+      ],
+      [
+        -0.20352951620640816,
+        0.010871425022710435,
+        -0.0849697574018999,
+        -0.08098554184406982,
+        -0.19225029290019374,
+        -0.026012994375538737,
+        0.04061238280531672,
+        0.08467281008165682,
+        -0.3021152738893432,
+        -0.30011977037105325
+      ]
+    ],
+    "selfEnergy": [
+      -0.04347440958653228,
+      0.0922011391261998,
+      -0.13094107724991294,
+      0.20938267596386642,
+      -0.04811412934586921,
+      0.005102026359720759,
+      -0.09895311430741707,
+      -0.06645131109490603,
+      0.12996091899186818,
+      -0.03627969416421628
+    ],
+    "kingResonance": [
+      -0.5908045097390033,
+      -0.9667386550115913,
+      -0.11761658739129248,
+      -0.32261795210461014,
+      -0.038305526636843466,
+      -0.29418975365496797,
+      -0.6236741198600664,
+      -0.14966175365754616,
+      -0.14341191665236164,
+      -0.033437057368674084
+    ],
+    "materialAnchor": 1.272140751775096,
+    "tempoBonus": 9.552018790309356,
+    "passedPawnScale": 1.1485861276813114,
+    "mobilityScale": 1.331002265712245
+  },
+  "book": {
+    "": [
+      {
+        "m": "e2e4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4": [
+      {
+        "m": "c7c6",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4": [
+      {
+        "m": "d7d5",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5": [
+      {
+        "m": "g1f3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c5": [
+      {
+        "m": "g1f3",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4e7e5g1f3": [
+      {
+        "m": "b8c6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c5g1f3": [
+      {
+        "m": "d7d6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6": [
+      {
+        "m": "f1c4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5": [
+      {
+        "m": "c2c4",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4g8f6": [
+      {
+        "m": "c2c4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5c2c4": [
+      {
+        "m": "e7e6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4": [
+      {
+        "m": "g7g6",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5": [
+      {
+        "m": "a7a6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6": [
+      {
+        "m": "b5a4",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4": [
+      {
+        "m": "g8f6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6": [
+      {
+        "m": "e1g1",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6e1g1": [
+      {
+        "m": "f8e7",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6e1g1f8e7": [
+      {
+        "m": "f1e1",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1b5a7a6b5a4g8f6e1g1f8e7f1e1": [
+      {
+        "m": "b7b5",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4g7g6": [
+      {
+        "m": "b1c3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3": [
+      {
+        "m": "f8g7",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7": [
+      {
+        "m": "e2e4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4": [
+      {
+        "m": "d7d6",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6": [
+      {
+        "m": "g1f3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6g1f3": [
+      {
+        "m": "e8g8",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6g1f3e8g8": [
+      {
+        "m": "f1e2",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4g8f6c2c4g7g6b1c3f8g7e2e4d7d6g1f3e8g8f1e2": [
+      {
+        "m": "e7e5",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c5g1f3d7d6": [
+      {
+        "m": "d2d4",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4": [
+      {
+        "m": "c5d4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4": [
+      {
+        "m": "f3d4",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4": [
+      {
+        "m": "g8f6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6": [
+      {
+        "m": "b1c3",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6b1c3": [
+      {
+        "m": "a7a6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6b1c3a7a6": [
+      {
+        "m": "c1e3",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c5g1f3d7d6d2d4c5d4f3d4g8f6b1c3a7a6c1e3": [
+      {
+        "m": "e7e5",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4": [
+      {
+        "m": "f8c5",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5": [
+      {
+        "m": "c2c3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3": [
+      {
+        "m": "g8f6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3g8f6": [
+      {
+        "m": "d2d4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3g8f6d2d4": [
+      {
+        "m": "e5d4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3g8f6d2d4e5d4": [
+      {
+        "m": "c3d4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4e7e5g1f3b8c6f1c4f8c5c2c3g8f6d2d4e5d4c3d4": [
+      {
+        "m": "c5b4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5c2c4e7e6": [
+      {
+        "m": "b1c3",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3": [
+      {
+        "m": "g8f6",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6": [
+      {
+        "m": "c4d5",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c4d5": [
+      {
+        "m": "e6d5",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c4d5e6d5": [
+      {
+        "m": "c1g5",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c4d5e6d5c1g5": [
+      {
+        "m": "f8e7",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c4d5e6d5c1g5f8e7": [
+      {
+        "m": "e2e3",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "d2d4d7d5c2c4e7e6b1c3g8f6c4d5e6d5c1g5f8e7e2e3": [
+      {
+        "m": "e8g8",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6": [
+      {
+        "m": "d2d4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6d2d4": [
+      {
+        "m": "d7d5",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c6d2d4d7d5": [
+      {
+        "m": "b1c3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3": [
+      {
+        "m": "d5e4",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4": [
+      {
+        "m": "c3e4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4": [
+      {
+        "m": "c8f5",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4c8f5": [
+      {
+        "m": "e4g3",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4c8f5e4g3": [
+      {
+        "m": "f5g6",
+        "code": 0,
+        "games": 3
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4c8f5e4g3f5g6": [
+      {
+        "m": "h2h4",
+        "code": 0,
+        "games": 0
+      }
+    ],
+    "e2e4c7c6d2d4d7d5b1c3d5e4c3e4c8f5e4g3f5g6h2h4": [
+      {
+        "m": "h7h6",
+        "code": 0,
+        "games": 3
+      }
+    ]
+  },
+  "learnedMoves": {
+    "codes": {
+      "pe2e4": 1,
+      "pe7e5": 1,
+      "ng1f3": 1,
+      "nb8c6": 1,
+      "bf1b5": 1,
+      "pa7a6": -1,
+      "bb5a4": 1,
+      "ng8f6": 1,
+      "ke1g1": 1,
+      "rf1e1": 1,
+      "pb7b5": -1,
+      "ba4b3": 1,
+      "pc2c3": 1,
+      "ke8g8": 1,
+      "ph2h3": 1,
+      "nc6b8": -1,
+      "pd2d4": 1,
+      "pc3c4": 1,
+      "pc7c6": 1,
+      "pc4b5": 1,
+      "pa6b5": -1,
+      "nb1c3": 1,
+      "bc1g5": 1,
+      "pb5b4": -1,
+      "nc3b1": 1,
+      "ph7h6": 1,
+      "bg5h4": 1,
+      "pd4e5": 1,
+      "nf6e4": 1,
+      "bh4e7": 1,
+      "qd8e7": -1,
+      "pe5d6": 1,
+      "nb1d2": 1,
+      "ne4d6": 1,
+      "nd2c4": 1,
+      "bb3c4": 1,
+      "nf3e5": 1,
+      "bc4f7": 1,
+      "rf8f7": 1,
+      "ne5f7": 1,
+      "qd1e1": 1,
+      "kg8f7": 1,
+      "qe1e3": 1,
+      "qe3g5": 1,
+      "pb2b3": 1,
+      "pa2a3": 1,
+      "pa3b4": 1,
+      "ra1a5": 1,
+      "pf2f3": 1,
+      "kg1f2": 1,
+      "bc8f5": 1,
+      "ra5a7": 1,
+      "pg7g6": 1,
+      "ra7a6": 1,
+      "kf2e1": 1,
+      "pg2g3": 1,
+      "ke1d2": 1,
+      "ra6d6": 1,
+      "rd6a6": 1,
+      "pg3g4": 1,
+      "ra6e6": 1,
+      "pc2c4": 1,
+      "bf8g7": 1,
+      "bf1e2": -1,
+      "pd4d5": -1,
+      "nc6e7": 1,
+      "nf3e1": -1,
+      "nf6d7": 1,
+      "bc1e3": 1,
+      "pf7f5": 1,
+      "pf5f4": 1,
+      "be3f2": -1,
+      "pg6g5": 1,
+      "ne7g6": 1,
+      "nd7f6": 1,
+      "bg7f8": 1,
+      "pc7d6": 1,
+      "pg5g4": 1,
+      "pg4g3": 1,
+      "pf4g3": 1,
+      "nf6h5": 1,
+      "nh5g3": 1,
+      "qd8h4": 1,
+      "qh4h1": 1,
+      "pc7c5": -1,
+      "pc5d4": -1,
+      "nf3d4": 1,
+      "nd4b3": 1,
+      "bc8e6": -1,
+      "qd1d2": 1,
+      "ke1c1": 1,
+      "pg2g4": 1,
+      "pg4g5": 1,
+      "nc3e2": 1,
+      "pf3f4": 1,
+      "pf4f5": 1,
+      "nb3d4": 1,
+      "ne2d4": 1,
+      "bf1c4": 1,
+      "bc1d2": -1,
+      "pd7d5": 1,
+      "ra8d8": 1,
+      "pe7e6": 1,
+      "pc4d5": 1,
+      "pe6d5": -1,
+      "pe2e3": 1,
+      "bf1d3": 1,
+      "qd1c2": 1,
+      "rf8e8": -1,
+      "ng1e2": 1,
+      "nd7f8": -1,
+      "kc1b1": 1,
+      "ra8c8": -1,
+      "bg5e7": 1,
+      "ne2f4": 1,
+      "pd5e4": 1,
+      "nc3e4": -1,
+      "ne4g3": -1,
+      "bf5g6": 1,
+      "ph2h4": -1,
+      "ph4h5": -1,
+      "bg6h7": 1,
+      "bh7d3": 1,
+      "qd1d3": -1,
+      "qd8d5": 1,
+      "qd5e4": 1,
+      "rf8d8": 1,
+      "rd8d7": 1,
+      "pf7f6": 1,
+      "be7f8": 1
+    },
+    "scale": 0.9527835051546392
+  },
+  "trainingMeta": {
+    "config": {
+      "seed": 42,
+      "imitation_steps": 250,
+      "selfplay_rounds": 20,
+      "games_per_round": 4,
+      "move_time_ms": 100,
+      "max_depth": 3,
+      "device": "cpu"
+    },
+    "imitation": {
+      "imitation_top1": 0.06,
+      "imitation_samples": 250,
+      "used_torch": false
+    },
+    "selfplay": {
+      "selfplay_adopted": 20,
+      "selfplay_rounds": 20,
+      "winrates": [
+        0.875,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.875,
+        1.0,
+        0.875,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "seconds": 498.7,
+    "elo": {
+      "engine_elo": 1715.0,
+      "ratings": {
+        "random": 200.0,
+        "greedy_material": 849.5,
+        "classic_pst_d2": 1248.2,
+        "classic_pst_d3": 1449.3,
+        "stigmergy": 1387.8
+      },
+      "games": 32,
+      "matches": [
+        {
+          "opponent": "random",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1200.1
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1200.2
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1200.2
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1200.3
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1200.4
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1200.5
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1200.5
+        },
+        {
+          "opponent": "random",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1200.6
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1203.4
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1206.2
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1208.9
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1211.6
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1214.3
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1216.9
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1219.5
+        },
+        {
+          "opponent": "greedy_material",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1222.0
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1235.0
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1247.4
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1259.4
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1271.0
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1282.3
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1293.1
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1303.5
+        },
+        {
+          "opponent": "classic_pst_d2",
+          "stigmergy_color": "black",
+          "result": "0-1",
+          "score": 1.0,
+          "elo_after": 1313.6
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1330.1
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "black",
+          "result": "1/2-1/2",
+          "score": 0.5,
+          "elo_after": 1334.0
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1349.9
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "black",
+          "result": "1/2-1/2",
+          "score": 0.5,
+          "elo_after": 1353.1
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1368.4
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "black",
+          "result": "1/2-1/2",
+          "score": 0.5,
+          "elo_after": 1371.1
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "white",
+          "result": "1-0",
+          "score": 1.0,
+          "elo_after": 1385.7
+        },
+        {
+          "opponent": "classic_pst_d3",
+          "stigmergy_color": "black",
+          "result": "1/2-1/2",
+          "score": 0.5,
+          "elo_after": 1387.8
+        }
+      ],
+      "uniqueness": {
+        "score": 100.0,
+        "max_score": 100.0,
+        "normalized": 1.0,
+        "details": {
+          "bonuses": [
+            {
+              "reason": "novel_family",
+              "delta": 15
+            },
+            {
+              "reason": "rejects_stockfish",
+              "delta": 2
+            },
+            {
+              "reason": "rejects_nnue",
+              "delta": 2
+            },
+            {
+              "reason": "rejects_alphazero",
+              "delta": 2
+            },
+            {
+              "reason": "rejects_lc0",
+              "delta": 2
+            },
+            {
+              "reason": "rejects_classic-pst-only",
+              "delta": 2
+            },
+            {
+              "reason": "multi_channel_pheromone_lattice",
+              "delta": 12
+            },
+            {
+              "reason": "jacobi_diffusion_kernels",
+              "delta": 12
+            },
+            {
+              "reason": "bilinear_cross_color_interaction",
+              "delta": 10
+            },
+            {
+              "reason": "king_resonance_coupling",
+              "delta": 8
+            },
+            {
+              "reason": "ternary_ant_trail_book",
+              "delta": 10
+            },
+            {
+              "reason": "ternary_move_pheromone_bias",
+              "delta": 6
+            },
+            {
+              "reason": "harmonic_board_channel",
+              "delta": 8
+            }
+          ],
+          "penalties": [],
+          "feature_count": 7,
+          "family": "diffusive-pheromone-field"
+        }
+      },
+      "composite": {
+        "elo_component": 0.7625,
+        "bracket_component": 0.85,
+        "uniqueness_component": 1.0,
+        "composite": 0.8556
+      },
+      "mle_elo": 1715.0,
+      "ladder_summary": {
+        "vs_random": "8/8",
+        "vs_greedy_material": "8/8",
+        "vs_classic_pst_d2": "8/8",
+        "vs_classic_pst_d3": "4W-4D-0L (75%)"
+      }
+    }
+  },
+  "uniquenessFingerprint": {
+    "family": "diffusive-pheromone-field",
+    "not": [
+      "stockfish",
+      "nnue",
+      "alphazero",
+      "lc0",
+      "classic-pst-only"
+    ],
+    "features": [
+      "multi_channel_pheromone_lattice",
+      "jacobi_diffusion_kernels",
+      "bilinear_cross_color_interaction",
+      "king_resonance_coupling",
+      "ternary_ant_trail_book",
+      "ternary_move_pheromone_bias",
+      "harmonic_board_channel"
+    ],
+    "search": [
+      "iterative_deepening",
+      "alpha_beta",
+      "transposition_table",
+      "null_move",
+      "lmr",
+      "quiescence",
+      "killers_history"
+    ]
+  }
+}
