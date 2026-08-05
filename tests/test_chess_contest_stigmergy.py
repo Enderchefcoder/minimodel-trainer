@@ -168,3 +168,30 @@ def test_mate_in_one_found() -> None:
     assert res.move.uci() == "h5f7"
     board.push(res.move)
     assert board.is_checkmate()
+
+
+def test_tactical_floor_material_and_hanging() -> None:
+    from chess_contest.stigmergy.tactics import hanging_penalty, see, tactical_floor
+
+    start = chess.Board()
+    assert abs(tactical_floor(start)) < 40  # symmetric + castling rights cancel
+
+    # White up a queen.
+    up = chess.Board("4k3/8/8/8/8/8/8/3QK3 w - - 0 1")
+    assert tactical_floor(up) > 800
+
+    # Hanging black queen on d4 attacked by white pawn c3, undefended.
+    hang = chess.Board("4k3/8/8/8/3q4/2P5/8/4K3 w - - 0 1")
+    assert hanging_penalty(hang) > 400
+
+    # SEE: PxQ should be strongly positive.
+    board = chess.Board("4k3/8/8/8/3q4/2P5/8/4K3 w - - 0 1")
+    move = chess.Move.from_uci("c3d4")
+    assert see(board, move) > 700
+
+
+def test_hybrid_eval_prefers_material() -> None:
+    w = default_weights()
+    equal = chess.Board()
+    up_queen = chess.Board("4k3/8/8/8/8/8/8/3QK3 w - - 0 1")
+    assert evaluate_board(up_queen, w) > evaluate_board(equal, w) + 500

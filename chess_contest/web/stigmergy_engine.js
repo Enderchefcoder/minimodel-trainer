@@ -195,13 +195,102 @@
     return score;
   }
 
-  function evaluate(chessInst, weights) {
+  // Piece-square tables (a1-first / white POV). chess.js board row0=rank8;
+  // white index = (7-r)*8+c; black uses mirrored r*8+c.
+  const PST = {
+    p: [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      5, 10, 10, -20, -20, 10, 10, 5,
+      5, -5, -10, 0, 0, -10, -5, 5,
+      0, 0, 0, 20, 20, 0, 0, 0,
+      5, 5, 10, 25, 25, 10, 5, 5,
+      10, 10, 20, 30, 30, 20, 10, 10,
+      50, 50, 50, 50, 50, 50, 50, 50,
+      0, 0, 0, 0, 0, 0, 0, 0,
+    ],
+    n: [
+      -50, -40, -30, -30, -30, -30, -40, -50,
+      -40, -20, 0, 5, 5, 0, -20, -40,
+      -30, 5, 10, 15, 15, 10, 5, -30,
+      -30, 0, 15, 20, 20, 15, 0, -30,
+      -30, 5, 15, 20, 20, 15, 5, -30,
+      -30, 0, 10, 15, 15, 10, 0, -30,
+      -40, -20, 0, 0, 0, 0, -20, -40,
+      -50, -40, -30, -30, -30, -30, -40, -50,
+    ],
+    b: [
+      -20, -10, -10, -10, -10, -10, -10, -20,
+      -10, 5, 0, 0, 0, 0, 5, -10,
+      -10, 10, 10, 10, 10, 10, 10, -10,
+      -10, 0, 10, 10, 10, 10, 0, -10,
+      -10, 5, 5, 10, 10, 5, 5, -10,
+      -10, 0, 5, 10, 10, 5, 0, -10,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -20, -10, -10, -10, -10, -10, -10, -20,
+    ],
+    r: [
+      0, 0, 0, 5, 5, 0, 0, 0,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      5, 10, 10, 10, 10, 10, 10, 5,
+      0, 0, 0, 0, 0, 0, 0, 0,
+    ],
+    q: [
+      -20, -10, -10, -5, -5, -10, -10, -20,
+      -10, 0, 5, 0, 0, 0, 0, -10,
+      -10, 5, 5, 5, 5, 5, 0, -10,
+      0, 0, 5, 5, 5, 5, 0, -5,
+      -5, 0, 5, 5, 5, 5, 0, -5,
+      -10, 0, 5, 5, 5, 5, 0, -10,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -20, -10, -10, -5, -5, -10, -10, -20,
+    ],
+    k: [
+      20, 30, 10, 0, 0, 10, 30, 20,
+      20, 20, 0, 0, 0, 0, 20, 20,
+      -10, -20, -20, -20, -20, -20, -20, -10,
+      -20, -30, -30, -40, -40, -30, -30, -20,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+    ],
+  };
+
+  function tacticalFloor(chessInst) {
+    const board = chessInst.board();
+    let score = 0;
+    let bishops = { w: 0, b: 0 };
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const cell = board[r][c];
+        if (!cell) continue;
+        // Map chess.js (rank8-first) to white-POV PST index (rank1-first).
+        const whiteIdx = (7 - r) * 8 + c;
+        const blackIdx = r * 8 + c;
+        const pst = PST[cell.type] || new Array(64).fill(0);
+        const val = MATERIAL[cell.type] + (cell.color === "w" ? pst[whiteIdx] : pst[blackIdx]);
+        score += cell.color === "w" ? val : -val;
+        if (cell.type === "b") bishops[cell.color] += 1;
+      }
+    }
+    if (bishops.w >= 2) score += 35;
+    if (bishops.b >= 2) score -= 35;
+    return score;
+  }
+
+  function evaluate(chessInst, weights, fast) {
     if (chessInst.in_checkmate()) return chessInst.turn() === "w" ? -MATE : MATE;
     if (chessInst.in_draw()) return 0;
     const p = weights.field;
+    const floor = tacticalFloor(chessInst);
     const dep = deposit(chessInst, p);
-    const fw = diffuse(dep.fw, p.decay, p.mix, weights.diffusionSteps);
-    const fb = diffuse(dep.fb, p.decay, p.mix, weights.diffusionSteps);
+    const steps = fast ? 1 : weights.diffusionSteps;
+    const fw = diffuse(dep.fw, p.decay, p.mix, steps);
+    const fb = diffuse(dep.fb, p.decay, p.mix, steps);
 
     let bilinear = 0;
     let selfW = 0;
@@ -228,14 +317,14 @@
     if (dep.bKing) {
       for (let c = 0; c < CHANNELS; c++) kingTerm -= p.kingResonance[c] * fw[c][dep.bKing.r][dep.bKing.c];
     }
-    const material = dep.material * p.materialAnchor;
+    // Material lives in tactical floor; tiny field bias only.
+    const materialBias = dep.material * p.materialAnchor * 0.05;
     const passed = passedPawnScore(dep.wPawns, dep.bPawns) * p.passedPawnScale;
     let mobility = chessInst.moves().length * p.mobilityScale;
     if (chessInst.turn() === "b") mobility = -mobility;
     const tempo = chessInst.turn() === "w" ? p.tempoBonus : -p.tempoBonus;
     let swarm = 0;
     if (p.fieldHead && p.fieldHead.length) {
-      // Lightweight swarm readout (channel mean diffs + material).
       const feats = new Array(24).fill(0);
       for (let c = 0; c < Math.min(CHANNELS, 10); c++) {
         let mw = 0, mb = 0;
@@ -249,11 +338,13 @@
       for (let i = 0; i < n; i++) swarm += p.fieldHead[i] * feats[i];
       swarm *= p.swarmScale || 1;
     }
-    return material + passed + mobility + tempo + 18 * bilinear + 4 * (selfW - selfB) + 55 * kingTerm + 12 * swarm;
+    const residual =
+      materialBias + passed + mobility + tempo + 22 * bilinear + 5 * (selfW - selfB) + 60 * kingTerm + 14 * swarm;
+    return floor + residual;
   }
 
-  function relativeEval(chessInst, weights) {
-    const s = evaluate(chessInst, weights);
+  function relativeEval(chessInst, weights, fast) {
+    const s = evaluate(chessInst, weights, fast);
     return chessInst.turn() === "w" ? s : -s;
   }
 
@@ -290,7 +381,10 @@
       const isCap = m.flags.includes("c") || m.flags.includes("e");
       if (isCap) {
         const victim = m.captured || "p";
-        s += 10000 + 10 * MATERIAL[victim] - MATERIAL[m.piece];
+        // Approx SEE: victim - attacker (prefer winning exchanges).
+        const seeApprox = MATERIAL[victim] - MATERIAL[m.piece];
+        s += 10000 + seeApprox;
+        if (seeApprox < 0) s -= 5000;
       }
       if (m.promotion) s += 8000 + 100 * (MATERIAL[m.promotion] || 0);
       const k = killers[ply];
@@ -315,15 +409,22 @@
       checkTime();
       if (chessInst.in_checkmate()) return -(MATE - ply);
       if (chessInst.in_draw()) return 0;
-      const stand = relativeEval(chessInst, weights);
+      const stand = relativeEval(chessInst, weights, true);
       if (stand >= beta) return beta;
       if (alpha < stand) alpha = stand;
       if (ply > 48) return alpha;
-      const moves = chessInst
-        .moves({ verbose: true })
-        .filter((m) => m.flags.includes("c") || m.flags.includes("e") || m.promotion || m.san.includes("+"));
+      const inCheck = chessInst.in_check();
+      let moves = chessInst.moves({ verbose: true });
+      if (!inCheck) {
+        moves = moves.filter((m) => m.flags.includes("c") || m.flags.includes("e") || m.promotion);
+      }
       orderMoves(chessInst, moves, ply, null);
-      for (const m of moves.slice(0, 24)) {
+      for (const m of moves.slice(0, 28)) {
+        if (!inCheck && (m.flags.includes("c") || m.flags.includes("e"))) {
+          const seeApprox = MATERIAL[m.captured || "p"] - MATERIAL[m.piece];
+          if (stand + MATERIAL[m.captured || "p"] + 200 < alpha) continue;
+          if (seeApprox < -200) continue;
+        }
         chessInst.move(m);
         let score;
         try {

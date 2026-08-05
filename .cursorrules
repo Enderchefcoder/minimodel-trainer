@@ -75,19 +75,24 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Overnight GM push — Stigmergy → ~3000 Elo (2026-08-05)
+## Task: Make Stigmergy insanely good (2026-08-05)
 
-Goal: Keep unique DPFE architecture; heavy self-play + Stockfish-max
-sparring (train on winner moves). Target near/over 3000 (honest ladder).
+Goal: Hybrid tactical floor + field residual, SEE/PVS search, stronger
+overnight schedule; keep uniqueness (not SF/NNUE clone). Push Elo hard.
 
 Plan:
-[X] Install Stockfish; SF UCI wrapper + strength ladder
-[X] Arch bumps (still unique): swarm field-head, check extensions,
-     deeper diffusion — NO NNUE/SF clone
-[X] Winner-distillation trainer (SF games + self-play)
-[X] Overnight runner (hours, checkpoints, logs)
-[X] Launch overnight job (8h tmux); monitor Elo vs SF levels
-[ ] Commit final gm_weights + reports when overnight finishes; update PR
+[X] tactics.py: material+PST+SEE+hanging floor
+[X] evaluate.py: floor + pheromone residual (fast path for qsearch)
+[X] search.py: SEE ordering, delta/futility, PVS, deeper defaults
+[X] JS mirror + uniqueness fingerprint bumps
+[X] Overnight: deeper stig search, winnable SF Elo bias
+[ ] Tests / ruff / commit / push / PR update
+[ ] Restart overnight from latest/ckpt_book; probe Elo
+
+Lessons:
+- Eval = tactical_floor + field_residual (never double-count full material).
+- Quiescence should use fast=True (1 diffusion step); floor stays exact.
+- Prefer wins vs SF 1500–2200 for distillation volume over MAX crush games.
 
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 

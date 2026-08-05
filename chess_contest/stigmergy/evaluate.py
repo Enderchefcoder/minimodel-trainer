@@ -1,4 +1,9 @@
-"""Field-interaction evaluation (centipawn-ish units from white's POV)."""
+"""Hybrid evaluation: tactical floor + pheromone field residual.
+
+The unique Stigmergy signal lives in the field residual (bilinear channel
+interactions, king resonance, swarm head). The tactical floor stops the
+engine from hanging queens while the field is still learning.
+"""
 
 from __future__ import annotations
 
@@ -7,19 +12,29 @@ import chess.polyglot
 import numpy as np
 
 from chess_contest.stigmergy.fields import build_diffused, passed_pawn_score
+from chess_contest.stigmergy.tactics import tactical_floor
 from chess_contest.stigmergy.weights import FIELD_HEAD_DIM, FieldParams, StigmergyWeights
 
 # Tiny process-local cache: field eval is the hot path in deep search.
-_EVAL_CACHE: dict[tuple[int, int], float] = {}
-_EVAL_CACHE_MAX = 80_000
+_EVAL_CACHE: dict[tuple[int, int, int], float] = {}
+_EVAL_CACHE_MAX = 120_000
 
 
 def clear_eval_cache() -> None:
+    """Drop the process-local eval cache (call when weights mutate)."""
     _EVAL_CACHE.clear()
 
 
-def evaluate_board(board: chess.Board, weights: StigmergyWeights) -> float:
-    """Return a scalar score in roughly-centipawn units, white-positive."""
+def evaluate_board(
+    board: chess.Board,
+    weights: StigmergyWeights,
+    *,
+    fast: bool = False,
+) -> float:
+    """Return a scalar score in roughly-centipawn units, white-positive.
+
+    ``fast=True`` uses fewer diffusion steps for quiescence / stand-pat.
+    """
     if board.is_checkmate():
         return -100000.0 if board.turn == chess.WHITE else 100000.0
     if (
@@ -30,14 +45,20 @@ def evaluate_board(board: chess.Board, weights: StigmergyWeights) -> float:
     ):
         return 0.0
 
-    key = (chess.polyglot.zobrist_hash(board), id(weights.field))
+    steps = 1 if fast else max(1, int(weights.diffusion_steps))
+    key = (chess.polyglot.zobrist_hash(board), id(weights.field), steps)
     cached = _EVAL_CACHE.get(key)
     if cached is not None:
         return cached
 
+    # Tactical floor is always exact — never miss hanging material.
+    floor = tactical_floor(board)
+
     params = weights.field
-    fw, fb, aux = build_diffused(board, params, weights.diffusion_steps)
-    score = _score_fields(board, fw, fb, aux, params)
+    fw, fb, aux = build_diffused(board, params, steps)
+    residual = _field_residual(board, fw, fb, aux, params)
+    # Blend: floor dominates tactics; residual is the unique Stigmergy voice.
+    score = floor + residual
     if len(_EVAL_CACHE) > _EVAL_CACHE_MAX:
         _EVAL_CACHE.clear()
     _EVAL_CACHE[key] = score
@@ -48,10 +69,8 @@ def _swarm_features(fw: np.ndarray, fb: np.ndarray, aux: dict) -> np.ndarray:
     """Pool pheromone fields into a fixed swarm-readout vector (unique, not NNUE)."""
     feats = np.zeros(FIELD_HEAD_DIM, dtype=np.float64)
     c = fw.shape[0]
-    # Channel mean differentials (clipped to first 10 slots).
     for i in range(min(c, 10)):
         feats[i] = float(fw[i].mean() - fb[i].mean())
-    # King-local enemy pressure (next slots).
     if aux.get("w_king") is not None:
         r, col = aux["w_king"]
         local = 0.0
@@ -73,9 +92,7 @@ def _swarm_features(fw: np.ndarray, fb: np.ndarray, aux: dict) -> np.ndarray:
     feats[12] = float(aux.get("material", 0)) / 1000.0
     feats[13] = float(fw.sum() - fb.sum()) / 100.0
     feats[14] = float((fw**2).mean() - (fb**2).mean())
-    # Harmonic residual energy.
     feats[15] = float(fw[9].sum() - fb[9].sum()) if c > 9 else 0.0
-    # Pad / small nonlinear mixes.
     feats[16] = feats[0] * feats[10]
     feats[17] = feats[1] * feats[11]
     feats[18] = np.tanh(feats[12])
@@ -87,7 +104,17 @@ def _swarm_features(fw: np.ndarray, fb: np.ndarray, aux: dict) -> np.ndarray:
     return feats
 
 
-def _score_fields(board, fw, fb, aux, params: FieldParams) -> float:
+def _field_residual(
+    board: chess.Board,
+    fw: np.ndarray,
+    fb: np.ndarray,
+    aux: dict,
+    params: FieldParams,
+) -> float:
+    """Pheromone / swarm residual — deliberately excludes raw material.
+
+    Material lives in :func:`tactical_floor` so we never double-count queens.
+    """
     fw_flat = fw.reshape(fw.shape[0], -1)
     fb_flat = fb.reshape(fb.shape[0], -1)
     gram = fw_flat @ fb_flat.T
@@ -105,7 +132,8 @@ def _score_fields(board, fw, fb, aux, params: FieldParams) -> float:
         r, c = aux["b_king"]
         king_term -= float((params.king_resonance * fw[:, r, c]).sum())
 
-    material = float(aux["material"]) * params.material_anchor
+    # Light material anchor only as a field bias (floor already has full material).
+    material_bias = float(aux["material"]) * params.material_anchor * 0.05
     passed = passed_pawn_score(aux["w_pawns"], aux["b_pawns"]) * params.passed_pawn_scale
 
     mobility = len(list(board.legal_moves)) * params.mobility_scale
@@ -121,18 +149,23 @@ def _score_fields(board, fw, fb, aux, params: FieldParams) -> float:
         swarm = float(np.dot(params.field_head[:n], feats[:n])) * params.swarm_scale
 
     return (
-        material
+        material_bias
         + passed
         + mobility
         + tempo
-        + 18.0 * bilinear
-        + 4.0 * self_term
-        + 55.0 * king_term
-        + 12.0 * swarm
+        + 22.0 * bilinear
+        + 5.0 * self_term
+        + 60.0 * king_term
+        + 14.0 * swarm
     )
 
 
-def relative_eval(board: chess.Board, weights: StigmergyWeights) -> float:
+def relative_eval(
+    board: chess.Board,
+    weights: StigmergyWeights,
+    *,
+    fast: bool = False,
+) -> float:
     """Score from the side-to-move's perspective (for negamax)."""
-    score = evaluate_board(board, weights)
+    score = evaluate_board(board, weights, fast=fast)
     return score if board.turn == chess.WHITE else -score

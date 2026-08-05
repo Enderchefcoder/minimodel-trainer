@@ -35,13 +35,13 @@ class StigmergyEngine:
     def choose_move(
         self,
         board: chess.Board,
-        time_ms: int = 1200,
-        max_depth: int = 10,
+        time_ms: int = 2000,
+        max_depth: int = 14,
     ) -> SearchResult:
         searcher = Searcher(self.weights)
         return searcher.search_with_root_update(board, time_ms=time_ms, max_depth=max_depth)
 
-    def play_move(self, board: chess.Board, time_ms: int = 1200, max_depth: int = 10) -> chess.Move:
+    def play_move(self, board: chess.Board, time_ms: int = 2000, max_depth: int = 14) -> chess.Move:
         result = self.choose_move(board, time_ms=time_ms, max_depth=max_depth)
         if result.move is None:
             raise RuntimeError("No legal move")

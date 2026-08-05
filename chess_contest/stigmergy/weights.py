@@ -294,6 +294,8 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "harmonic_board_channel",
             "swarm_field_head_readout",
             "winner_distillation_from_oracles",
+            "tactical_floor_field_fusion",
+            "see_ordered_idas",
         ],
         "search": [
             "iterative_deepening",
@@ -304,6 +306,9 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "quiescence",
             "killers_history",
             "check_extensions",
+            "see_move_ordering",
+            "principal_variation_search",
+            "futility_pruning",
         ],
     }
 

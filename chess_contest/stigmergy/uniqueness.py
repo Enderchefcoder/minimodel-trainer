@@ -33,6 +33,8 @@ NOVEL_FEATURES = {
     "swarm_vote_policy": 6,
     "swarm_field_head_readout": 8,
     "winner_distillation_from_oracles": 6,
+    "tactical_floor_field_fusion": 7,
+    "see_ordered_idas": 5,
 }
 
 

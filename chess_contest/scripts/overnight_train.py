@@ -58,16 +58,16 @@ class OvernightConfig:
     init_weights: str = "chess_contest/weights/base_weights.json"
     out_dir: str = "chess_contest/weights/overnight"
     stockfish_path: str = "/usr/games/stockfish"
-    stig_movetime_ms: int = 120
-    stig_max_depth: int = 4
-    sf_movetime_ms: int = 80
-    max_plies: int = 70
-    checkpoint_every_min: float = 12.0
-    probe_every_min: float = 30.0
-    book_build_positions: int = 400
-    selfplay_batch: int = 2
-    sf_batch: int = 10
-    analyse_per_cycle: int = 80
+    stig_movetime_ms: int = 280
+    stig_max_depth: int = 7
+    sf_movetime_ms: int = 60
+    max_plies: int = 80
+    checkpoint_every_min: float = 10.0
+    probe_every_min: float = 25.0
+    book_build_positions: int = 500
+    selfplay_batch: int = 3
+    sf_batch: int = 12
+    analyse_per_cycle: int = 100
     skip_book_if_ckpt: bool = True
 
 
@@ -228,11 +228,13 @@ def run_overnight(cfg: OvernightConfig) -> Path:
 
         engine = StigmergyEngine(weights)
         cycle = 0
-        # Escalating SF Elo schedule (ends at max 3190).
+        # Bias toward winnable SF Elo bands early; still sample MAX often.
+        # Wins at 1500-2200 teach tactics; MAX analysis teaches ceiling play.
         sf_schedule = (
-            [1320, 1500, 1700, 1900, 2100] * 2
-            + [2300, 2500, 2700, 2800] * 3
-            + [2900, 3000, 3100, 3190] * 10
+            [1320, 1400, 1500, 1600, 1700, 1800, 1900, 2000] * 4
+            + [2100, 2200, 2300, 2400] * 3
+            + [2500, 2600, 2700, 2800] * 2
+            + [2900, 3000, 3100, 3190]
         )
 
         while time.time() < deadline:
@@ -466,13 +468,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--init", default="chess_contest/weights/base_weights.json")
     p.add_argument("--out-dir", default="chess_contest/weights/overnight")
     p.add_argument("--stockfish", default="/usr/games/stockfish")
-    p.add_argument("--stig-ms", type=int, default=120)
-    p.add_argument("--stig-depth", type=int, default=4)
-    p.add_argument("--sf-ms", type=int, default=80)
-    p.add_argument("--book-positions", type=int, default=400)
-    p.add_argument("--analyse-per-cycle", type=int, default=80)
-    p.add_argument("--sf-batch", type=int, default=10)
-    p.add_argument("--selfplay-batch", type=int, default=2)
+    p.add_argument("--stig-ms", type=int, default=280)
+    p.add_argument("--stig-depth", type=int, default=7)
+    p.add_argument("--sf-ms", type=int, default=60)
+    p.add_argument("--book-positions", type=int, default=500)
+    p.add_argument("--analyse-per-cycle", type=int, default=100)
+    p.add_argument("--sf-batch", type=int, default=12)
+    p.add_argument("--selfplay-batch", type=int, default=3)
     p.add_argument("--quick", action="store_true", help="~10min smoke overnight")
     args = p.parse_args(argv)
 

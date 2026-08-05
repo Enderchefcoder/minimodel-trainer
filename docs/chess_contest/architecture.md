@@ -19,12 +19,13 @@ self-play residual nets. **Stigmergy-DPFE** does neither:
 | Jacobi diffusion | Scents spread with learnable decay/mix (stigmergy) |
 | Bilinear cross-color scoring | `Σ W[c,d] ⟨F_w[c], F_b[d]⟩` |
 | King resonance | Enemy field sampled under the king |
-| Soft material anchor | Stops hanging queens while fields own positional play |
+| Soft material / tactical floor | Classical material+PST+hanging+SEE fused under fields |
 | Ternary ant-trail book | Openings as `{-1,0,1}` codes with reinforcement |
 | Harmonic channel | Fixed board basis mixed into the lattice |
+| Swarm field-head | Compact pheromone readout (not NNUE) |
 
 Search is deliberately deep and “slow is fine”: iterative deepening, TT,
-null-move (Python), LMR, killers, history, quiescence.
+null-move (Python), PVS, LMR, SEE ordering, killers, history, quiescence.
 
 ## Train → play split
 
