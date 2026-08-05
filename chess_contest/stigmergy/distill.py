@@ -175,10 +175,18 @@ def fanout_opponent_replies(
         quiets = [m for m in board.legal_moves if m.uci() not in seen]
         if quiets:
             gen = rng if rng is not None else np.random.default_rng(0)
-            gen.shuffle(quiets)
-            for move in quiets[: max(4, max_replies // 2)]:
-                _add(move)
-        for move in replies[:max_replies]:
+            # Near-complete coverage when the reply fan is small (typical UCI_Elo noise).
+            n_legal = len(list(board.legal_moves))
+            if n_legal <= 22:
+                for move in quiets:
+                    _add(move)
+            else:
+                gen.shuffle(quiets)
+                for move in quiets[: max(6, max_replies)]:
+                    _add(move)
+        # Prefer full fan when small; otherwise cap for speed.
+        limit = len(replies) if len(replies) <= 22 else max(max_replies, min(24, len(replies)))
+        for move in replies[:limit]:
             board.push(move)
             try:
                 if not board.is_game_over(claim_draw=True):
