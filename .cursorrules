@@ -76,7 +76,7 @@ Plan:
 [X] mm1m bakeoff via run_experiment (same DEFAULTS as group_arch)
 [X] Merge original arch_* + mm1m_* into combined ranking JSON
 [X] Update report 12, RESULTS.md, re-rank docs; tests; commit; push; PR
-[ ] Inline all 20 + merged 25 into report 03 (not just a pointer)
+[X] Inline all 20 + merged 25 into report 03 (not just a pointer)
 
 Lessons:
 - Selective SSM Python-autograd unrolling is ~300 tok/s; a custom autograd
