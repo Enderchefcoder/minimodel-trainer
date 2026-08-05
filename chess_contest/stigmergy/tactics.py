@@ -210,16 +210,28 @@ def threat_bonus(board: chess.Board) -> float:
     return score
 
 
-def tactical_floor(board: chess.Board) -> float:
-    """Classical material + PST + structure + hanging — white-positive cp."""
+def tactical_floor_fast(board: chess.Board) -> float:
+    """Material + PST only — hot-path leaf eval (~5x faster than full floor)."""
     score = 0.0
     taper = _phase_taper(board)
-    bishops = [0, 0]
-    for sq, piece in board.piece_map().items():
-        val = material_of(piece.piece_type) + pst_value(piece, sq, phase_taper=taper)
-        score += val if piece.color == chess.WHITE else -val
-        if piece.piece_type == chess.BISHOP:
-            bishops[int(piece.color)] += 1
+    for sq in chess.scan_reversed(board.occupied):
+        pt = board.piece_type_at(sq)
+        if pt is None:
+            continue
+        color = bool(board.occupied_co[chess.WHITE] & (1 << sq))
+        piece = chess.Piece(pt, color)
+        val = material_of(pt) + pst_value(piece, sq, phase_taper=taper)
+        score += val if color else -val
+    return float(score)
+
+
+def tactical_floor(board: chess.Board) -> float:
+    """Classical material + PST + structure + hanging — white-positive cp."""
+    score = tactical_floor_fast(board)
+    bishops = [
+        len(board.pieces(chess.BISHOP, chess.WHITE)),
+        len(board.pieces(chess.BISHOP, chess.BLACK)),
+    ]
     if bishops[chess.WHITE] >= 2:
         score += 35
     if bishops[chess.BLACK] >= 2:

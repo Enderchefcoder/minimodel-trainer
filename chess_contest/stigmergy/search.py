@@ -13,7 +13,7 @@ import chess
 import chess.polyglot
 
 from chess_contest.stigmergy.coarse import coarse_trail_move
-from chess_contest.stigmergy.tactics import material_of, see, tactical_floor
+from chess_contest.stigmergy.tactics import material_of, see, tactical_floor, tactical_floor_fast
 from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
 MATE = 100_000
@@ -23,12 +23,11 @@ DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
 def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
     """Side-to-move score for alpha-beta leaves.
 
-    Uses the classical tactical floor inside the search tree for speed and
-    punishing tactics. The pheromone residual remains for analysis / uniqueness
-    via :func:`evaluate_board`; trails/book supply oracle policy at the root.
+    Uses a fast classical floor inside the search tree. Exact trails/book cover
+    the oracle policy at the root; full tactical_floor is reserved for analysis.
     """
-    del weights  # floor is weight-agnostic; kept for call-site uniformity
-    floor = tactical_floor(board)
+    del weights
+    floor = tactical_floor_fast(board)
     tempo = 8.0 if board.turn == chess.WHITE else -8.0
     score = floor + tempo
     return score if board.turn == chess.WHITE else -score
@@ -66,6 +65,7 @@ class Searcher:
         self.tt: dict[int, _TTEntry] = {}
         self.killers: dict[int, list[chess.Move | None]] = {}
         self.history: dict[int, int] = {}
+        self._rep_stack: list[int] = []
 
     def _check_time(self) -> None:
         if (self.nodes & 2047) == 0 and time.perf_counter() >= self.deadline:
@@ -262,11 +262,27 @@ class Searcher:
             return -MATE + ply
         if board.is_stalemate() or board.is_insufficient_material() or board.is_fifty_moves():
             return 0.0
-        if board.can_claim_threefold_repetition() and ply > 0:
-            return 0.0
-
-        alpha_orig = alpha
+        # Cheap repetition: same zobrist already on the search path (not full history).
         key = chess.polyglot.zobrist_hash(board)
+        if ply > 0 and key in self._rep_stack:
+            return 0.0
+        self._rep_stack.append(key)
+        try:
+            return self._negamax_inner(board, depth, alpha, beta, ply, allow_null, key)
+        finally:
+            self._rep_stack.pop()
+
+    def _negamax_inner(
+        self,
+        board: chess.Board,
+        depth: int,
+        alpha: float,
+        beta: float,
+        ply: int,
+        allow_null: bool,
+        key: int,
+    ) -> float:
+        alpha_orig = alpha
         tt = self.tt.get(key)
         tt_move = tt.move if tt and tt.key == key else None
         if tt is not None and tt.key == key and tt.depth >= depth:
@@ -296,11 +312,7 @@ class Searcher:
             allow_null
             and depth >= 3
             and not in_check
-            and any(
-                p.piece_type not in (chess.PAWN, chess.KING)
-                for p in board.piece_map().values()
-                if p.color == board.turn
-            )
+            and (board.occupied_co[board.turn] & ~board.pawns & ~board.kings)
         ):
             R = 3 if depth >= 6 else 2
             board.push(chess.Move.null())
@@ -508,6 +520,7 @@ class Searcher:
         self.tt.clear()
         self.killers.clear()
         self.history.clear()
+        self._rep_stack = []
 
         best_move = legal[0]
         best_score = 0.0
