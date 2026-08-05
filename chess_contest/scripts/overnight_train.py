@@ -215,10 +215,18 @@ def run_overnight(cfg: OvernightConfig) -> Path:
     try:
         book_ckpt = out / "ckpt_book.json"
         init_path = Path(cfg.init_weights).resolve()
-        if cfg.skip_book_if_ckpt and book_ckpt.exists() and (
-            init_path == book_ckpt.resolve() or "ckpt_book" in cfg.init_weights
+        book_ready = len(weights.book) >= 5_000
+        if cfg.skip_book_if_ckpt and (
+            book_ready
+            or (
+                book_ckpt.exists()
+                and (init_path == book_ckpt.resolve() or "ckpt_book" in cfg.init_weights)
+            )
         ):
-            _log(log, "Skipping book rebuild (resuming from SF book checkpoint)")
+            _log(
+                log,
+                f"Skipping book rebuild (book_entries={len(weights.book)}, resume path)",
+            )
         else:
             sf.set_elo(None)
             n = build_sf_opening_book(weights, sf, cfg.book_build_positions, log, rng)

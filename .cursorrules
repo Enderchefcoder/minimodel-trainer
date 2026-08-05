@@ -72,6 +72,10 @@ notes: reusable lessons first, then a scratchpad for the active task.
   score >= 0.5 vs weak refs — otherwise every mutation is adopted.
 - Overnight field imitation must use *additive clipped* deposit updates;
   multiplicative `deposit *= 1+lr` exploded eval to ~1e62 within an hour.
+- Full recursive SEE on every move-order call is too slow on CPU; use
+  MVV-LVA for ordering and a cheap 2-ply SEE only in quiescence pruning.
+- Hybrid eval = tactical_floor + field_residual (do not double-count full
+  material). Quiescence uses `fast=True` (1 diffusion step).
 
 # Scratchpad
 
@@ -86,8 +90,8 @@ Plan:
 [X] search.py: SEE ordering, delta/futility, PVS, deeper defaults
 [X] JS mirror + uniqueness fingerprint bumps
 [X] Overnight: deeper stig search, winnable SF Elo bias
-[ ] Tests / ruff / commit / push / PR update
-[ ] Restart overnight from latest/ckpt_book; probe Elo
+[X] Tests / ruff / commit / push / PR update
+[X] Restart overnight from latest/ckpt_book; probe Elo
 
 Lessons:
 - Eval = tactical_floor + field_residual (never double-count full material).
