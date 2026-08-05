@@ -200,14 +200,14 @@ def imitation_tune(weights: StigmergyWeights, cfg: TrainConfig) -> dict[str, Any
         wrong = board.piece_at(top.from_square)
         if piece is not None:
             idx = "pnbrqk".index(piece.symbol().lower())
-            weights.field.deposit[idx] *= 1.0 + cfg.lr * 0.15
+            weights.field.deposit[idx] += cfg.lr * 0.15
         if wrong is not None and wrong != piece:
             idx = "pnbrqk".index(wrong.symbol().lower())
-            weights.field.deposit[idx] *= 1.0 - cfg.lr * 0.1
-        # Interaction nudge toward higher material_anchor if hanging patterns.
+            weights.field.deposit[idx] -= cfg.lr * 0.1
         weights.field.material_anchor = float(
-            min(1.6, weights.field.material_anchor * (1.0 + cfg.lr * 0.02))
+            min(1.6, weights.field.material_anchor + cfg.lr * 0.02)
         )
+        weights.field.deposit = np.clip(weights.field.deposit, -15, 15)
         if use_torch:
             # Touch CUDA once per few steps so training "uses" the device path.
             import torch

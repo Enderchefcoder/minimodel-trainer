@@ -148,6 +148,23 @@ def distill_stockfish_pv(
     return n
 
 
+def clip_field_params(params) -> None:
+    """Keep pheromone parameters in a numerically stable band."""
+    params.deposit = np.clip(params.deposit, -15.0, 15.0)
+    params.decay = np.clip(params.decay, 0.12, 0.95)
+    params.mix = np.clip(params.mix, 0.05, 0.9)
+    params.interaction = np.clip(params.interaction, -3.0, 3.0)
+    params.self_energy = np.clip(params.self_energy, -2.0, 2.0)
+    params.king_resonance = np.clip(params.king_resonance, -3.0, 3.0)
+    params.material_anchor = float(np.clip(params.material_anchor, 0.4, 2.5))
+    params.tempo_bonus = float(np.clip(params.tempo_bonus, 0.0, 40.0))
+    params.passed_pawn_scale = float(np.clip(params.passed_pawn_scale, 0.2, 3.0))
+    params.mobility_scale = float(np.clip(params.mobility_scale, 0.2, 3.0))
+    params.swarm_scale = float(np.clip(params.swarm_scale, 0.05, 5.0))
+    if params.field_head is not None:
+        params.field_head = np.clip(params.field_head, -8.0, 8.0)
+
+
 def imitation_toward_move(
     weights: StigmergyWeights,
     board: chess.Board,
@@ -169,19 +186,23 @@ def imitation_toward_move(
     scored.sort(key=lambda t: t[1], reverse=True)
     if scored[0][0] == target:
         return True
-    # Soft ES-style nudge of deposit for the target piece.
+    # Additive, clipped nudges — multiplicative updates explode overnight.
     piece = board.piece_at(target.from_square)
     wrong = board.piece_at(scored[0][0].from_square)
     if piece is not None:
         idx = "pnbrqk".index(piece.symbol().lower())
-        weights.field.deposit[idx] *= 1.0 + lr
-        weights.field.deposit[idx] += rng.normal(0, lr * 0.05, weights.field.deposit[idx].shape)
+        weights.field.deposit[idx] += lr * 0.15 + rng.normal(0, lr * 0.02, weights.field.deposit[idx].shape)
     if wrong is not None and wrong != piece:
         idx = "pnbrqk".index(wrong.symbol().lower())
-        weights.field.deposit[idx] *= 1.0 - lr * 0.5
-    weights.field.material_anchor = float(min(2.0, weights.field.material_anchor * (1.0 + lr * 0.01)))
-    if hasattr(weights.field, "field_head") and weights.field.field_head is not None:
-        weights.field.field_head = weights.field.field_head + rng.normal(0, lr * 0.02, weights.field.field_head.shape)
+        weights.field.deposit[idx] -= lr * 0.1
+    weights.field.material_anchor = float(
+        min(2.0, weights.field.material_anchor + lr * 0.01)
+    )
+    if weights.field.field_head is not None:
+        weights.field.field_head = weights.field.field_head + rng.normal(
+            0, lr * 0.015, weights.field.field_head.shape
+        )
+    clip_field_params(weights.field)
     return False
 
 

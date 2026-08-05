@@ -22,6 +22,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from chess_contest.stigmergy.distill import (  # noqa: E402
+    clip_field_params,
     distill_game,
     distill_stockfish_pv,
     imitation_toward_move,
@@ -361,11 +362,13 @@ def run_overnight(cfg: OvernightConfig) -> Path:
                     stats["selfplay_games"] += 2
                     if sc > baseline + 0.05:
                         weights.field = cand
+                        clip_field_params(weights.field)
                         baseline = sc
                         adopted += 1
                         clear_eval_cache()
                 _log(log, f"cycle {cycle} self-play adopted={adopted}/{cfg.selfplay_batch}")
 
+            clip_field_params(weights.field)
             prune_learned_moves(weights, keep=20000)
             engine = StigmergyEngine(weights)
 

@@ -360,6 +360,13 @@ def mutate_field(params: FieldParams, rng: np.random.Generator, sigma: float = 0
     out.swarm_scale = float(max(0.1, out.swarm_scale + rng.normal(0, sigma * 0.2)))
     if out.field_head is not None:
         out.field_head = out.field_head + rng.normal(0, sigma * 0.4, out.field_head.shape)
+    # Hard caps — overnight multiplicative history taught us this matters.
+    out.deposit = np.clip(out.deposit, -15.0, 15.0)
+    out.interaction = np.clip(out.interaction, -3.0, 3.0)
+    out.self_energy = np.clip(out.self_energy, -2.0, 2.0)
+    out.king_resonance = np.clip(out.king_resonance, -3.0, 3.0)
+    if out.field_head is not None:
+        out.field_head = np.clip(out.field_head, -8.0, 8.0)
     return out
 
 

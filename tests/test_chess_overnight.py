@@ -64,7 +64,16 @@ def test_swarm_head_changes_eval() -> None:
     assert bumped != base
 
 
-def test_prune_learned_moves() -> None:
+def test_clip_field_params_bounds() -> None:
+    from chess_contest.stigmergy.distill import clip_field_params
+
+    w = default_weights()
+    assert w.field.field_head is not None
+    w.field.deposit[:] = 100.0
+    w.field.field_head[:] = 50.0
+    clip_field_params(w.field)
+    assert float(w.field.deposit.max()) <= 15.0
+    assert float(abs(w.field.field_head).max()) <= 8.0
     w = default_weights()
     for i in range(100):
         w.learned_moves[f"n{i}a2b3"] = float(i)
