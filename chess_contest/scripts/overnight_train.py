@@ -373,6 +373,23 @@ def run_overnight(cfg: OvernightConfig) -> Path:
             engine = StigmergyEngine(weights)
 
             now = time.time()
+            # Health check: abort cycle updates if eval exploded.
+            try:
+                from chess_contest.stigmergy.evaluate import evaluate_board as _ev
+
+                probe_eval = abs(float(_ev(chess.Board(), weights)))
+                if probe_eval > 1e6 or not np.isfinite(probe_eval):
+                    _log(log, f"HEALTH FAIL eval={probe_eval}; reloading last good checkpoint")
+                    latest = out / "latest.json"
+                    book = out / "ckpt_book.json"
+                    reload_path = latest if latest.exists() else book
+                    weights = load_weights(reload_path)
+                    clip_field_params(weights.field)
+                    clear_eval_cache()
+                    continue
+            except Exception as e:
+                _log(log, f"health check error: {e}")
+
             if now - last_ckpt >= cfg.checkpoint_every_min * 60:
                 ckpt = out / f"ckpt_{int(now - t0)}s.json"
                 weights.training_meta = {
