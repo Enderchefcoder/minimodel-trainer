@@ -1,6 +1,7 @@
 # Crush Glint-2: 1.4M dense GQA on FineWeb-Edu + DCLM-100BT + TinyStories +
 # soft-label QA. Designed for a single Colab T4 (~4h wall clock).
 # See research/reports/11_crush_glint2_recipe.md for the design rationale.
+# Notebook v2: AMP + compile, wall-clock WSD, EMA, seq-1024 probe, Glint eval.
 extends: _base.yaml
 
 run_name: crush-glint2-1.4m
@@ -13,14 +14,15 @@ data:
   # Soft-label JSON (prompt→answer + 3-way next-token targets) lives at:
   #   research/data/corpus/slm_next_token_dataset.json
   soft_label_json: research/data/corpus/slm_next_token_dataset.json
-  soft_label_ce_weight: 0.03
-  soft_label_kl_every: 20
+  soft_label_ce_weight: 0.05
+  soft_label_kl_every: 10
+  soft_label_kl_weight: 0.30
 
 training:
   max_steps: 12000          # ~786M tokens at 65,536 tok/step; wall-clock capped in notebook
-  batch_size: 32
-  seq_len: 512
-  grad_accum_steps: 4       # 32*512*4 = 65,536 tokens/step
+  batch_size: 16            # notebook probes 16×1024 then falls back to 32×512
+  seq_len: 1024
+  grad_accum_steps: 4       # 16*1024*4 = 65,536 tokens/step (same at 32*512*4)
   optimizer: adamw
   lr: 3.0e-3
   weight_decay: 0.1
@@ -32,10 +34,10 @@ training:
     decay_ratio: 0.20
     decay_shape: sqrt
   compile: true
-  dtype: auto
+  dtype: auto               # notebook uses fp16 GradScaler on T4
   log_every: 50
   eval_every: 500
-  save_every: 500
+  save_every: 200
   keep_last: 3
   keep_best: 1
   seed: 1337
