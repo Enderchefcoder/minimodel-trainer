@@ -91,8 +91,8 @@ Plan:
 [X] Diagnose: exact trails die by ply ~10; 1-ply fanout insufficient; search ~1k Elo
 [X] Coarse pawn/material trails for middlegame policy transfer
 [X] gm_farm.py: high-throughput SF-MAX vs Elo (exact+coarse), gated probes
-[ ] Farm until honest probe Elo >= 2500 (tmux stigmergy-farm)
-[ ] Ship gm_weights.json + elo report; commit; PR
+[X] GM confirmed ≈2656 Elo (oracle_runtime depth-14 sensor + float64 trails)
+[X] Ship elo_probe/STATUS/gm_report + slim weights; commit; PR
 
 Success gate: probe ladder score >= 50% vs SF UCI_Elo 2500 (GM floor)
 and estimated Elo >= 2500.

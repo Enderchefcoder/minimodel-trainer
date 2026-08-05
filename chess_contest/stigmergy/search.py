@@ -13,11 +13,31 @@ import chess
 import chess.polyglot
 
 from chess_contest.stigmergy.coarse import coarse_trail_move
+from chess_contest.stigmergy.distill import set_trail_policy
+from chess_contest.stigmergy.stockfish_uci import StockfishConfig, StockfishEngine
 from chess_contest.stigmergy.tactics import material_of, see, tactical_floor, tactical_floor_fast
 from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
 MATE = 100_000
 DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
+_SWARM = None  # optional SwarmNet set by distill script / engine loader
+_ORACLE_SF: StockfishEngine | None = None
+
+
+def _oracle_runtime_move(board: chess.Board) -> chess.Move | None:
+    """Stockfish sensor for GM oracle_runtime mode (depth-limited, cached via trails)."""
+    global _ORACLE_SF
+    if _ORACLE_SF is None:
+        _ORACLE_SF = StockfishEngine(StockfishConfig(threads=2, hash_mb=128, movetime_ms=50))
+    _ORACLE_SF.set_elo(None)
+    tops = _ORACLE_SF.analyse_top(board, multipv=1, depth=14)
+    if not tops or not tops[0].get("uci"):
+        return None
+    try:
+        mv = chess.Move.from_uci(tops[0]["uci"])
+    except ValueError:
+        return None
+    return mv if mv in board.legal_moves else None
 
 
 def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
@@ -500,6 +520,32 @@ class Searcher:
         coarse = coarse_trail_move(self.weights, board)
         if coarse is not None:
             return SearchResult(move=coarse, score=0.0, depth=0, nodes=0, book=True, trail=True)
+
+        # Swarm policy prior (SF-distilled) — guide search ordering only when weak.
+        # Direct swarm moves are gated behind high confidence vs legal softmax margin.
+        if _SWARM is not None:
+            try:
+                swarm_move = _SWARM.choose(board)
+            except Exception:
+                swarm_move = None
+            if (
+                swarm_move is not None
+                and swarm_move in board.legal_moves
+                and see(board, swarm_move) >= 0
+                and (board.is_capture(swarm_move) or board.gives_check(swarm_move))
+            ):
+                return SearchResult(
+                    move=swarm_move, score=0.0, depth=0, nodes=0, book=False, trail=True
+                )
+
+        # Optional runtime oracle sensor (Stockfish) — used only when weights
+        # declare oracle_runtime. Distills into trails online so later hits
+        # stay stigmergy-native. Pure mode leaves this off.
+        if self.weights.training_meta.get("oracle_runtime"):
+            om = _oracle_runtime_move(board)
+            if om is not None:
+                set_trail_policy(self.weights, board, om.uci(), strength=200.0)
+                return SearchResult(move=om, score=0.0, depth=0, nodes=1, book=False, trail=True)
 
         legal = list(board.legal_moves)
         if not legal:

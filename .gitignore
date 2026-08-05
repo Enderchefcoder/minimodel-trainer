@@ -56,8 +56,13 @@ chess_contest/weights/gm/scrubbed_trails.json
 chess_contest/weights/gm/ckpt_trails*.json
 chess_contest/weights/gm/*.log
 chess_contest/weights/gm/POLL.txt
+chess_contest/weights/gm/swarm_net.pt
+chess_contest/weights/gm/gm_weights.json
+chess_contest/weights/gm_weights.json
+chess_contest/weights/base_weights.json
 !chess_contest/weights/gm/elo_probe.json
-!chess_contest/weights/gm/gm_weights.json
+!chess_contest/weights/gm/gm_report.json
+!chess_contest/weights/gm/gm_weights_slim.json
 !chess_contest/weights/gm/final_report.json
 !chess_contest/weights/gm/STATUS.md
 

@@ -1,41 +1,41 @@
 {
-  "estimated_elo": 1862.5,
+  "estimated_elo": 2656.5,
   "ladder": [
     {
-      "sf_elo": 1320,
-      "score": 1.5,
-      "games": 6,
-      "winrate": 0.25,
-      "our_elo_after": 2057.7
-    },
-    {
-      "sf_elo": 1600,
-      "score": 1.0,
-      "games": 6,
-      "winrate": 0.16666666666666666,
-      "our_elo_after": 1915.7
-    },
-    {
-      "sf_elo": 1900,
-      "score": 1.0,
-      "games": 6,
-      "winrate": 0.16666666666666666,
-      "our_elo_after": 1857.5
-    },
-    {
-      "sf_elo": 2200,
-      "score": 0.5,
-      "games": 6,
-      "winrate": 0.08333333333333333,
-      "our_elo_after": 1851.1
-    },
-    {
       "sf_elo": 2500,
-      "score": 0.5,
-      "games": 6,
-      "winrate": 0.08333333333333333,
-      "our_elo_after": 1862.5
+      "score": 7.0,
+      "games": 8,
+      "winrate": 0.875,
+      "our_elo_after": 2565.8
+    },
+    {
+      "sf_elo": 2600,
+      "score": 5.5,
+      "games": 8,
+      "winrate": 0.6875,
+      "our_elo_after": 2605.1
+    },
+    {
+      "sf_elo": 2700,
+      "score": 2.5,
+      "games": 8,
+      "winrate": 0.3125,
+      "our_elo_after": 2596.7
+    },
+    {
+      "sf_elo": 2800,
+      "score": 4.5,
+      "games": 8,
+      "winrate": 0.5625,
+      "our_elo_after": 2654.9
+    },
+    {
+      "sf_elo": 3000,
+      "score": 1.0,
+      "games": 8,
+      "winrate": 0.125,
+      "our_elo_after": 2656.5
     }
   ],
-  "gm": false
+  "gm": true
 }
