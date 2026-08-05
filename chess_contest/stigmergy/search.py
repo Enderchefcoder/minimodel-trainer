@@ -180,7 +180,9 @@ class Searcher:
                 return tt.score
 
         in_check = board.is_check()
-        if depth <= 0:
+        # Check extension: look one ply deeper when in check.
+        ext = 1 if in_check else 0
+        if depth + ext <= 0:
             return self.quiesce(board, alpha, beta, ply)
 
         # Null-move pruning (skip when in check or endgame-ish).
@@ -222,9 +224,11 @@ class Searcher:
 
             board.push(move)
             try:
-                score = -self.negamax(board, depth - 1 - reduction, -beta, -alpha, ply + 1, True)
+                score = -self.negamax(
+                    board, depth - 1 - reduction + ext, -beta, -alpha, ply + 1, True
+                )
                 if reduction and score > alpha:
-                    score = -self.negamax(board, depth - 1, -beta, -alpha, ply + 1, True)
+                    score = -self.negamax(board, depth - 1 + ext, -beta, -alpha, ply + 1, True)
             finally:
                 board.pop()
 

@@ -73,6 +73,20 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
+## Task: Overnight GM push — Stigmergy → ~3000 Elo (2026-08-05)
+
+Goal: Keep unique DPFE architecture; heavy self-play + Stockfish-max
+sparring (train on winner moves). Target near/over 3000 (honest ladder).
+
+Plan:
+[ ] Install Stockfish; SF UCI wrapper + strength ladder
+[ ] Arch bumps (still unique): more channels, deeper diffusion, capture SEE
+     field term, longer ternary trails — NO NNUE/SF clone
+[ ] Winner-distillation trainer (SF games + self-play)
+[ ] Overnight runner (hours, checkpoints, logs)
+[ ] Launch overnight job; periodic Elo vs SF levels
+[ ] Commit weights + reports; update PR
+
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

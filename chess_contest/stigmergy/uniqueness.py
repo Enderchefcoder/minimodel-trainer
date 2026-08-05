@@ -31,6 +31,8 @@ NOVEL_FEATURES = {
     "spectral_attack_graph": 8,
     "chemical_reaction_eval": 8,
     "swarm_vote_policy": 6,
+    "swarm_field_head_readout": 8,
+    "winner_distillation_from_oracles": 6,
 }
 
 

@@ -97,6 +97,9 @@ DEFAULT_BOOK: dict[str, list[dict[str, Any]]] = {
 CODE_WEIGHT = {-1: 1, 0: 3, 1: 6}
 
 
+FIELD_HEAD_DIM = 24  # swarm readout over pooled pheromone stats
+
+
 @dataclass
 class FieldParams:
     """Learnable pheromone-field parameters (numpy arrays)."""
@@ -111,6 +114,9 @@ class FieldParams:
     tempo_bonus: float = 8.0
     passed_pawn_scale: float = 1.0
     mobility_scale: float = 1.0
+    # Unique "swarm readout": linear head on pooled field stats (not NNUE).
+    field_head: np.ndarray | None = None
+    swarm_scale: float = 1.0
 
     def copy(self) -> FieldParams:
         return FieldParams(
@@ -124,10 +130,12 @@ class FieldParams:
             tempo_bonus=float(self.tempo_bonus),
             passed_pawn_scale=float(self.passed_pawn_scale),
             mobility_scale=float(self.mobility_scale),
+            field_head=None if self.field_head is None else self.field_head.copy(),
+            swarm_scale=float(self.swarm_scale),
         )
 
     def to_jsonable(self) -> dict[str, Any]:
-        return {
+        out = {
             "deposit": self.deposit.tolist(),
             "decay": self.decay.tolist(),
             "mix": self.mix.tolist(),
@@ -138,10 +146,15 @@ class FieldParams:
             "tempoBonus": float(self.tempo_bonus),
             "passedPawnScale": float(self.passed_pawn_scale),
             "mobilityScale": float(self.mobility_scale),
+            "swarmScale": float(self.swarm_scale),
         }
+        if self.field_head is not None:
+            out["fieldHead"] = self.field_head.tolist()
+        return out
 
     @classmethod
     def from_jsonable(cls, data: dict[str, Any]) -> FieldParams:
+        head = data.get("fieldHead")
         return cls(
             deposit=np.asarray(data["deposit"], dtype=np.float64),
             decay=np.asarray(data["decay"], dtype=np.float64),
@@ -153,6 +166,8 @@ class FieldParams:
             tempo_bonus=float(data.get("tempoBonus", 8.0)),
             passed_pawn_scale=float(data.get("passedPawnScale", 1.0)),
             mobility_scale=float(data.get("mobilityScale", 1.0)),
+            field_head=None if head is None else np.asarray(head, dtype=np.float64),
+            swarm_scale=float(data.get("swarmScale", 1.0)),
         )
 
 
@@ -207,6 +222,8 @@ def default_field_params() -> FieldParams:
         tempo_bonus=10.0,
         passed_pawn_scale=1.15,
         mobility_scale=1.25,
+        field_head=np.zeros(FIELD_HEAD_DIM, dtype=np.float64),
+        swarm_scale=1.0,
     )
 
 
@@ -217,8 +234,8 @@ class StigmergyWeights:
     field: FieldParams
     book: dict[str, list[dict[str, Any]]] = field(default_factory=lambda: deepcopy(DEFAULT_BOOK))
     learned_moves: dict[str, float] = field(default_factory=dict)
-    diffusion_steps: int = 3
-    format_version: int = 2
+    diffusion_steps: int = 4
+    format_version: int = 3
     created_at: str = ""
     training_meta: dict[str, Any] = field(default_factory=dict)
 
@@ -242,17 +259,21 @@ class StigmergyWeights:
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StigmergyWeights:
-        if int(data.get("formatVersion", 0)) < 2:
+        ver = int(data.get("formatVersion", 0))
+        if ver < 2:
             raise ValueError(
                 f"Unsupported weights formatVersion={data.get('formatVersion')!r}; "
                 "need >= 2 (stigmergy-dpfe)."
             )
+        fp = FieldParams.from_jsonable(data["field"])
+        if fp.field_head is None:
+            fp.field_head = np.zeros(FIELD_HEAD_DIM, dtype=np.float64)
         return cls(
-            field=FieldParams.from_jsonable(data["field"]),
+            field=fp,
             book=deepcopy(data.get("book") or DEFAULT_BOOK),
             learned_moves=dequantize_learned_moves(data.get("learnedMoves") or {}),
-            diffusion_steps=int(data.get("diffusionSteps", 3)),
-            format_version=int(data.get("formatVersion", 2)),
+            diffusion_steps=int(data.get("diffusionSteps", 4)),
+            format_version=max(ver, 3),
             created_at=str(data.get("createdAt", "")),
             training_meta=dict(data.get("trainingMeta") or {}),
         )
@@ -271,6 +292,8 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "ternary_ant_trail_book",
             "ternary_move_pheromone_bias",
             "harmonic_board_channel",
+            "swarm_field_head_readout",
+            "winner_distillation_from_oracles",
         ],
         "search": [
             "iterative_deepening",
@@ -280,6 +303,7 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "lmr",
             "quiescence",
             "killers_history",
+            "check_extensions",
         ],
     }
 
@@ -333,6 +357,9 @@ def mutate_field(params: FieldParams, rng: np.random.Generator, sigma: float = 0
     out.tempo_bonus = float(max(0.0, out.tempo_bonus + rng.normal(0, sigma * 4)))
     out.passed_pawn_scale = float(max(0.3, out.passed_pawn_scale + rng.normal(0, sigma * 0.3)))
     out.mobility_scale = float(max(0.3, out.mobility_scale + rng.normal(0, sigma * 0.3)))
+    out.swarm_scale = float(max(0.1, out.swarm_scale + rng.normal(0, sigma * 0.2)))
+    if out.field_head is not None:
+        out.field_head = out.field_head + rng.normal(0, sigma * 0.4, out.field_head.shape)
     return out
 
 
