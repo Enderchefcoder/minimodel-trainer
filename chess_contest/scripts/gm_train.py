@@ -199,11 +199,11 @@ def build_trails_from_sf(
                 _log(log, f"analyse fail: {e}")
             continue
         reinforced += distill_stockfish_top(weights, b, tops, boost=2.2)
-        # Also imitate top1 into field lightly.
-        if tops:
+        # Occasional light field nudge only — full imitation every position is too slow.
+        if tops and (i % 40 == 0):
             try:
                 mv = chess.Move.from_uci(tops[0]["uci"])
-                imitation_toward_move(weights, b, mv, rng, lr=0.03)
+                imitation_toward_move(weights, b, mv, rng, lr=0.02)
             except Exception:
                 pass
         if (i + 1) % 200 == 0:
@@ -346,8 +346,10 @@ def run_gm(cfg: GMConfig) -> Path:
             weights, sf, cfg.trail_build_positions, cfg.analyse_ms, log, rng
         )
         stats["trail_reinforce"] += sf_vs_sf_distill(
-            weights, sf, games=120, movetime_ms=max(60, cfg.analyse_ms // 2), max_plies=90, log=log
+            weights, sf, games=80, movetime_ms=max(50, cfg.analyse_ms // 2), max_plies=70, log=log
         )
+        # Mid-phase checkpoint before probe.
+        save_weights(weights, out / "ckpt_trails_raw.json")
         # Anchor root opening from SF-MAX so we never open with garbage book lines.
         sf.set_elo(None)
         root = chess.Board()
@@ -412,13 +414,14 @@ def run_gm(cfg: GMConfig) -> Path:
                 tops = sf.analyse_top(b, movetime_ms=cfg.analyse_ms, multipv=4)
                 stats["trail_reinforce"] += distill_stockfish_top(weights, b, tops, boost=2.0)
                 if tops:
-                    try:
-                        if imitation_toward_move(
-                            weights, b, chess.Move.from_uci(tops[0]["uci"]), rng, lr=0.025
-                        ):
-                            hits += 1
-                    except Exception:
-                        pass
+                    hits += 1
+                    if rng.random() < 0.05:
+                        try:
+                            imitation_toward_move(
+                                weights, b, chess.Move.from_uci(tops[0]["uci"]), rng, lr=0.02
+                            )
+                        except Exception:  # noqa: S110 — oracle may return illegal uci
+                            pass
             _log(
                 log,
                 f"cycle {cycle} analyse hits~{hits}/{cfg.analyse_per_cycle} "
