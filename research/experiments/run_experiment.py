@@ -142,7 +142,8 @@ def val_loss(model, cfg: ExpConfig, device: torch.device, n_batches: int = 20) -
 def make_adapter(model, tok: BPETokenizer, cfg: ExpConfig) -> ModelAdapter:
     model.eval()
     loops = cfg.eval_loops
-    forward_kwargs = {"loops": loops} if (loops and cfg.family in ("looped_transformer",)) else {}
+    family_key = ARCHITECTURES.normalize(cfg.family)
+    forward_kwargs = {"loops": loops} if (loops and family_key == "looped_transformer") else {}
 
     def encode(text: str) -> list[int]:
         return tok.encode(text, allow_special=False)

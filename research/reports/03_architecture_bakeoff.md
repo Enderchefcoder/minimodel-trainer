@@ -70,3 +70,11 @@ Two things follow, and they shape the rest of the program:
   inference. Glint-2 fails (b) catastrophically (report 07): it works only at
   exactly 8 loops. Fixing that is our clearest architectural win, independent of
   the training-budget question.
+
+## Follow-up: twenty ~1M candidates (report 12)
+
+The same protocol was re-run on twenty ~1.0–1.2M templates and merged with these
+five results in `research/data/results/arch_bakeoff_merged.json` (report 12).
+At the *advertised* Glint budget, selective-SSM and Griffin hybrids lead val
+loss / WikiText among the new ladder; the original `arch_dense` (~1.7M) still
+holds the overall val-loss crown in the merged 25-run board.

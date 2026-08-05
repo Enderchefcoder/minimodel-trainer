@@ -59,10 +59,55 @@ notes: reusable lessons first, then a scratchpad for the active task.
 - Root `.gitignore` pattern `data/` matches *any* path segment named `data/`
   (including `src/vision/data/` and `research/data/`). Re-include package trees with
   `!src/vision/data/**` (and `git check-ignore -v` before assuming files track).
+- RG-LRU log-space parallel scan NaNs past ~16–32 tokens at init (cumsum of
+  `log(a)` underflows → `exp(-C)` overflows). Prefer a sequential float32 scan
+  for hybrid recurrence so streaming matches full forward.
 
 # Scratchpad
 
-## Task: Crush Glint-2 Colab recipe (2026-08-04)
+## Task: Full bakeoff grade for 20 mm1m candidates (2026-08-04)
+
+Goal: grade all 20 ~1M candidates with the report-03 protocol (TinyStories,
+300 steps, BLiMP/ARC-E/WikiText), merge with the original 5 arch_* results,
+update research docs / RESULTS.md / report 12.
+
+Plan:
+[X] Pull TinyStories + eval data; tokenize v4096
+[X] mm1m bakeoff via run_experiment (same DEFAULTS as group_arch)
+[X] Merge original arch_* + mm1m_* into combined ranking JSON
+[X] Update report 12, RESULTS.md, re-rank docs; tests; commit; push; PR
+
+Lessons:
+- Selective SSM Python-autograd unrolling is ~300 tok/s; a custom autograd
+  scan (TorchScript forward + reverse sweep) reaches ~7k tok/s on CPU.
+- At 2.46M TinyStories tokens, ~1.1M Mamba beats ~1.0M dense on val loss;
+  report-03 ~1.7M dense still wins the merged board. Looped remains last.
+- `mamba_pure` with conv_kernel=4 is identical to `mamba_conv_gate` — set
+  pure's conv_kernel=0 to distinguish them.
+- Parallel-scan RG-LRU NaNs beyond ~16–32 tokens at init — use sequential
+  float32 scan (changes hybrid training numerics).
+
+## Task: 20 ~1M Glint-2 architecture candidates (2026-08-04) — DONE (PR #4)
+
+Goal: ship 20 ~1M-param architectures, add to the template ladder, order by
+Glint-2-beating prior (then sandbox bakeoff). Mix:
+- 10 researched/optimized (lit + prior reports)
+- 5 novel Transformer improvements (original)
+- 5 novel Mamba/SSM variants (original, pure PyTorch)
+
+Plan:
+[X] Branch + env
+[X] Novel layers (ResiMix, KV-inherit, braid, echo-FFN, dual-RoPE) + Mamba SSM
+[X] Register families; 20 SPECS in generate_templates.py; regenerate
+[X] Ranked candidate list + report 12 + bakeoff script (offline/smoke)
+[X] Full report-03 bakeoff + merge + docs
+[X] Tests / ruff / smoke / commit / PR
+
+Lessons:
+- RG-LRU log-space parallel scan NaNs past ~16–32 tokens at init (cumsum log
+  underflow → exp overflow). Use sequential float32 scan for hybrid models.
+
+## Task: Crush Glint-2 Colab recipe (2026-08-04) — DONE (PR #3)
 
 Goal: best 1.4M recipe (arch/tok/data/hparams/tokens) on FineWeb-Edu +
 TinyStories + DCLM-100BT, crush Glint-2 on ARC-E/C, BLiMP, WikiText,

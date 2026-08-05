@@ -44,6 +44,11 @@ class TemplateSpec:
     recommended_tokens: str = ""
     training_defaults: dict[str, Any] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
+    #: Rank among the ~1M Glint-2 candidates (1 = strongest prior). None for
+    #: unrelated size-ladder templates.
+    glint2_rank: int | None = None
+    #: researched | novel-transformer | novel-mamba
+    candidate_class: str = ""
 
 
 def ffn_hidden(dim: int, ratio: float = 8 / 3, multiple: int = 32) -> int:
@@ -56,10 +61,410 @@ def ffn_hidden(dim: int, ratio: float = 8 / 3, multiple: int = 32) -> int:
     return ((raw + multiple - 1) // multiple) * multiple
 
 
+_MM1M_TRAIN = {"lr": 3.0e-3, "batch_tokens": 65536, "seq_len": 512}
+_MM1M_BASE = {
+    "vocab_size": 4096,
+    "dim": 112,
+    "n_heads": 7,
+    "head_dim": 16,
+    "n_kv_heads": 1,
+    "window": 512,
+    "max_seq_len": 1024,
+    "qk_norm": True,
+    "tie_embeddings": True,
+}
+
+
 # ---------------------------------------------------------------------------
 # The size ladder
 # ---------------------------------------------------------------------------
 SPECS: list[TemplateSpec] = [
+    # ==================================================================
+    # ~1M Glint-2 candidates (ordered by prior; mm1m_rXX sorts by rank)
+    # ==================================================================
+    TemplateSpec(
+        name="mm1m_r01_dense_gqa_vr",
+        family="dense-transformer",
+        description=(
+            "Rank-1 ~1.03M dense GQA + value residual + QK-norm — researched "
+            "winner shape from the crush-Glint-2 bake-off, retargeted to ~1M."
+        ),
+        arch={**_MM1M_BASE, "n_layers": 5, "ffn_hidden": 256, "value_residual": True},
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        notes=["Prior from reports 03/11: dense GQA≈MHA, VR+QK-norm mandatory."],
+        glint2_rank=1,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r02_dense_mha",
+        family="dense-transformer",
+        description="Rank-2 ~1.05M full MHA dense (researched; sandbox GQA≈MHA).",
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 4,
+            "n_kv_heads": 7,
+            "ffn_hidden": 288,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=2,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r03_dense_window",
+        family="dense-transformer",
+        description=(
+            "Rank-3 ~1.03M dense with Mistral-style local/global window pattern "
+            "(researched)."
+        ),
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 256,
+            "window": 256,
+            "window_pattern": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=3,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r04_hybrid_griffin",
+        family="hybrid-recurrent",
+        description="Rank-4 ~0.95M Griffin-style RG-LRU hybrid (researched).",
+        arch={
+            "vocab_size": 4096,
+            "dim": 96,
+            "n_layers": 6,
+            "n_heads": 6,
+            "head_dim": 16,
+            "n_kv_heads": 1,
+            "ffn_hidden": 192,
+            "window": 512,
+            "max_seq_len": 2048,
+            "layer_pattern": ["recurrent", "recurrent", "attention"],
+            "qk_norm": True,
+            "tie_embeddings": True,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=4,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r05_exp_resimix",
+        family="experimental-transformer",
+        description=(
+            "Rank-5 ~1.04M novel ResiMix Transformer — prenorm/postnorm residual "
+            "mix with per-channel gates."
+        ),
+        arch={**_MM1M_BASE, "n_layers": 5, "ffn_hidden": 256, "variant": "resimix"},
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        notes=["Original improvement; still a Transformer."],
+        glint2_rank=5,
+        candidate_class="novel-transformer",
+    ),
+    TemplateSpec(
+        name="mm1m_r06_exp_kv_inherit",
+        family="experimental-transformer",
+        description=(
+            "Rank-6 ~1.03M novel KV-inherit Transformer — soft mix over all prior "
+            "layer values (generalised value residual)."
+        ),
+        arch={**_MM1M_BASE, "n_layers": 5, "ffn_hidden": 256, "variant": "kv_inherit"},
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=6,
+        candidate_class="novel-transformer",
+    ),
+    TemplateSpec(
+        name="mm1m_r07_dense_deep",
+        family="dense-transformer",
+        description="Rank-7 ~1.11M thin-deep dense L=8 (researched; usually trails wider).",
+        arch={
+            "vocab_size": 4096,
+            "dim": 96,
+            "n_layers": 8,
+            "n_heads": 6,
+            "head_dim": 16,
+            "n_kv_heads": 2,
+            "ffn_hidden": 224,
+            "window": 512,
+            "max_seq_len": 1024,
+            "qk_norm": True,
+            "tie_embeddings": True,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=7,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r08_exp_braid",
+        family="experimental-transformer",
+        description=(
+            "Rank-8 ~1.03M novel braid attention — odd heads local, even heads global "
+            "inside one layer."
+        ),
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 256,
+            "variant": "braid",
+            "local_window": 128,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=8,
+        candidate_class="novel-transformer",
+    ),
+    TemplateSpec(
+        name="mm1m_r09_exp_dual_rope",
+        family="experimental-transformer",
+        description=(
+            "Rank-9 ~1.03M novel dual-RoPE Transformer — per-head mix of fast and "
+            "slow rotary bases."
+        ),
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 256,
+            "variant": "dual_rope",
+            "rope_base": 10000.0,
+            "rope_base_slow": 500.0,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=9,
+        candidate_class="novel-transformer",
+    ),
+    TemplateSpec(
+        name="mm1m_r10_mamba_attn_tail",
+        family="mamba-lm",
+        description=(
+            "Rank-10 ~1.06M novel Mamba trunk + attention coda (retrieval tail)."
+        ),
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 224,
+            "variant": "attn_tail",
+            "attn_tail_layers": 2,
+            "state_dim": 16,
+            "expand": 1,
+            "conv_kernel": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=10,
+        candidate_class="novel-mamba",
+    ),
+    TemplateSpec(
+        name="mm1m_r11_exp_echo_ffn",
+        family="experimental-transformer",
+        description=(
+            "Rank-11 ~1.04M novel echo-FFN Transformer — tied double SwiGLU with "
+            "LoRA bridge."
+        ),
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 256,
+            "variant": "echo_ffn",
+            "echo_lora_rank": 8,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=11,
+        candidate_class="novel-transformer",
+    ),
+    TemplateSpec(
+        name="mm1m_r12_mamba_braid",
+        family="mamba-lm",
+        description="Rank-12 ~1.10M novel alternating SSM/attention braid.",
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 6,
+            "ffn_hidden": 192,
+            "variant": "braid",
+            "layer_pattern": ["ssm", "attention"],
+            "state_dim": 16,
+            "expand": 1,
+            "conv_kernel": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=12,
+        candidate_class="novel-mamba",
+    ),
+    TemplateSpec(
+        name="mm1m_r13_loop_poisson",
+        family="looped-transformer",
+        description=(
+            "Rank-13 ~1.16M researched looped model with stabilisers + Poisson "
+            "loop sampling (Huginn-style)."
+        ),
+        arch={
+            "vocab_size": 4096,
+            "dim": 112,
+            "n_heads": 7,
+            "head_dim": 16,
+            "ffn_hidden": 768,
+            "embedding_rank": 48,
+            "window": 512,
+            "max_seq_len": 1024,
+            "n_shared_blocks": 1,
+            "train_loops": 8,
+            "min_loops": 4,
+            "max_loops_table": 16,
+            "loop_lora_rank": 4,
+            "value_residual": True,
+            "variable_loops": True,
+            "loop_sampling": "poisson",
+        },
+        recommended_tokens="0.5-2B",
+        training_defaults={"lr": 2.0e-2, "batch_tokens": 65536, "seq_len": 512},
+        notes=["Use Muon for looped (report 04); loops are the test-time dial."],
+        glint2_rank=13,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r14_dense_wide",
+        family="dense-transformer",
+        description="Rank-14 ~1.12M wide-shallow dense L=2 (researched).",
+        arch={
+            "vocab_size": 4096,
+            "dim": 160,
+            "n_layers": 2,
+            "n_heads": 5,
+            "head_dim": 32,
+            "n_kv_heads": 1,
+            "ffn_hidden": 352,
+            "window": 512,
+            "max_seq_len": 1024,
+            "qk_norm": True,
+            "tie_embeddings": True,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=14,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r15_moe_micro",
+        family="moe-transformer",
+        description="Rank-15 ~1.07M micro-MoE (researched; active≈0.85M).",
+        arch={
+            "vocab_size": 4096,
+            "dim": 96,
+            "n_layers": 4,
+            "n_heads": 6,
+            "head_dim": 16,
+            "n_kv_heads": 1,
+            "ffn_hidden": 128,
+            "window": 512,
+            "max_seq_len": 1024,
+            "n_routed_experts": 4,
+            "n_shared_experts": 1,
+            "top_k": 2,
+            "first_moe_layer": 1,
+            "qk_norm": True,
+            "tie_embeddings": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=15,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r16_mamba_multihead",
+        family="mamba-lm",
+        description="Rank-16 ~1.16M novel multi-head selective SSM.",
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 192,
+            "variant": "multihead",
+            "state_dim": 16,
+            "expand": 1,
+            "conv_kernel": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=16,
+        candidate_class="novel-mamba",
+    ),
+    TemplateSpec(
+        name="mm1m_r17_mamba_conv_gate",
+        family="mamba-lm",
+        description="Rank-17 ~1.11M novel conv-gated selective SSM (forced short conv).",
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 224,
+            "variant": "conv_gate",
+            "state_dim": 16,
+            "expand": 1,
+            "conv_kernel": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=17,
+        candidate_class="novel-mamba",
+    ),
+    TemplateSpec(
+        name="mm1m_r18_dense_novr",
+        family="dense-transformer",
+        description="Rank-18 ~1.03M dense without value residual (researched ablation).",
+        arch={**_MM1M_BASE, "n_layers": 5, "ffn_hidden": 256, "value_residual": False},
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=18,
+        candidate_class="researched",
+    ),
+    TemplateSpec(
+        name="mm1m_r19_mamba_pure",
+        family="mamba-lm",
+        description="Rank-19 ~1.11M novel pure selective-SSM stack (no attention).",
+        arch={
+            **_MM1M_BASE,
+            "n_layers": 5,
+            "ffn_hidden": 224,
+            "variant": "pure",
+            "state_dim": 16,
+            "expand": 1,
+            "conv_kernel": 4,
+            "value_residual": True,
+        },
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=19,
+        candidate_class="novel-mamba",
+    ),
+    TemplateSpec(
+        name="mm1m_r20_dense_ffn4x",
+        family="dense-transformer",
+        description="Rank-20 ~1.18M dense with ~4x FFN (researched; report 05 width sweep).",
+        arch={**_MM1M_BASE, "n_layers": 4, "ffn_hidden": 448, "value_residual": True},
+        recommended_tokens="0.3-1B",
+        training_defaults=dict(_MM1M_TRAIN),
+        glint2_rank=20,
+        candidate_class="researched",
+    ),
     # ---------------- looped (recurrent depth) ----------------
     TemplateSpec(
         name="looped_4m",
@@ -376,6 +781,10 @@ def build_template_document(spec: TemplateSpec) -> dict[str, Any]:
     active = getattr(model, "active_parameters", None)
     if callable(active):
         document["active_params"] = active()
+    if spec.glint2_rank is not None:
+        document["glint2_rank"] = int(spec.glint2_rank)
+    if spec.candidate_class:
+        document["candidate_class"] = spec.candidate_class
     if spec.recommended_tokens:
         document["recommended_tokens"] = spec.recommended_tokens
     document["arch"] = dict(spec.arch)

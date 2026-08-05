@@ -6,7 +6,8 @@
 | File | Covers |
 | --- | --- |
 | `test_core.py` | config/extends/interpolation, registry, IO, logging, seeding, devices, dist |
-| `test_architectures.py` | layers, all four LM families (incl. cache-equivalence), builder, templates |
+| `test_architectures.py` | layers, LM families (incl. cache-equivalence), builder, templates |
+| `test_mm1m_candidates.py` | 20 ordered ~1M Glint-2 candidates + novel/mamba families |
 | `test_tokenization.py` | BPE roundtrips, total split pattern, HF interop, chat masking |
 | `test_datasets.py` | registry validation, shard format, tokenize paths, loaders |
 | `test_checkpointing.py` | save/load/retention/export, ETA, plots |

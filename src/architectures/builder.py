@@ -41,6 +41,7 @@ __all__ = [
     "TEMPLATE_DIR",
     "build_model",
     "describe_model",
+    "list_glint2_candidates",
     "list_templates",
     "load_model",
     "load_template",
@@ -58,6 +59,31 @@ def list_templates() -> list[str]:
     if not TEMPLATE_DIR.exists():
         return []
     return sorted(p.stem for p in TEMPLATE_DIR.glob("*.yaml"))
+
+
+def list_glint2_candidates() -> list[dict[str, Any]]:
+    """Return the ~1M Glint-2 candidate templates ordered by ``glint2_rank``.
+
+    Each entry carries ``name``, ``rank``, ``candidate_class``, ``params`` and
+    ``family`` so callers can print a leaderboard without re-parsing YAML.
+    """
+    rows: list[dict[str, Any]] = []
+    for name in list_templates():
+        template = load_template(name)
+        rank = template.get("glint2_rank")
+        if rank is None:
+            continue
+        rows.append(
+            {
+                "name": name,
+                "rank": int(rank),
+                "candidate_class": str(template.get("candidate_class") or ""),
+                "params": int(template.get("params") or 0),
+                "family": str(template.get("family") or ""),
+                "description": str(template.get("description") or ""),
+            }
+        )
+    return sorted(rows, key=lambda row: row["rank"])
 
 
 def resolve_template_path(spec: str | Path) -> Path:

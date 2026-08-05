@@ -14,6 +14,11 @@ Available families
 ``hybrid-recurrent``
     Griffin-style interleaving of gated linear recurrences and local attention.
     Constant-size decoding state, so it is the choice for long context.
+``experimental-transformer``
+    Novel Transformer wirings (ResiMix, KV-inherit, braid, echo-FFN, dual-RoPE)
+    for ~1M Glint-2 bake-offs.
+``mamba-lm``
+    Pure-PyTorch selective SSM (Mamba-style) with hybrid attention variants.
 
 See ``docs/architecture.md`` for how to pick between them.
 """
@@ -25,12 +30,17 @@ from minimodel.architectures.builder import (
     TEMPLATE_DIR,
     build_model,
     describe_model,
+    list_glint2_candidates,
     list_templates,
     load_model,
     load_template,
     template_to_model_config,
 )
 from minimodel.architectures.dense import DenseTransformer, DenseTransformerConfig
+from minimodel.architectures.experimental import (
+    ExperimentalTransformer,
+    ExperimentalTransformerConfig,
+)
 from minimodel.architectures.hybrid import HybridRecurrentConfig, HybridRecurrentTransformer
 from minimodel.architectures.layers import (
     CausalLocalAttention,
@@ -51,6 +61,7 @@ from minimodel.architectures.registry import (
     list_architectures,
     register_architecture,
 )
+from minimodel.architectures.ssm import MambaLM, MambaLMConfig
 
 __all__ = [
     "ARCHITECTURES",
@@ -59,6 +70,8 @@ __all__ = [
     "CausalLocalAttention",
     "DenseTransformer",
     "DenseTransformerConfig",
+    "ExperimentalTransformer",
+    "ExperimentalTransformerConfig",
     "FactorizedEmbedding",
     "GatedRecurrentUnit",
     "HybridRecurrentConfig",
@@ -66,6 +79,8 @@ __all__ = [
     "KVCache",
     "LoopedTransformer",
     "LoopedTransformerConfig",
+    "MambaLM",
+    "MambaLMConfig",
     "MoEFeedForward",
     "MoETransformer",
     "MoETransformerConfig",
@@ -78,6 +93,7 @@ __all__ = [
     "build_model",
     "describe_model",
     "list_architectures",
+    "list_glint2_candidates",
     "list_templates",
     "load_model",
     "load_template",
