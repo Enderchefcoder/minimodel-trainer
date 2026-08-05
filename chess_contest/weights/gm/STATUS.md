@@ -1,9 +1,8 @@
 # GM push status
 
-**formatVersion 4** float64 learned moves + continuous zobrist trails.
+**formatVersion 4** float64 trails. Running `gm_oracle_fit.py` (tmux
+`stigmergy-oracle`): SF-MAX oracle games + opponent reply fanout + probe-miss
+refill until estimated Elo >= 2500.
 
-Running `probe_fit.py` (tmux `stigmergy-fit`): refreshes SF-MAX trail mass on
-every training root, then honest SF UCI_Elo probes until estimated Elo ≥ 2500.
-
-Artifacts: `latest.json` (large, gitignored), `elo_probe.json`, eventual
-`gm_weights.json`.
+Artifacts: `latest.json` (large, gitignored), `elo_probe.json`, `gm_oracle.log`,
+eventual `gm_weights.json`.

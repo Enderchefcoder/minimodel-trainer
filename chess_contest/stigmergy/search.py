@@ -1,6 +1,6 @@
 """Deep iterative-deepening alpha-beta search for Stigmergy.
 
-Slower than Stockfish by design — uniqueness is in the field eval, strength
+Slower than Stockfish by design - uniqueness is in the field eval, strength
 comes from depth: TT, null-move, LMR, killers, history, SEE, quiescence.
 """
 
@@ -83,7 +83,7 @@ class Searcher:
         if not entry:
             return None
         best = max(entry, key=self._book_entry_score)
-        # Require strong continuous weight — refuse polluted low-mass overnight trails.
+        # Require strong continuous weight - refuse polluted low-mass overnight trails.
         score = self._book_entry_score(best)
         if score < 8.0 and int(best.get("code", 0)) < 1:
             return None
@@ -202,7 +202,7 @@ class Searcher:
         if board.is_stalemate() or board.is_insufficient_material():
             return 0.0
 
-        # Fast stand-pat (1 diffusion step) — tactics floor still exact.
+        # Fast stand-pat (1 diffusion step) - tactics floor still exact.
         stand = _search_eval(board, self.weights)
         if stand >= beta:
             return beta
@@ -420,6 +420,58 @@ class Searcher:
         self._last_best_move = best_move  # type: ignore[attr-defined]
         return best
 
+    def _mate_in_one(self, board: chess.Board, legal: list[chess.Move]) -> chess.Move | None:
+        for move in legal:
+            board.push(move)
+            is_mate = board.is_checkmate()
+            board.pop()
+            if is_mate:
+                return move
+        return None
+
+    def _avoid_hanging_root(
+        self, board: chess.Board, move: chess.Move, legal: list[chess.Move]
+    ) -> chess.Move:
+        """If the chosen root move hangs material, prefer a safer alternative."""
+
+        def _major_hang_after(cand: chess.Move) -> bool:
+            board.push(cand)
+            try:
+                for reply in board.legal_moves:
+                    if not board.is_capture(reply):
+                        continue
+                    if see(board, reply) < 0:
+                        continue
+                    victim = board.piece_at(reply.to_square)
+                    if victim is not None and material_of(victim.piece_type) >= 300:
+                        return True
+            finally:
+                board.pop()
+            return False
+
+        if see(board, move) >= -50 and not _major_hang_after(move):
+            return move
+
+        scored: list[tuple[float, chess.Move]] = []
+        mover_white = board.turn == chess.WHITE
+        for cand in legal:
+            board.push(cand)
+            try:
+                if board.is_checkmate():
+                    return cand
+                white_floor = tactical_floor(board)
+                our_score = white_floor if mover_white else -white_floor
+            finally:
+                board.pop()
+            our_score += 0.02 * see(board, cand)
+            if _major_hang_after(cand):
+                our_score -= 400.0
+            scored.append((our_score, cand))
+        if not scored:
+            return move
+        scored.sort(key=lambda t: t[0], reverse=True)
+        return scored[0][1]
+
     def search_with_root_update(
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
@@ -438,18 +490,16 @@ class Searcher:
         if len(legal) == 1:
             return SearchResult(move=legal[0], score=0.0, depth=1, nodes=1)
 
-        # Instant tactical probe: never miss mate-in-one.
-        for move in legal:
-            board.push(move)
-            is_mate = board.is_checkmate()
-            board.pop()
-            if is_mate:
-                return SearchResult(
-                    move=move, score=float(MATE - 1), depth=1, nodes=len(legal), book=False
-                )
+        mate = self._mate_in_one(board, legal)
+        if mate is not None:
+            return SearchResult(
+                move=mate, score=float(MATE - 1), depth=1, nodes=len(legal), book=False
+            )
 
+        # Out-of-trail: spend at least 350ms so we clear depth 3-4 on CPU.
+        think_ms = max(time_ms, 350)
         self.nodes = 0
-        self.deadline = time.perf_counter() + max(0.08, time_ms / 1000.0)
+        self.deadline = time.perf_counter() + max(0.12, think_ms / 1000.0)
         self.tt.clear()
         self.killers.clear()
         self.history.clear()
@@ -493,6 +543,7 @@ class Searcher:
             if hasattr(self, "_last_best_move"):
                 best_move = self._last_best_move
 
+        best_move = self._avoid_hanging_root(board, best_move, legal)
         return SearchResult(
             move=best_move,
             score=best_score,

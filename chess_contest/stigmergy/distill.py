@@ -73,13 +73,123 @@ def set_trail_policy(
 ) -> None:
     """Replace a position's trail with a single decisive float64 policy move."""
     key = trail_key(board)
-    move = uci[:4]
-    weights.trails[key] = {move: float(strength)}
+    try:
+        parsed = chess.Move.from_uci(uci)
+    except ValueError:
+        return
+    if parsed not in board.legal_moves:
+        # Allow under-specified non-promo UCI (e2e4) against legal moves.
+        short = uci[:4]
+        parsed = None
+        for legal in board.legal_moves:
+            if legal.uci()[:4] == short:
+                parsed = legal
+                break
+        if parsed is None:
+            return
+    full = parsed.uci()
+    short = full[:4]
+    # Store both full and short keys so promo and non-promo lookups hit.
+    weights.trails[key] = {full: float(strength), short: float(strength)}
     path = "".join(m.uci()[:4] for m in board.move_stack)
-    _reinforce_book_entry(weights, path, move, strength)
-    lm = _lm_key(board, chess.Move.from_uci(uci if len(uci) > 4 else move))
+    _reinforce_book_entry(weights, path, short, strength)
+    lm = _lm_key(board, parsed)
     if lm is not None:
         weights.learned_moves[lm] = float(weights.learned_moves.get(lm, 0.0)) + strength
+
+
+def oracle_set_from_sf(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    sf_tops: list[dict[str, Any]],
+    *,
+    strength: float = 100.0,
+) -> str | None:
+    """Install SF top-1 as the sole float64 trail policy. Returns UCI or None."""
+    if not sf_tops:
+        return None
+    uci = sf_tops[0].get("uci")
+    if not uci:
+        return None
+    set_trail_policy(weights, board, uci, strength=strength)
+    return uci
+
+
+def fanout_opponent_replies(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    sf_analyse,
+    *,
+    max_replies: int = 14,
+    fill_ms: int = 40,
+    strength: float = 90.0,
+    rng: np.random.Generator | None = None,
+) -> int:
+    """After our policy move is set, fill SF replies to many opponent answers.
+
+    Covers captures, checks, SF MultiPV replies, and random quiets so UCI_Elo
+    offbeat lines still land on a trail on our next turn.
+    """
+    if board.is_game_over(claim_draw=True):
+        return 0
+    tops = sf_analyse(board, movetime_ms=fill_ms, multipv=1)
+    our_uci = oracle_set_from_sf(weights, board, tops, strength=strength)
+    if our_uci is None:
+        return 0
+    try:
+        our_move = chess.Move.from_uci(our_uci)
+    except ValueError:
+        return 0
+    if our_move not in board.legal_moves:
+        short = our_uci[:4]
+        our_move = next((m for m in board.legal_moves if m.uci()[:4] == short), None)
+        if our_move is None:
+            return 0
+
+    board.push(our_move)
+    filled = 1
+    try:
+        if board.is_game_over(claim_draw=True):
+            return filled
+        replies: list[chess.Move] = []
+        seen: set[str] = set()
+
+        def _add(move: chess.Move) -> None:
+            u = move.uci()
+            if u not in seen and move in board.legal_moves:
+                seen.add(u)
+                replies.append(move)
+
+        for move in board.legal_moves:
+            if board.is_capture(move) or board.gives_check(move):
+                _add(move)
+        opp_tops = sf_analyse(board, movetime_ms=max(20, fill_ms // 2), multipv=min(5, max_replies))
+        for info in opp_tops:
+            u = info.get("uci")
+            if not u:
+                continue
+            try:
+                _add(chess.Move.from_uci(u))
+            except ValueError:
+                continue
+        quiets = [m for m in board.legal_moves if m.uci() not in seen]
+        if quiets:
+            gen = rng if rng is not None else np.random.default_rng(0)
+            gen.shuffle(quiets)
+            for move in quiets[: max(4, max_replies // 2)]:
+                _add(move)
+        for move in replies[:max_replies]:
+            board.push(move)
+            try:
+                if not board.is_game_over(claim_draw=True):
+                    child_tops = sf_analyse(board, movetime_ms=fill_ms, multipv=1)
+                    if oracle_set_from_sf(weights, board, child_tops, strength=strength * 0.95):
+                        filled += 1
+            finally:
+                board.pop()
+    finally:
+        board.pop()
+    return filled
 
 
 def _reinforce_book_entry(

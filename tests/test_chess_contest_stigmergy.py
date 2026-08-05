@@ -74,6 +74,44 @@ def test_legacy_ternary_learned_moves_load(tmp_path: Path) -> None:
     assert w2.learned_moves["pe7e5"] < 0
 
 
+def test_set_trail_policy_decisive() -> None:
+    from chess_contest.stigmergy.distill import set_trail_policy
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    board = chess.Board()
+    set_trail_policy(w, board, "e2e4", strength=80.0)
+    key = trail_key(board)
+    assert w.trails[key]["e2e4"] == 80.0
+    # Replacing policy clears competing moves.
+    set_trail_policy(w, board, "d2d4", strength=90.0)
+    assert "e2e4" not in w.trails[key] or w.trails[key].get("e2e4", 0) < 1
+    assert Searcher(w).trail_move(board).uci()[:4] == "d2d4"
+
+
+def test_fanout_opponent_replies_offline() -> None:
+    from chess_contest.stigmergy.distill import fanout_opponent_replies
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    board = chess.Board()
+
+    def fake_analyse(b: chess.Board, movetime_ms: int = 40, multipv: int = 1):
+        del movetime_ms
+        moves = list(b.legal_moves)
+        out = []
+        for i, m in enumerate(moves[: multipv]):
+            out.append({"uci": m.uci(), "pv": [m.uci()], "cp": 20 - i, "mate": None})
+        return out
+
+    n = fanout_opponent_replies(
+        w, board, fake_analyse, max_replies=6, fill_ms=1, strength=50.0
+    )
+    assert n >= 2
+    assert Searcher(w).trail_move(board) is not None
+    assert len(w.trails) >= 2
+
+
 def test_trails_reinforce_and_trail_move() -> None:
     from chess_contest.stigmergy.distill import distill_stockfish_pv
     from chess_contest.stigmergy.search import Searcher

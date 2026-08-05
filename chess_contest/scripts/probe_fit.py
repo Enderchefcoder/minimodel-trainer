@@ -22,7 +22,6 @@ if str(_ROOT) not in sys.path:
 from chess_contest.stigmergy.distill import prune_trails, set_trail_policy  # noqa: E402
 from chess_contest.stigmergy.engine import StigmergyEngine  # noqa: E402
 from chess_contest.stigmergy.opponents import update_elo  # noqa: E402
-from chess_contest.stigmergy.search import Searcher  # noqa: E402
 from chess_contest.stigmergy.stockfish_uci import (  # noqa: E402
     StockfishConfig,
     StockfishEngine,

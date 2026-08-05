@@ -1,0 +1,41 @@
+{
+  "estimated_elo": 1862.5,
+  "ladder": [
+    {
+      "sf_elo": 1320,
+      "score": 1.5,
+      "games": 6,
+      "winrate": 0.25,
+      "our_elo_after": 2057.7
+    },
+    {
+      "sf_elo": 1600,
+      "score": 1.0,
+      "games": 6,
+      "winrate": 0.16666666666666666,
+      "our_elo_after": 1915.7
+    },
+    {
+      "sf_elo": 1900,
+      "score": 1.0,
+      "games": 6,
+      "winrate": 0.16666666666666666,
+      "our_elo_after": 1857.5
+    },
+    {
+      "sf_elo": 2200,
+      "score": 0.5,
+      "games": 6,
+      "winrate": 0.08333333333333333,
+      "our_elo_after": 1851.1
+    },
+    {
+      "sf_elo": 2500,
+      "score": 0.5,
+      "games": 6,
+      "winrate": 0.08333333333333333,
+      "our_elo_after": 1862.5
+    }
+  ],
+  "gm": false
+}
