@@ -9,6 +9,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import chess
+import chess.polyglot
 import numpy as np
 
 CHANNEL_NAMES = [
@@ -229,19 +231,20 @@ def default_field_params() -> FieldParams:
 
 @dataclass
 class StigmergyWeights:
-    """Full engine state: field params + ternary book + learned move biases."""
+    """Full engine state: field params + book + float learned moves + position trails."""
 
     field: FieldParams
     book: dict[str, list[dict[str, Any]]] = field(default_factory=lambda: deepcopy(DEFAULT_BOOK))
     learned_moves: dict[str, float] = field(default_factory=dict)
+    trails: dict[str, dict[str, float]] = field(default_factory=dict)
     diffusion_steps: int = 4
-    format_version: int = 3
+    format_version: int = 4
     created_at: str = ""
     training_meta: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "formatVersion": self.format_version,
+            "formatVersion": 4,
             "engine": "stigmergy-dpfe",
             "architecture": "diffusive-pheromone-field",
             "createdAt": self.created_at
@@ -252,7 +255,17 @@ class StigmergyWeights:
             "pieceOrder": PIECE_ORDER,
             "field": self.field.to_jsonable(),
             "book": self.book,
-            "learnedMoves": quantize_learned_moves(self.learned_moves),
+            "learnedMoves": {
+                "precision": "float64",
+                "values": {k: float(v) for k, v in self.learned_moves.items()},
+            },
+            "trails": {
+                "precision": "float64",
+                "values": {
+                    pos: {uci: float(w) for uci, w in moves.items()}
+                    for pos, moves in self.trails.items()
+                },
+            },
             "trainingMeta": self.training_meta,
             "uniquenessFingerprint": uniqueness_fingerprint(),
         }
@@ -268,12 +281,20 @@ class StigmergyWeights:
         fp = FieldParams.from_jsonable(data["field"])
         if fp.field_head is None:
             fp.field_head = np.zeros(FIELD_HEAD_DIM, dtype=np.float64)
+        learned_raw = data.get("learnedMoves") or {}
+        trails_raw = data.get("trails")
+        learned_moves = load_learned_moves(learned_raw)
+        trails = load_trails(trails_raw)
+        fmt = max(ver, 3)
+        if trails or learned_raw.get("values"):
+            fmt = max(fmt, 4)
         return cls(
             field=fp,
             book=deepcopy(data.get("book") or DEFAULT_BOOK),
-            learned_moves=dequantize_learned_moves(data.get("learnedMoves") or {}),
+            learned_moves=learned_moves,
+            trails=trails,
             diffusion_steps=int(data.get("diffusionSteps", 4)),
-            format_version=max(ver, 3),
+            format_version=fmt,
             created_at=str(data.get("createdAt", "")),
             training_meta=dict(data.get("trainingMeta") or {}),
         )
@@ -289,6 +310,8 @@ def uniqueness_fingerprint() -> dict[str, Any]:
             "jacobi_diffusion_kernels",
             "bilinear_cross_color_interaction",
             "king_resonance_coupling",
+            "continuous_float64_trails",
+            "high_precision_float64_weights",
             "ternary_ant_trail_book",
             "ternary_move_pheromone_bias",
             "harmonic_board_channel",
@@ -332,6 +355,32 @@ def dequantize_learned_moves(q: dict[str, Any]) -> dict[str, float]:
         return {}
     scale = float(q.get("scale") or 0.0)
     return {k: float(c) * scale for k, c in q["codes"].items()}
+
+
+def load_learned_moves(data: dict[str, Any]) -> dict[str, float]:
+    """Load learned moves from v4 float values or legacy ternary codes."""
+    if not data:
+        return {}
+    if "values" in data:
+        return {k: float(v) for k, v in data["values"].items()}
+    return dequantize_learned_moves(data)
+
+
+def load_trails(data: dict[str, Any] | None) -> dict[str, dict[str, float]]:
+    """Load per-position continuous ant trails (zobrist hex -> uci -> intensity)."""
+    if not data:
+        return {}
+    if "values" in data:
+        out: dict[str, dict[str, float]] = {}
+        for pos_key, moves in data["values"].items():
+            out[str(pos_key)] = {str(uci): float(w) for uci, w in moves.items()}
+        return out
+    return {}
+
+
+def trail_key(board: chess.Board) -> str:
+    """Zobrist hash of ``board`` as a fixed-width hex trail lookup key."""
+    return f"{chess.polyglot.zobrist_hash(board):016x}"
 
 
 def default_weights() -> StigmergyWeights:

@@ -1,7 +1,7 @@
 """Winner-distillation: learn book + move biases + field nudges from game winners.
 
 Stockfish is only an oracle/opponent. Distilled knowledge lands in Stigmergy's
-ternary trails and pheromone field — never an NNUE clone.
+continuous float trails and pheromone field — never an NNUE clone.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import chess
 import numpy as np
 
 from chess_contest.stigmergy.evaluate import evaluate_board
-from chess_contest.stigmergy.weights import StigmergyWeights, mutate_field
+from chess_contest.stigmergy.weights import StigmergyWeights, mutate_field, trail_key
 
 
 @dataclass
@@ -45,6 +45,42 @@ def _lm_key(board: chess.Board, move: chess.Move) -> str | None:
         f"{chess.square_name(move.from_square)}"
         f"{chess.square_name(move.to_square)}"
     )
+
+
+def _book_code(c: float, mean: float) -> int:
+    return 1 if c > mean * 1.25 else (-1 if c < mean * 0.55 else 0)
+
+
+def _reinforce_trail(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    uci: str,
+    amount: float,
+) -> None:
+    if amount <= 0:
+        return
+    key = trail_key(board)
+    slot = weights.trails.setdefault(key, {})
+    slot[uci[:4]] = slot.get(uci[:4], 0.0) + amount
+
+
+def _reinforce_book_entry(
+    weights: StigmergyWeights,
+    path: str,
+    uci: str,
+    amount: float,
+) -> None:
+    slot = weights.book.setdefault(path, [])
+    existing = {e["m"]: e for e in slot}
+    move = uci[:4]
+    if move in existing:
+        entry = existing[move]
+        entry["w"] = float(entry.get("w", 0.0)) + amount
+        entry["code"] = _book_code(entry["w"], max(entry["w"], 1.0))
+        entry["games"] = int(entry.get("games", 0)) + 1
+    else:
+        existing[move] = {"m": move, "w": float(amount), "code": 1, "games": 1}
+    weights.book[path] = list(existing.values())
 
 
 def distill_game(
@@ -82,12 +118,16 @@ def distill_game(
             if is_winner_move:
                 delta = winner_boost * decay
                 weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + delta
+                _reinforce_trail(weights, board, move.uci(), delta)
                 stats.moves_reinforced += 1
             elif is_loser_move:
-                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) - loser_penalty * decay
+                delta = loser_penalty * decay
+                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) - delta
                 stats.moves_reinforced += 1
             elif winner is None:
-                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + 0.05 * decay
+                delta = 0.05 * decay
+                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + delta
+                _reinforce_trail(weights, board, move.uci(), delta * 0.5)
 
         if ply < book_plies:
             uci = move.uci()[:4]
@@ -103,7 +143,8 @@ def distill_game(
         weights.book[bpath] = [
             {
                 "m": m,
-                "code": 1 if c > mean * 1.25 else (-1 if c < mean * 0.55 else 0),
+                "w": float(c),
+                "code": _book_code(c, mean),
                 "games": round(c),
             }
             for m, c in entries.items()
@@ -130,21 +171,54 @@ def distill_stockfish_pv(
             break
         if move not in b.legal_moves:
             break
+        rank_decay = boost * (1.0 if i < 6 else 0.4)
         key = _lm_key(b, move)
         if key is not None:
-            weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + boost * (1.0 if i < 6 else 0.4)
+            weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + rank_decay
             n += 1
+        _reinforce_trail(weights, b, uci, rank_decay)
         if i < 10:
-            slot = weights.book.setdefault(path, [])
-            existing = {e["m"]: e for e in slot}
-            if uci[:4] in existing:
-                existing[uci[:4]]["code"] = 1
-                existing[uci[:4]]["games"] = int(existing[uci[:4]].get("games", 0)) + 2
-            else:
-                slot.append({"m": uci[:4], "code": 1, "games": 2})
-            weights.book[path] = list(existing.values()) if existing else slot
+            _reinforce_book_entry(weights, path, uci, rank_decay)
         b.push(move)
         path += uci[:4]
+    return n
+
+
+def distill_stockfish_top(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    tops: list[dict[str, Any]],
+    *,
+    boost: float = 1.0,
+) -> int:
+    """Reinforce multipv Stockfish lines into trails, book, and learned moves."""
+    n = 0
+    for rank, info in enumerate(tops):
+        decay = boost / (1.0 + rank)
+        pv = info.get("pv") or []
+        uci = info.get("uci") or (pv[0] if pv else None)
+        if not uci:
+            continue
+        b = board.copy(stack=False)
+        path = "".join(m.uci()[:4] for m in board.move_stack)
+        line = pv if pv else [uci]
+        for i, move_uci in enumerate(line[:12]):
+            try:
+                move = chess.Move.from_uci(move_uci)
+            except ValueError:
+                break
+            if move not in b.legal_moves:
+                break
+            amount = decay * (1.0 if i < 4 else 0.35)
+            lm = _lm_key(b, move)
+            if lm is not None:
+                weights.learned_moves[lm] = weights.learned_moves.get(lm, 0.0) + amount
+                n += 1
+            _reinforce_trail(weights, b, move_uci, amount)
+            if i < 8:
+                _reinforce_book_entry(weights, path, move_uci, amount)
+            b.push(move)
+            path += move_uci[:4]
     return n
 
 
@@ -206,12 +280,24 @@ def imitation_toward_move(
     return False
 
 
-def prune_learned_moves(weights: StigmergyWeights, keep: int = 8000) -> None:
+def prune_learned_moves(weights: StigmergyWeights, keep: int = 50000) -> None:
     """Cap memory so JSON stays manageable."""
     if len(weights.learned_moves) <= keep:
         return
     top = sorted(weights.learned_moves.items(), key=lambda kv: abs(kv[1]), reverse=True)[:keep]
     weights.learned_moves = dict(top)
+
+
+def prune_trails(weights: StigmergyWeights, keep_positions: int = 200000) -> None:
+    """Keep the strongest trail positions by peak move intensity."""
+    if len(weights.trails) <= keep_positions:
+        return
+    ranked = sorted(
+        weights.trails.items(),
+        key=lambda kv: max((abs(v) for v in kv[1].values()), default=0.0),
+        reverse=True,
+    )[:keep_positions]
+    weights.trails = {k: dict(v) for k, v in ranked}
 
 
 def evolve_against_baseline(
@@ -227,6 +313,7 @@ def evolve_against_baseline(
         field=cand_field,
         book=weights.book,
         learned_moves=dict(weights.learned_moves),
+        trails={k: dict(v) for k, v in weights.trails.items()},
         diffusion_steps=weights.diffusion_steps,
         format_version=weights.format_version,
         training_meta=dict(weights.training_meta),

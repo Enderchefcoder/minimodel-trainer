@@ -83,19 +83,51 @@ _PST: dict[int, list[int]] = {
     ],
 }
 
+# Endgame king PST — centralize for mating attacks.
+_KING_EG: list[int] = [
+    -30, -20, -10, -10, -10, -10, -20, -30,
+    -20, -10, 0, 5, 5, 0, -10, -20,
+    -10, 0, 10, 15, 15, 10, 0, -10,
+    -10, 5, 15, 25, 25, 15, 5, -10,
+    -10, 5, 15, 25, 25, 15, 5, -10,
+    -10, 0, 10, 15, 15, 10, 0, -10,
+    -20, -10, 0, 0, 0, 0, -10, -20,
+    -30, -20, -10, -10, -10, -10, -20, -30,
+]
+
 
 def material_of(piece_type: int) -> int:
     """Centipawn material for a piece type."""
     return _MAT.get(piece_type, 0)
 
 
-def pst_value(piece: chess.Piece, square: int) -> int:
+def pst_value(piece: chess.Piece, square: int, *, phase_taper: float = 1.0) -> int:
     """Piece-square bonus for ``piece`` on ``square`` (white-oriented table)."""
     table = _PST.get(piece.piece_type)
     if table is None:
         return 0
     idx = square if piece.color == chess.WHITE else chess.square_mirror(square)
+    if piece.piece_type == chess.KING:
+        mg = table[idx]
+        eg = _KING_EG[idx]
+        return int(mg * phase_taper + eg * (1.0 - phase_taper))
     return table[idx]
+
+
+def _phase_taper(board: chess.Board) -> float:
+    """1.0 = full midgame king PST, 0.0 = full endgame king PST."""
+    pawns = len(board.pieces(chess.PAWN, chess.WHITE))
+    pawns += len(board.pieces(chess.PAWN, chess.BLACK))
+    minors = len(board.pieces(chess.KNIGHT, chess.WHITE))
+    minors += len(board.pieces(chess.KNIGHT, chess.BLACK))
+    minors += len(board.pieces(chess.BISHOP, chess.WHITE))
+    minors += len(board.pieces(chess.BISHOP, chess.BLACK))
+    majors = len(board.pieces(chess.ROOK, chess.WHITE))
+    majors += len(board.pieces(chess.ROOK, chess.BLACK))
+    majors += len(board.pieces(chess.QUEEN, chess.WHITE))
+    majors += len(board.pieces(chess.QUEEN, chess.BLACK))
+    phase = pawns + minors * 2 + majors * 4
+    return min(1.0, max(0.0, phase / 24.0))
 
 
 def see(board: chess.Board, move: chess.Move) -> int:
@@ -151,12 +183,40 @@ def hanging_penalty(board: chess.Board) -> float:
     return score
 
 
+def threat_bonus(board: chess.Board) -> float:
+    """Reward attacks on higher-value undefended enemy pieces (white-positive cp)."""
+    score = 0.0
+    for victim_sq, victim in board.piece_map().items():
+        if victim.piece_type == chess.KING:
+            continue
+        victim_val = material_of(victim.piece_type)
+        if not board.is_attacked_by(not victim.color, victim_sq):
+            continue
+        if board.is_attacked_by(victim.color, victim_sq):
+            continue
+        for attacker_color in (chess.WHITE, chess.BLACK):
+            if not board.is_attacked_by(attacker_color, victim_sq):
+                continue
+            cheapest = victim_val
+            for att_sq in board.attackers(attacker_color, victim_sq):
+                att = board.piece_at(att_sq)
+                if att is None:
+                    continue
+                cheapest = min(cheapest, material_of(att.piece_type))
+            if victim_val > cheapest:
+                bonus = 0.35 * victim_val
+                score += bonus if attacker_color == chess.WHITE else -bonus
+                break
+    return score
+
+
 def tactical_floor(board: chess.Board) -> float:
     """Classical material + PST + structure + hanging — white-positive cp."""
     score = 0.0
+    taper = _phase_taper(board)
     bishops = [0, 0]
     for sq, piece in board.piece_map().items():
-        val = material_of(piece.piece_type) + pst_value(piece, sq)
+        val = material_of(piece.piece_type) + pst_value(piece, sq, phase_taper=taper)
         score += val if piece.color == chess.WHITE else -val
         if piece.piece_type == chess.BISHOP:
             bishops[int(piece.color)] += 1
@@ -191,4 +251,5 @@ def tactical_floor(board: chess.Board) -> float:
             score += sign * 15
 
     score += hanging_penalty(board)
+    score += threat_bonus(board)
     return float(score)

@@ -14,7 +14,7 @@ import chess.polyglot
 
 from chess_contest.stigmergy.evaluate import relative_eval
 from chess_contest.stigmergy.tactics import material_of, see
-from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights
+from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
 MATE = 100_000
 DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
@@ -27,6 +27,7 @@ class SearchResult:
     depth: int
     nodes: int
     book: bool = False
+    trail: bool = False
     pv: list[str] | None = None
 
 
@@ -56,15 +57,19 @@ class Searcher:
         if (self.nodes & 2047) == 0 and time.perf_counter() >= self.deadline:
             raise RuntimeError("TIME_UP")
 
+    def _book_entry_score(self, entry: dict) -> float:
+        if "w" in entry:
+            return float(entry["w"])
+        code = int(entry.get("code", 0))
+        return float(CODE_WEIGHT.get(code, 1))
+
     def book_move(self, board: chess.Board) -> chess.Move | None:
         hist = board.move_stack
         key = "".join(m.uci()[:4] for m in hist)
         entry = self.weights.book.get(key)
         if not entry:
             return None
-        best = max(
-            entry, key=lambda e: (int(e.get("code", 0)), CODE_WEIGHT.get(int(e.get("code", 0)), 1))
-        )
+        best = max(entry, key=self._book_entry_score)
         uci = best["m"]
         try:
             move = chess.Move.from_uci(uci if len(uci) >= 4 else uci + "q")
@@ -77,6 +82,26 @@ class Searcher:
             return move if move in board.legal_moves else None
         except ValueError:
             return None
+
+    def trail_move(self, board: chess.Board) -> chess.Move | None:
+        """High-confidence continuous ant-trail move from distilled oracle lines."""
+        pos_trails = self.weights.trails.get(trail_key(board))
+        if not pos_trails:
+            return None
+        scored: list[tuple[chess.Move, float]] = []
+        for move in board.legal_moves:
+            uci = move.uci()[:4]
+            w = pos_trails.get(uci)
+            if w is not None:
+                scored.append((move, float(w)))
+        if not scored:
+            return None
+        scored.sort(key=lambda t: t[1], reverse=True)
+        best_move, best_w = scored[0]
+        second_w = scored[1][1] if len(scored) > 1 else 0.0
+        if best_w >= 1.5 and (second_w <= 0.0 or best_w >= second_w * 1.25):
+            return best_move
+        return None
 
     def _move_score(
         self,
@@ -111,6 +136,9 @@ class Searcher:
             elif killers[1] == move:
                 score += 8000
         score += min(self.history.get(move.from_square << 6 | move.to_square, 0), 5000)
+        uci = move.uci()[:4]
+        trail_bonus = self.weights.trails.get(trail_key(board), {}).get(uci, 0.0)
+        score += trail_bonus * 500.0
         piece = board.piece_at(move.from_square)
         if piece is not None:
             lk = (
@@ -367,6 +395,10 @@ class Searcher:
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
         """Iterative deepening that keeps the best completed-depth move."""
+        trail = self.trail_move(board)
+        if trail is not None:
+            return SearchResult(move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True)
+
         book = self.book_move(board)
         if book is not None:
             return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)

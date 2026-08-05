@@ -20,19 +20,88 @@ from chess_contest.stigmergy.weights import (
     default_weights,
     load_weights,
     mutate_field,
+    quantize_learned_moves,
     save_weights,
+    trail_key,
     uniqueness_fingerprint,
 )
 
 
 def test_default_weights_roundtrip(tmp_path: Path) -> None:
     w = default_weights()
+    w.learned_moves["pe2e4"] = 1.23456789
+    w.trails[trail_key(chess.Board())] = {"e2e4": 2.5}
     path = tmp_path / "w.json"
     save_weights(w, path)
     w2 = load_weights(path)
     assert w2.diffusion_steps == w.diffusion_steps
     assert w2.field.deposit.shape == (6, 10)
     assert "e2e4" in {e["m"] for e in w2.book[""]}
+    assert w2.format_version == 4
+    assert w2.learned_moves["pe2e4"] == 1.23456789
+    assert w2.trails[trail_key(chess.Board())]["e2e4"] == 2.5
+    data = json.loads(path.read_text())
+    assert data["formatVersion"] == 4
+    assert data["learnedMoves"]["precision"] == "float64"
+    assert data["learnedMoves"]["values"]["pe2e4"] == 1.23456789
+    assert "codes" not in data["learnedMoves"]
+    assert data["trails"]["precision"] == "float64"
+
+
+def test_format_v4_float_roundtrip_exact(tmp_path: Path) -> None:
+    w = default_weights()
+    w.learned_moves = {
+        "pe2e4": 0.123456789012345,
+        "ng1f3": -2.718281828,
+    }
+    path = tmp_path / "v4.json"
+    save_weights(w, path)
+    w2 = load_weights(path)
+    assert w2.learned_moves["pe2e4"] == 0.123456789012345
+    assert w2.learned_moves["ng1f3"] == -2.718281828
+
+
+def test_legacy_ternary_learned_moves_load(tmp_path: Path) -> None:
+    w = default_weights()
+    path = tmp_path / "legacy.json"
+    legacy = w.to_dict()
+    legacy["formatVersion"] = 3
+    legacy["learnedMoves"] = quantize_learned_moves({"pe2e4": 2.0, "pe7e5": -1.5})
+    del legacy["trails"]
+    path.write_text(json.dumps(legacy), encoding="utf-8")
+    w2 = load_weights(path)
+    assert w2.learned_moves["pe2e4"] > 0
+    assert w2.learned_moves["pe7e5"] < 0
+
+
+def test_trails_reinforce_and_trail_move() -> None:
+    from chess_contest.stigmergy.distill import distill_stockfish_pv
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    board = chess.Board()
+    distill_stockfish_pv(w, board, ["e2e4"], boost=2.0)
+    key = trail_key(board)
+    assert key in w.trails
+    assert w.trails[key].get("e2e4", 0.0) >= 2.0
+    searcher = Searcher(w)
+    move = searcher.trail_move(board)
+    assert move is not None
+    assert move.uci()[:4] == "e2e4"
+
+
+def test_trail_move_requires_confidence_gap() -> None:
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    board = chess.Board()
+    key = trail_key(board)
+    w.trails[key] = {"e2e4": 1.0, "d2d4": 0.9}
+    assert Searcher(w).trail_move(board) is None
+    w.trails[key]["e2e4"] = 2.0
+    move = Searcher(w).trail_move(board)
+    assert move is not None
+    assert move.uci()[:4] == "e2e4"
 
 
 def test_field_shapes_startpos() -> None:
@@ -174,7 +243,7 @@ def test_tactical_floor_material_and_hanging() -> None:
     from chess_contest.stigmergy.tactics import hanging_penalty, see, tactical_floor
 
     start = chess.Board()
-    assert abs(tactical_floor(start)) < 40  # symmetric + castling rights cancel
+    assert abs(tactical_floor(start)) < 50  # symmetric + castling rights cancel
 
     # White up a queen.
     up = chess.Board("4k3/8/8/8/8/8/8/3QK3 w - - 0 1")

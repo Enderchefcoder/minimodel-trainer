@@ -27,6 +27,8 @@ NOVEL_FEATURES = {
     "king_resonance_coupling": 8,
     "ternary_ant_trail_book": 10,
     "ternary_move_pheromone_bias": 6,
+    "continuous_float64_trails": 8,
+    "high_precision_float64_weights": 5,
     "harmonic_board_channel": 8,
     "spectral_attack_graph": 8,
     "chemical_reaction_eval": 8,
