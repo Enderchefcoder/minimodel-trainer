@@ -84,6 +84,10 @@ venv/bin/python research/experiments/aggregate.py
 
 ## Merged board: original 5 + 20 mm1m (25 runs)
 
+The same full table (with tok/s) is also inlined in
+[report 03](03_architecture_bakeoff.md) so that report stands alone as the
+complete fixed-budget architecture bake-off.
+
 Sorted by val_loss (then WikiText byte-ppl). Original `arch_*` models are
 ~1.7M params; mm1m are ~1.0–1.2M — same tokens and harness, different budget.
 
