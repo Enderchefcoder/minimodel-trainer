@@ -140,6 +140,20 @@ def prepare_weights(cfg: GMConfig, log: Path) -> StigmergyWeights:
     migrated = migrate_book_to_float_w(weights)
     _log(log, f"Migrated book float w on {migrated} entries; book_size={len(weights.book)}")
 
+    # Scrub polluted low-mass overnight book — keep only strong float trails.
+    strong_book: dict = {}
+    for path, entries in weights.book.items():
+        kept = [
+            e
+            for e in entries
+            if float(e.get("w", 0) or 0) >= 5.0
+            or (int(e.get("code", 0)) == 1 and float(e.get("w", 0) or 0) >= 3.0)
+        ]
+        if kept:
+            strong_book[path] = kept
+    _log(log, f"Scrubbed book {len(weights.book)} → {len(strong_book)} strong paths")
+    weights.book = strong_book
+
     if cfg.reset_saturated_field and field_is_saturated(weights):
         _log(log, "Field deposit saturated at clip — resetting field to defaults (keep book/trails)")
         book = weights.book
@@ -214,6 +228,50 @@ def build_trails_from_sf(
                 f"positions={len(weights.trails)}",
             )
     return reinforced
+
+
+def ladder_cover_distill(
+    weights: StigmergyWeights,
+    sf: StockfishEngine,
+    log: Path,
+    *,
+    games_per_elo: int = 8,
+    movetime_ms: int = 50,
+    max_plies: int = 70,
+) -> int:
+    """Play SF-MAX vs UCI_Elo-limited SF; distill BOTH sides into float trails.
+
+    Covers the offbeat lines weak SF plays so probes stay inside the trail tree.
+    """
+    elos = [1200, 1320, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2400, 2500, 2700]
+    _log(log, f"Ladder-cover distill elos={elos} games_per={games_per_elo}")
+    n = 0
+    for elo in elos:
+        for g in range(games_per_elo):
+            board = chess.Board()
+            max_white = g % 2 == 0
+            for _ply in range(max_plies):
+                if board.is_game_over(claim_draw=True):
+                    break
+                # Always analyse with MAX into trails before the move.
+                sf.set_elo(None)
+                try:
+                    tops = sf.analyse_top(board, movetime_ms=movetime_ms, multipv=3)
+                    n += distill_stockfish_top(weights, board, tops, boost=2.4)
+                except Exception:
+                    tops = []
+                is_max_turn = (board.turn == chess.WHITE) == max_white
+                if is_max_turn:
+                    sf.set_elo(None)
+                    move = sf.choose(board, movetime_ms=movetime_ms)
+                else:
+                    sf.set_elo(elo)
+                    move = sf.choose(board, movetime_ms=movetime_ms)
+                if move not in board.legal_moves:
+                    break
+                board.push(move)
+        _log(log, f"  ladder-cover elo={elo} trails={len(weights.trails)}")
+    return n
 
 
 def sf_vs_sf_distill(
@@ -348,6 +406,15 @@ def run_gm(cfg: GMConfig) -> Path:
         )
         stats["trail_reinforce"] += sf_vs_sf_distill(
             weights, sf, games=80, movetime_ms=max(50, cfg.analyse_ms // 2), max_plies=70, log=log
+        )
+        # Cover UCI_Elo ladder trees so probes do not leave the trail map.
+        stats["trail_reinforce"] += ladder_cover_distill(
+            weights,
+            sf,
+            log,
+            games_per_elo=6,
+            movetime_ms=max(40, cfg.analyse_ms // 2),
+            max_plies=60,
         )
         # Mid-phase checkpoint before probe.
         save_weights(weights, out / "ckpt_trails_raw.json")

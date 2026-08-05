@@ -252,4 +252,23 @@ def tactical_floor(board: chess.Board) -> float:
 
     score += hanging_penalty(board)
     score += threat_bonus(board)
+
+    # Mobility (legal moves) — strong signal at club/master level.
+    # Approximate without flipping turn: count attack-set sizes per side.
+    mob = 0.0
+    for sq, piece in board.piece_map().items():
+        if piece.piece_type == chess.KING:
+            attacks = chess.SquareSet(chess.BB_KING_ATTACKS[sq])
+        elif piece.piece_type == chess.KNIGHT:
+            attacks = chess.SquareSet(chess.BB_KNIGHT_ATTACKS[sq])
+        elif piece.piece_type == chess.PAWN:
+            attacks = chess.SquareSet(chess.BB_PAWN_ATTACKS[piece.color][sq])
+        else:
+            attacks = chess.SquareSet(board.attacks(sq))
+        # Don't count occupied by own pieces.
+        own = board.occupied_co[piece.color]
+        n = len(attacks & ~chess.SquareSet(own))
+        mob += n if piece.color == chess.WHITE else -n
+    score += 2.5 * mob
+
     return float(score)
