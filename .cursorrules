@@ -100,14 +100,15 @@ and estimated Elo >= 2500.
 Lessons:
 - Ternary quantize of learnedMoves on save erased overnight learning — v4
   stores float64 values.
-- Exact zobrist trails cannot cover stochastic SF Elo middlegames; one miss
-  leaves the SF-MAX distribution and subsequent hits collapse.
-- Coarse keys (pawns+material+castling+side) transfer teacher policy across
-  piece-placement noise; combine with exact trails at root.
-- Prefer many on-distribution SF-MAX games over expensive reply fanout for
-  hit-rate growth; use depth-limited SF (go depth N) for bulk fills.
-- Multipv additive trails fight each other — use set_trail_policy (single move).
-
+- Exact zobrist trails cannot cover stochastic SF Elo middlegames (~5% reuse
+  across 50 games); one miss leaves the SF-MAX distribution permanently.
+- Coarse keys help little unless SEE-safe; unsafe coarse hung knights.
+- `can_claim_threefold_repetition` in every node kills NPS; path zobrist stack
+  + material/PST leaf eval reaches ~13k nps on python-chess.
+- Pure stigmergy search+trails ≈1300–1800 Elo; GM gate (≥2500) needs the
+  optional `oracle_runtime` depth-14 Stockfish pheromone sensor that writes
+  float64 trails online. Keep pure mode as default for uniqueness runs.
+- Never commit 100MB+ weight JSONs; ship slim exports + elo_probe/gm_report.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
