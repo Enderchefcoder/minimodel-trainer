@@ -20,7 +20,7 @@ and written up in `reports/`.
 | 09 | [synthesis](reports/09_synthesis.md) | The recipe to beat Glint-2, and the CPU-budget contender |
 | 10 | [glint2_verification](reports/10_glint2_verification.md) | Fresh Hub proof: shipped weights are 1.71M loop+coda; README mislabels params + WikiText ppl |
 | 11 | [crush_glint2_recipe](reports/11_crush_glint2_recipe.md) | Locked 1.4M dense GQA recipe + Colab T4 one-cell notebook (FineWeb-Edu/DCLM/TinyStories/soft-QA) |
-| 12 | [arch_1m_candidates](reports/12_arch_1m_candidates.md) | 20 ordered ~1M architectures (10 researched + 5 novel TF + 5 Mamba) |
+| 12 | [arch_1m_candidates](reports/12_arch_1m_candidates.md) | 20 ~1M arches graded on report-03 protocol; merged with original 5 |
 | — | [RESULTS](reports/RESULTS.md) | Auto-aggregated tables + figures from all runs |
 
 ## Experiments (`experiments/`)
@@ -31,8 +31,8 @@ and written up in `reports/`.
 | `pull_train_data.py` | Cache TinyStories / fineweb-edu text |
 | `setup_corpus.py` | Train the 4096-BPE tokenizer, tokenize corpora to shards |
 | `eval_harness.py` | Model-agnostic BLiMP / ARC / byte-ppl scorer (shared by all) |
-| `eval_glint2.py` | Run the released Glint-2 through the harness |
-| `prove_glint2_claims.py` | Fresh download + param audit; proves 1.71M vs advertised 1.06M |
+| `bakeoff_1m_candidates.py` | Report-03-protocol bake-off for `mm1m_r*`; merges with `arch_*` |
+| `aggregate.py` | Build `RESULTS.md` + charts from result JSONs |
 | `run_experiment.py` | Train one config, evaluate, save a result JSON |
 | `ablations.py` | Grouped compute-matched ablations (arch, stabilizers, optimizer, ffn, ...) |
 | `loops_scaling.py` | Evaluate a model across loop counts |

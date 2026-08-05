@@ -9,6 +9,7 @@ are not clones of published Mamba configs.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -54,6 +55,100 @@ MambaLMConfig: dict[str, Any] = {
     "attn_tail_layers": 2,
     "layer_pattern": ["ssm", "ssm", "attention"],
 }
+
+
+def _selective_scan_loop(
+    dA: Tensor, bx: Tensor, h: Tensor
+) -> tuple[Tensor, Tensor]:
+    """Sequential selective scan, scripted for CPU speed.
+
+    ``h_t = dA_t * h_{t-1} + bx_t`` with tensors laid out ``[T, B, H, N, Dh]``.
+    """
+    seq_len = dA.size(0)
+    outs = torch.empty_like(bx)
+    for t in range(seq_len):
+        h = dA[t] * h + bx[t]
+        outs[t] = h
+    return outs, h
+
+
+_selective_scan_loop_scripted = torch.jit.script(_selective_scan_loop)
+
+
+class _SelectiveScanFn(torch.autograd.Function):
+    """Selective scan with an O(T) reverse-mode backward.
+
+    Avoids unrolling 256 Python autograd nodes (which made training ~30x slower
+    than the TorchScript forward alone) by saving ``dA`` / ``h`` and running a
+    single reverse sweep for ``grad_dA`` and ``grad_bx``.
+    """
+
+    @staticmethod
+    def forward(ctx, dA: Tensor, bx: Tensor, h0: Tensor) -> Tensor:
+        # dA, bx: [B, T, H, N, Dh] ; h0: [B, H, N, Dh] -> h_seq [B, T, H, N, Dh]
+        dA_t = dA.transpose(0, 1).contiguous()
+        bx_t = bx.transpose(0, 1).contiguous()
+        h_seq_t, h_last = _selective_scan_loop_scripted(dA_t, bx_t, h0)
+        h_seq = h_seq_t.transpose(0, 1).contiguous()
+        ctx.save_for_backward(dA, h_seq, h0)
+        ctx.h_last = h_last
+        return h_seq
+
+    @staticmethod
+    def backward(ctx, grad_h_seq: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        dA, h_seq, h0 = ctx.saved_tensors
+        seq_len = dA.shape[1]
+        grad_dA = torch.zeros_like(dA)
+        grad_bx = grad_h_seq.clone()
+        grad_h = torch.zeros_like(h0)
+        # h_{t-1} padded with h0 at t=0
+        h_prev = torch.cat([h0.unsqueeze(1), h_seq[:, :-1]], dim=1)
+        for t in range(seq_len - 1, -1, -1):
+            grad_total = grad_bx[:, t] + grad_h
+            grad_dA[:, t] = grad_total * h_prev[:, t]
+            grad_bx[:, t] = grad_total
+            grad_h = grad_total * dA[:, t]
+        return grad_dA, grad_bx, grad_h
+
+
+def selective_scan(dA: Tensor, bx: Tensor, h0: Tensor) -> tuple[Tensor, Tensor]:
+    """Return ``(h_seq, h_last)`` for the selective recurrence."""
+    h_seq = _SelectiveScanFn.apply(dA, bx, h0)
+    return h_seq, h_seq[:, -1]
+
+
+def _parallel_scan(dA: Tensor, bx: Tensor) -> Tensor:
+    """Associative parallel scan for ``h_t = dA_t * h_{t-1} + bx_t`` (testing aid)."""
+    a = dA
+    b = bx
+    length = a.shape[1]
+    pad = 1 << (length - 1).bit_length()
+    if pad != length:
+        pad_shape = list(a.shape)
+        pad_shape[1] = pad - length
+        a = torch.cat([a, torch.ones(pad_shape, device=a.device, dtype=a.dtype)], dim=1)
+        b = torch.cat([b, torch.zeros(pad_shape, device=b.device, dtype=b.dtype)], dim=1)
+
+    def _combine(a1: Tensor, b1: Tensor, a2: Tensor, b2: Tensor) -> tuple[Tensor, Tensor]:
+        return a2 * a1, a2 * b1 + b2
+
+    levels = int(math.log2(pad))
+    for _level in range(levels):
+        step = 1 << _level
+        a_prev, b_prev = a, b
+        a = a_prev.clone()
+        b = b_prev.clone()
+        idx = torch.arange(step, pad, device=a.device)
+        left = idx - step
+        a_n, b_n = _combine(
+            a_prev.index_select(1, left),
+            b_prev.index_select(1, left),
+            a_prev.index_select(1, idx),
+            b_prev.index_select(1, idx),
+        )
+        a.index_copy_(1, idx, a_n)
+        b.index_copy_(1, idx, b_n)
+    return b[:, :length]
 
 
 class SelectiveSSM(nn.Module):
@@ -106,9 +201,7 @@ class SelectiveSSM(nn.Module):
         )
         self.D = nn.Parameter(torch.ones(self.inner))
         if self.use_conv and self.conv_kernel > 0:
-            self.conv_weight = nn.Parameter(
-                torch.empty(self.inner, 1, self.conv_kernel)
-            )
+            self.conv_weight = nn.Parameter(torch.empty(self.inner, 1, self.conv_kernel))
             self.conv_bias = nn.Parameter(torch.zeros(self.inner))
             nn.init.normal_(self.conv_weight, std=0.02)
         else:
@@ -136,30 +229,26 @@ class SelectiveSSM(nn.Module):
     ) -> tuple[Tensor, Tensor]:
         """Run the selective recurrence over ``x`` shaped ``[B, T, H, Dh]``.
 
-        State layout is ``[B, H, N, Dh]`` so each channel keeps an independent
-        ``N``-dimensional SSM. ``A`` broadcasts as ``[H, N, 1]``.
+        State layout is ``[B, H, N, Dh]``. Full-sequence training uses a parallel
+        associative scan; incremental decoding (``state is not None`` or ``T``
+        small) uses a TorchScript sequential loop so streaming matches exactly.
         """
-        batch, seq_len, n_heads, head_dim = x.shape
+        batch, _seq_len, n_heads, head_dim = x.shape
         A = -torch.exp(self.A_log.float())  # [H, N]
         dA = torch.exp(delta.unsqueeze(3).float() * A.unsqueeze(-1))  # [B,T,H,N,Dh]
         dB = delta.unsqueeze(3).float() * B.unsqueeze(-1).float()  # [B,T,H,N,Dh]
+        bx = dB * x.float().unsqueeze(3)  # [B,T,H,N,Dh]
 
-        h = (
+        h0 = (
             torch.zeros(
                 batch, n_heads, self.state_dim, head_dim, device=x.device, dtype=torch.float32
             )
             if state is None
             else state.float()
         )
-        ys: list[Tensor] = []
-        x_f = x.float()
-        C_f = C.float()
-        for t in range(seq_len):
-            h = dA[:, t] * h + dB[:, t] * x_f[:, t].unsqueeze(2)
-            y_t = (C_f[:, t].unsqueeze(-1) * h).sum(dim=2)  # [B,H,Dh]
-            ys.append(y_t)
-        y = torch.stack(ys, dim=1).to(x.dtype)
-        return y, h.to(x.dtype)
+        h_seq, h_last = selective_scan(dA, bx, h0)
+        y = (C.float().unsqueeze(-1) * h_seq).sum(dim=3).to(x.dtype)
+        return y, h_last.to(x.dtype)
 
     def forward(
         self, x: Tensor, state: tuple[Tensor | None, Tensor | None] | Tensor | None = None

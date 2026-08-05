@@ -20,6 +20,7 @@ from minimodel.architectures.ssm import SelectiveSSM
 
 RESULTS = Path(__file__).resolve().parents[1] / "research" / "data" / "results"
 RANKING = RESULTS / "arch_1m_candidates.json"
+MERGED = RESULTS / "arch_bakeoff_merged.json"
 
 
 class TestMM1MCandidates:
@@ -134,7 +135,7 @@ class TestNovelFamilies:
 class TestRankingArtifact:
     """Committed bake-off ranking JSON stays coherent with templates."""
 
-    def test_ranking_json_lists_all_twenty(self):
+    def test_smoke_ranking_json_lists_all_twenty(self):
         assert RANKING.exists(), "run bakeoff_1m_candidates.py to create the ranking"
         data = json.loads(RANKING.read_text(encoding="utf-8"))
         prior = data["ordered_by_prior"]
@@ -144,6 +145,27 @@ class TestRankingArtifact:
         names = {r["name"] for r in list_glint2_candidates()}
         assert {r["name"] for r in prior} == names
         assert [r["measured_rank"] for r in measured] == list(range(1, 21))
-        # Measured list is sorted by ascending loss.
         losses = [r["final_loss"] for r in measured]
         assert losses == sorted(losses)
+
+    def test_merged_report03_bakeoff_when_present(self):
+        if not MERGED.exists():
+            pytest.skip("full report-03 bake-off not run yet")
+        data = json.loads(MERGED.read_text(encoding="utf-8"))
+        assert data["n_mm1m"] == 20
+        assert data["n_original"] == 5
+        assert data["n_merged"] == 25
+        mm1m = data["mm1m_candidates"]
+        assert len(mm1m) == 20
+        assert [r["mm1m_measured_rank"] for r in mm1m] == list(range(1, 21))
+        # Protocol matches report 03.
+        assert data["protocol"]["max_steps"] == 300
+        assert data["protocol"]["seq_len"] == 256
+        assert data["protocol"]["batch_size"] == 32
+        for row in mm1m:
+            assert "val_loss" in row
+            assert "wikitext_byte_ppl" in row
+            assert "blimp_acc" in row
+            assert "arc_easy_acc" in row
+            assert row["train_tokens"] == 2_457_600
+
