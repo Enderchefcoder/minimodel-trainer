@@ -191,10 +191,14 @@ def distill_stockfish_top(
     *,
     boost: float = 1.0,
 ) -> int:
-    """Reinforce multipv Stockfish lines into trails, book, and learned moves."""
+    """Reinforce multipv Stockfish lines into trails, book, and learned moves.
+
+    Top-1 gets the bulk of float mass so trail_move follows a single clear policy.
+    """
     n = 0
     for rank, info in enumerate(tops):
-        decay = boost / (1.0 + rank)
+        # Strong top-1 preference for a decisive continuous trail.
+        decay = boost * (1.0 if rank == 0 else 0.15 / rank)
         pv = info.get("pv") or []
         uci = info.get("uci") or (pv[0] if pv else None)
         if not uci:
@@ -202,20 +206,20 @@ def distill_stockfish_top(
         b = board.copy(stack=False)
         path = "".join(m.uci()[:4] for m in board.move_stack)
         line = pv if pv else [uci]
-        for i, move_uci in enumerate(line[:12]):
+        for i, move_uci in enumerate(line[:8]):
             try:
                 move = chess.Move.from_uci(move_uci)
             except ValueError:
                 break
             if move not in b.legal_moves:
                 break
-            amount = decay * (1.0 if i < 4 else 0.35)
+            amount = decay * (1.0 if i < 3 else 0.25)
             lm = _lm_key(b, move)
             if lm is not None:
                 weights.learned_moves[lm] = weights.learned_moves.get(lm, 0.0) + amount
                 n += 1
             _reinforce_trail(weights, b, move_uci, amount)
-            if i < 8:
+            if i < 6:
                 _reinforce_book_entry(weights, path, move_uci, amount)
             b.push(move)
             path += move_uci[:4]

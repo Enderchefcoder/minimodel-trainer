@@ -87,13 +87,22 @@ collapse). Unique DPFE residual kept; classical floor + float trails carry
 strength.
 
 Plan:
-[ ] formatVersion 4: float64 fields + continuous book scores + full float moves
-[ ] Stronger phased PST / king safety / threats; faster search
-[ ] Kill weak overnight; run intensive GM trainer until probe >= 2500
+[X] formatVersion 4: float64 fields + continuous book scores + full float moves
+[X] Stronger phased PST / king safety / threats / mobility; tactical search leaves
+[X] gm_train.py: trail flood, SF-vs-SF, ladder-cover, scrubbed book, guided spar
+[ ] Train until probe >= 2500 (running stigmergy-gm v3)
 [ ] Ship gm_weights.json + elo report; commit; PR
 
 Success gate: probe ladder score >= 50% vs SF UCI_Elo 2500 (GM floor)
 and estimated Elo >= 2500.
+
+Lessons:
+- Ternary quantize of learnedMoves on save erased overnight learning — v4
+  stores float64 values.
+- Polluted low-mass book from losing SF games tanks Elo; scrub w>=5.
+- Field diffusion inside every search node is too slow/weak; use tactical_floor
+  in alpha-beta, trails at root for oracle policy.
+- Random multipv trails miss UCI_Elo offbeat lines — need MAX-vs-Elo ladder cover.
 
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 

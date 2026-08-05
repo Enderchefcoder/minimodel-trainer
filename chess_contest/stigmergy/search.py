@@ -136,6 +136,7 @@ class Searcher:
         tt_move: chess.Move | None,
         *,
         check_checks: bool = False,
+        pos_trails: dict[str, float] | None = None,
     ) -> float:
         if tt_move is not None and move == tt_move:
             return 1_000_000.0
@@ -162,8 +163,8 @@ class Searcher:
                 score += 8000
         score += min(self.history.get(move.from_square << 6 | move.to_square, 0), 5000)
         uci = move.uci()[:4]
-        trail_bonus = self.weights.trails.get(trail_key(board), {}).get(uci, 0.0)
-        score += trail_bonus * 500.0
+        if pos_trails:
+            score += float(pos_trails.get(uci, 0.0)) * 500.0
         piece = board.piece_at(move.from_square)
         if piece is not None:
             lk = (
@@ -184,8 +185,11 @@ class Searcher:
         check_checks: bool = False,
     ) -> list[chess.Move]:
         moves = list(board.legal_moves)
+        pos_trails = self.weights.trails.get(trail_key(board))
         moves.sort(
-            key=lambda m: self._move_score(board, m, ply, tt_move, check_checks=check_checks),
+            key=lambda m: self._move_score(
+                board, m, ply, tt_move, check_checks=check_checks, pos_trails=pos_trails
+            ),
             reverse=True,
         )
         return moves
@@ -306,7 +310,7 @@ class Searcher:
             if score >= beta:
                 return beta
 
-        moves = self._ordered_moves(board, ply, tt_move, check_checks=(depth >= 4))
+        moves = self._ordered_moves(board, ply, tt_move, check_checks=False)
         if not moves:
             return -MATE + ply if in_check else 0.0
 
@@ -394,7 +398,7 @@ class Searcher:
         beta: float,
         pv_move: chess.Move,
     ) -> float:
-        moves = self._ordered_moves(board, 0, pv_move, check_checks=True)
+        moves = self._ordered_moves(board, 0, pv_move, check_checks=False)
         best = -1e18
         best_move = moves[0]
         for i, move in enumerate(moves):
