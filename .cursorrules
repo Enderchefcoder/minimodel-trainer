@@ -79,13 +79,13 @@ Goal: Keep unique DPFE architecture; heavy self-play + Stockfish-max
 sparring (train on winner moves). Target near/over 3000 (honest ladder).
 
 Plan:
-[ ] Install Stockfish; SF UCI wrapper + strength ladder
-[ ] Arch bumps (still unique): more channels, deeper diffusion, capture SEE
-     field term, longer ternary trails — NO NNUE/SF clone
-[ ] Winner-distillation trainer (SF games + self-play)
-[ ] Overnight runner (hours, checkpoints, logs)
-[ ] Launch overnight job; periodic Elo vs SF levels
-[ ] Commit weights + reports; update PR
+[X] Install Stockfish; SF UCI wrapper + strength ladder
+[X] Arch bumps (still unique): swarm field-head, check extensions,
+     deeper diffusion — NO NNUE/SF clone
+[X] Winner-distillation trainer (SF games + self-play)
+[X] Overnight runner (hours, checkpoints, logs)
+[X] Launch overnight job (8h tmux); monitor Elo vs SF levels
+[ ] Commit final gm_weights + reports when overnight finishes; update PR
 
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 

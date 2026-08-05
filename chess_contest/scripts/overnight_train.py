@@ -57,15 +57,17 @@ class OvernightConfig:
     init_weights: str = "chess_contest/weights/base_weights.json"
     out_dir: str = "chess_contest/weights/overnight"
     stockfish_path: str = "/usr/games/stockfish"
-    stig_movetime_ms: int = 250
-    stig_max_depth: int = 5
-    sf_movetime_ms: int = 120
-    max_plies: int = 100
-    checkpoint_every_min: float = 15.0
-    probe_every_min: float = 45.0
+    stig_movetime_ms: int = 120
+    stig_max_depth: int = 4
+    sf_movetime_ms: int = 80
+    max_plies: int = 70
+    checkpoint_every_min: float = 12.0
+    probe_every_min: float = 30.0
     book_build_positions: int = 400
-    selfplay_batch: int = 8
-    sf_batch: int = 6
+    selfplay_batch: int = 2
+    sf_batch: int = 10
+    analyse_per_cycle: int = 80
+    skip_book_if_ckpt: bool = True
 
 
 def _log(path: Path, msg: str) -> None:
@@ -210,20 +212,26 @@ def run_overnight(cfg: OvernightConfig) -> Path:
     }
 
     try:
-        # Phase A — SF opening oracle book.
-        sf.set_elo(None)  # max
-        n = build_sf_opening_book(weights, sf, cfg.book_build_positions, log, rng)
-        stats["distill_moves"] += n
-        stats["phases"].append({"name": "sf_book", "reinforced": n})
-        save_weights(weights, out / "ckpt_book.json")
+        book_ckpt = out / "ckpt_book.json"
+        init_path = Path(cfg.init_weights).resolve()
+        if cfg.skip_book_if_ckpt and book_ckpt.exists() and (
+            init_path == book_ckpt.resolve() or "ckpt_book" in cfg.init_weights
+        ):
+            _log(log, "Skipping book rebuild (resuming from SF book checkpoint)")
+        else:
+            sf.set_elo(None)
+            n = build_sf_opening_book(weights, sf, cfg.book_build_positions, log, rng)
+            stats["distill_moves"] += n
+            stats["phases"].append({"name": "sf_book", "reinforced": n})
+            save_weights(weights, book_ckpt)
 
         engine = StigmergyEngine(weights)
         cycle = 0
         # Escalating SF Elo schedule (ends at max 3190).
         sf_schedule = (
-            [1320, 1500, 1700, 1900, 2100] * 3
-            + [2300, 2500, 2700, 2800] * 4
-            + [2900, 3000, 3100, 3190] * 8
+            [1320, 1500, 1700, 1900, 2100] * 2
+            + [2300, 2500, 2700, 2800] * 3
+            + [2900, 3000, 3100, 3190] * 10
         )
 
         while time.time() < deadline:
@@ -231,11 +239,35 @@ def run_overnight(cfg: OvernightConfig) -> Path:
             clear_eval_cache()
             engine = StigmergyEngine(weights)
 
-            # --- SF sparring + winner distillation ---
+            # --- Fast SF analysis distillation (high throughput) ---
+            sf.set_elo(None)
+            analysed = 0
+            for _ in range(cfg.analyse_per_cycle):
+                b = chess.Board()
+                for _ply in range(int(rng.integers(0, 16))):
+                    if b.is_game_over():
+                        break
+                    b.push(rng.choice(list(b.legal_moves)))
+                if b.is_game_over():
+                    continue
+                tops = sf.analyse_top(b, movetime_ms=max(40, cfg.sf_movetime_ms // 2), multipv=3)
+                for info in tops:
+                    if info.get("pv"):
+                        stats["distill_moves"] += distill_stockfish_pv(
+                            weights, b, info["pv"], boost=1.6 if info is tops[0] else 0.9
+                        )
+                    try:
+                        mv = chess.Move.from_uci(info["uci"])
+                        if imitation_toward_move(weights, b, mv, rng, lr=0.06):
+                            analysed += 1
+                    except Exception:
+                        pass
+            _log(log, f"cycle {cycle} analysed≈{cfg.analyse_per_cycle} top1_hits~{analysed}")
+
+            # --- SF sparring + winner distillation (volume over depth) ---
             for j in range(cfg.sf_batch):
                 target = sf_schedule[(cycle * cfg.sf_batch + j) % len(sf_schedule)]
-                # Mix: mostly limited Elo, every 5th game full max.
-                if (cycle + j) % 5 == 0:
+                if (cycle + j) % 4 == 0:
                     sf.set_elo(None)
                     target_label = "MAX"
                 else:
@@ -260,91 +292,81 @@ def run_overnight(cfg: OvernightConfig) -> Path:
                     result, moves = play_recorded(sf_choose, stig_choose, cfg.max_plies)
                     stig_won = result == "0-1"
 
-                # Always distill the game winner (SF or us).
                 dstat = distill_game(
                     weights,
                     moves,
                     result,
-                    winner_boost=1.4 if not stig_won else 1.0,
-                    loser_penalty=0.45,
+                    winner_boost=1.8 if not stig_won else 1.1,
+                    loser_penalty=0.55,
                 )
                 stats["sf_games"] += 1
                 stats["distill_moves"] += dstat.moves_reinforced
                 if stig_won:
                     stats["sf_wins_as_stig"] += 1
 
-                # Extra: if SF won or drew, imitate SF's early PV from the startpos-like midgame.
-                if not stig_won and moves:
-                    # Replay to a mid position and ask SF for PV to imitate.
+                # Always pull a MAX PV from a midgame node of this game.
+                if moves:
                     mid = chess.Board()
-                    for m in moves[: min(12, len(moves) // 2 or 1)]:
+                    cut = max(1, min(16, len(moves) // 2))
+                    for m in moves[:cut]:
                         mid.push(m)
                     if not mid.is_game_over():
                         sf.set_elo(None)
-                        tops = sf.analyse_top(mid, movetime_ms=100, multipv=2)
+                        tops = sf.analyse_top(mid, movetime_ms=90, multipv=2)
                         for info in tops:
                             if info.get("pv"):
                                 stats["distill_moves"] += distill_stockfish_pv(
-                                    weights, mid, info["pv"], boost=1.3
+                                    weights, mid, info["pv"], boost=1.5
                                 )
-                            try:
-                                mv = chess.Move.from_uci(info["uci"])
-                                imitation_toward_move(weights, mid, mv, rng, lr=0.05)
-                            except Exception:
-                                pass
 
-                if (j + 1) == cfg.sf_batch:
-                    _log(
-                        log,
-                        f"cycle {cycle} SF batch done vs~{target_label} "
-                        f"stig_wins={stats['sf_wins_as_stig']}/{stats['sf_games']}",
+            _log(
+                log,
+                f"cycle {cycle} SF games stig_wins={stats['sf_wins_as_stig']}/{stats['sf_games']} "
+                f"last_vs={target_label}",
+            )
+
+            # --- Light self-play ES (every other cycle) ---
+            if cycle % 2 == 0 and cfg.selfplay_batch > 0:
+                ref = ClassicPSTOpponent(depth=2)
+                greedy = GreedyMaterialOpponent()
+
+                def score_weights(w, _ref=ref, _greedy=greedy) -> float:
+                    eng = StigmergyEngine(w)
+                    pts = 0.0
+                    for i in range(2):
+                        def ch(board_pos, _eng=eng):
+                            return _eng.choose_move(board_pos, time_ms=50, max_depth=3).move
+
+                        opp = _ref.choose if i % 2 == 0 else _greedy.choose
+                        if i % 2 == 0:
+                            result = play_game(ch, opp, max_plies=40)
+                            pts += {"1-0": 1.0, "0-1": 0.0, "1/2-1/2": 0.5}[result]
+                        else:
+                            result = play_game(opp, ch, max_plies=40)
+                            pts += {"1-0": 0.0, "0-1": 1.0, "1/2-1/2": 0.5}[result]
+                    return pts / 2.0
+
+                baseline = score_weights(weights)
+                adopted = 0
+                for _ in range(cfg.selfplay_batch):
+                    cand = mutate_field(weights.field, rng, sigma=0.05)
+                    trial = StigmergyWeights(
+                        field=cand,
+                        book=weights.book,
+                        learned_moves=dict(weights.learned_moves),
+                        diffusion_steps=weights.diffusion_steps,
+                        format_version=3,
                     )
+                    sc = score_weights(trial)
+                    stats["selfplay_games"] += 2
+                    if sc > baseline + 0.05:
+                        weights.field = cand
+                        baseline = sc
+                        adopted += 1
+                        clear_eval_cache()
+                _log(log, f"cycle {cycle} self-play adopted={adopted}/{cfg.selfplay_batch}")
 
-            # --- Self-play evolutionary batch ---
-            ref = ClassicPSTOpponent(depth=3)
-            greedy = GreedyMaterialOpponent()
-
-            def score_weights(w, _ref=ref, _greedy=greedy) -> float:
-                eng = StigmergyEngine(w)
-                pts = 0.0
-                for i in range(4):
-                    def ch(b, _eng=eng):
-                        return _eng.choose_move(
-                            b,
-                            time_ms=max(60, cfg.stig_movetime_ms // 2),
-                            max_depth=max(3, cfg.stig_max_depth - 1),
-                        ).move
-
-                    opp = _ref.choose if i % 2 == 0 else _greedy.choose
-                    if i % 2 == 0:
-                        result = play_game(ch, opp, max_plies=60)
-                        pts += {"1-0": 1.0, "0-1": 0.0, "1/2-1/2": 0.5}[result]
-                    else:
-                        result = play_game(opp, ch, max_plies=60)
-                        pts += {"1-0": 0.0, "0-1": 1.0, "1/2-1/2": 0.5}[result]
-                return pts / 4.0
-
-            baseline = score_weights(weights)
-            adopted = 0
-            for _ in range(cfg.selfplay_batch):
-                cand = mutate_field(weights.field, rng, sigma=0.05)
-                trial = StigmergyWeights(
-                    field=cand,
-                    book=weights.book,
-                    learned_moves=dict(weights.learned_moves),
-                    diffusion_steps=weights.diffusion_steps,
-                    format_version=3,
-                )
-                sc = score_weights(trial)
-                stats["selfplay_games"] += 4
-                if sc > baseline + 0.05:
-                    weights.field = cand
-                    baseline = sc
-                    adopted += 1
-                    clear_eval_cache()
-            _log(log, f"cycle {cycle} self-play adopted={adopted}/{cfg.selfplay_batch} baseline={baseline:.2f}")
-
-            prune_learned_moves(weights, keep=12000)
+            prune_learned_moves(weights, keep=20000)
             engine = StigmergyEngine(weights)
 
             now = time.time()
@@ -354,7 +376,9 @@ def run_overnight(cfg: OvernightConfig) -> Path:
                     **weights.training_meta,
                     "overnight": stats,
                     "elapsed_hours": round((now - t0) / 3600, 3),
-                    "uniqueness": score_uniqueness(weights.to_dict()["uniquenessFingerprint"]).to_dict(),
+                    "uniqueness": score_uniqueness(
+                        weights.to_dict()["uniquenessFingerprint"]
+                    ).to_dict(),
                 }
                 save_weights(weights, ckpt)
                 save_weights(weights, out / "latest.json")
@@ -364,7 +388,9 @@ def run_overnight(cfg: OvernightConfig) -> Path:
             if now - last_probe >= cfg.probe_every_min * 60:
                 try:
                     probe = probe_sf_ladder(weights, sf, cfg, log)
-                    (out / "elo_probe.json").write_text(json.dumps(probe, indent=2), encoding="utf-8")
+                    (out / "elo_probe.json").write_text(
+                        json.dumps(probe, indent=2), encoding="utf-8"
+                    )
                     stats["last_probe"] = probe
                     _log(log, f"Elo probe ≈ {probe['estimated_elo']}")
                 except Exception:
@@ -420,10 +446,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--init", default="chess_contest/weights/base_weights.json")
     p.add_argument("--out-dir", default="chess_contest/weights/overnight")
     p.add_argument("--stockfish", default="/usr/games/stockfish")
-    p.add_argument("--stig-ms", type=int, default=250)
-    p.add_argument("--stig-depth", type=int, default=5)
-    p.add_argument("--sf-ms", type=int, default=100)
+    p.add_argument("--stig-ms", type=int, default=120)
+    p.add_argument("--stig-depth", type=int, default=4)
+    p.add_argument("--sf-ms", type=int, default=80)
     p.add_argument("--book-positions", type=int, default=400)
+    p.add_argument("--analyse-per-cycle", type=int, default=80)
+    p.add_argument("--sf-batch", type=int, default=10)
+    p.add_argument("--selfplay-batch", type=int, default=2)
     p.add_argument("--quick", action="store_true", help="~10min smoke overnight")
     args = p.parse_args(argv)
 
@@ -433,14 +462,16 @@ def main(argv: list[str] | None = None) -> int:
         init_weights=args.init,
         out_dir=args.out_dir,
         stockfish_path=args.stockfish,
-        stig_movetime_ms=80 if args.quick else args.stig_ms,
+        stig_movetime_ms=60 if args.quick else args.stig_ms,
         stig_max_depth=3 if args.quick else args.stig_depth,
-        sf_movetime_ms=50 if args.quick else args.sf_ms,
-        book_build_positions=40 if args.quick else args.book_positions,
-        checkpoint_every_min=2.0 if args.quick else 15.0,
-        probe_every_min=5.0 if args.quick else 45.0,
-        selfplay_batch=2 if args.quick else 8,
-        sf_batch=2 if args.quick else 6,
+        sf_movetime_ms=40 if args.quick else args.sf_ms,
+        book_build_positions=30 if args.quick else args.book_positions,
+        checkpoint_every_min=2.0 if args.quick else 12.0,
+        probe_every_min=4.0 if args.quick else 30.0,
+        selfplay_batch=1 if args.quick else args.selfplay_batch,
+        sf_batch=2 if args.quick else args.sf_batch,
+        analyse_per_cycle=15 if args.quick else args.analyse_per_cycle,
+        skip_book_if_ckpt=True,
     )
     run_overnight(cfg)
     return 0
