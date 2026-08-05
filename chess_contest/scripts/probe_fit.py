@@ -66,11 +66,12 @@ def play_and_fill(
             break
         stig_turn = (board.turn == chess.WHITE) == stig_white
         if stig_turn:
-            if searcher.trail_move(board) is None and searcher.book_move(board) is None:
-                sf.set_elo(None)
-                tops = sf.analyse_top(board, movetime_ms=fill_ms, multipv=2)
-                distill_stockfish_top(engine.weights, board, tops, boost=6.0)
-                fills += 1
+            # Always refresh MAX policy at the root we are about to play —
+            # densifies the exact probe distribution into float64 trails.
+            sf.set_elo(None)
+            tops = sf.analyse_top(board, movetime_ms=fill_ms, multipv=2)
+            distill_stockfish_top(engine.weights, board, tops, boost=8.0)
+            fills += 1
             move = engine.choose_move(board, time_ms=stig_ms, max_depth=stig_depth).move
         else:
             if sf_elo is None:
