@@ -10,6 +10,7 @@ is oracle-only during training — probes use weights alone.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import sys
 import time
@@ -416,12 +417,10 @@ def run_gm(cfg: GMConfig) -> Path:
                 if tops:
                     hits += 1
                     if rng.random() < 0.05:
-                        try:
+                        with contextlib.suppress(Exception):
                             imitation_toward_move(
                                 weights, b, chess.Move.from_uci(tops[0]["uci"]), rng, lr=0.02
                             )
-                        except Exception:  # noqa: S110 — oracle may return illegal uci
-                            pass
             _log(
                 log,
                 f"cycle {cycle} analyse hits~{hits}/{cfg.analyse_per_cycle} "

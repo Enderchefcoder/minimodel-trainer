@@ -96,12 +96,16 @@ def test_trail_move_requires_confidence_gap() -> None:
     w = default_weights()
     board = chess.Board()
     key = trail_key(board)
+    # Near-tie still picks the leader under the relaxed GM trail policy.
     w.trails[key] = {"e2e4": 1.0, "d2d4": 0.95}
-    assert Searcher(w).trail_move(board) is None
-    w.trails[key]["e2e4"] = 2.5
     move = Searcher(w).trail_move(board)
     assert move is not None
     assert move.uci()[:4] == "e2e4"
+    # Clear leader preferred.
+    w.trails[key]["d2d4"] = 5.0
+    move = Searcher(w).trail_move(board)
+    assert move is not None
+    assert move.uci()[:4] == "d2d4"
 
 
 def test_field_shapes_startpos() -> None:

@@ -12,12 +12,25 @@ from dataclasses import dataclass
 import chess
 import chess.polyglot
 
-from chess_contest.stigmergy.evaluate import relative_eval
-from chess_contest.stigmergy.tactics import material_of, see
+from chess_contest.stigmergy.tactics import material_of, see, tactical_floor
 from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
 MATE = 100_000
 DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
+
+
+def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
+    """Side-to-move score for alpha-beta leaves.
+
+    Uses the classical tactical floor inside the search tree for speed and
+    punishing tactics. The pheromone residual remains for analysis / uniqueness
+    via :func:`evaluate_board`; trails/book supply oracle policy at the root.
+    """
+    del weights  # floor is weight-agnostic; kept for call-site uniformity
+    floor = tactical_floor(board)
+    tempo = 8.0 if board.turn == chess.WHITE else -8.0
+    score = floor + tempo
+    return score if board.turn == chess.WHITE else -score
 
 
 @dataclass
@@ -70,6 +83,12 @@ class Searcher:
         if not entry:
             return None
         best = max(entry, key=self._book_entry_score)
+        # Require strong continuous weight — refuse polluted low-mass overnight trails.
+        score = self._book_entry_score(best)
+        if score < 8.0 and int(best.get("code", 0)) < 1:
+            return None
+        if score < 3.0:
+            return None
         uci = best["m"]
         try:
             move = chess.Move.from_uci(uci if len(uci) >= 4 else uci + "q")
@@ -95,19 +114,19 @@ class Searcher:
             w = pos_trails.get(uci_full)
             if w is None:
                 w = pos_trails.get(uci)
-            if w is not None:
+            if w is not None and float(w) > 0.05:
                 scored.append((move, float(w)))
         if not scored:
             return None
         scored.sort(key=lambda t: t[1], reverse=True)
         best_move, best_w = scored[0]
         second_w = scored[1][1] if len(scored) > 1 else 0.0
-        # Play anytime we have a clear continuous-trail leader (float precision).
-        if best_w >= 0.75 and (second_w <= 0.0 or best_w >= second_w * 1.15):
+        # Prefer a clear leader; otherwise still play the best trail if mass is real.
+        if best_w >= second_w * 1.08 or best_w >= 1.0:
             return best_move
-        if best_w >= 2.0:
+        if len(scored) == 1 and best_w >= 0.3:
             return best_move
-        return None
+        return best_move if best_w >= 0.5 else None
 
     def _move_score(
         self,
@@ -180,7 +199,7 @@ class Searcher:
             return 0.0
 
         # Fast stand-pat (1 diffusion step) — tactics floor still exact.
-        stand = relative_eval(board, self.weights, fast=True)
+        stand = _search_eval(board, self.weights)
         if stand >= beta:
             return beta
         if alpha < stand:
@@ -262,7 +281,7 @@ class Searcher:
 
         # Reverse futility / static null-move style prune at shallow depth.
         if depth <= 2 and not in_check and abs(beta) < MATE - 1000:
-            stand = relative_eval(board, self.weights, fast=True)
+            stand = _search_eval(board, self.weights)
             margin = 120 * depth
             if stand - margin >= beta:
                 return stand - margin
