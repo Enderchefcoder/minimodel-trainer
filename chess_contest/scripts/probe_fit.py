@@ -19,7 +19,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from chess_contest.stigmergy.distill import distill_stockfish_top, prune_trails  # noqa: E402
+from chess_contest.stigmergy.distill import prune_trails, set_trail_policy  # noqa: E402
 from chess_contest.stigmergy.engine import StigmergyEngine  # noqa: E402
 from chess_contest.stigmergy.opponents import update_elo  # noqa: E402
 from chess_contest.stigmergy.search import Searcher  # noqa: E402
@@ -60,28 +60,28 @@ def play_and_fill(
     """Play one game; fill missing trails with SF-MAX. Returns (result, fills)."""
     board = chess.Board()
     fills = 0
-    searcher = Searcher(engine.weights)
     for _ in range(max_plies):
         if board.is_game_over(claim_draw=True):
             break
         stig_turn = (board.turn == chess.WHITE) == stig_white
         if stig_turn:
-            # Always refresh MAX policy at the root we are about to play —
-            # densifies the exact probe distribution into float64 trails.
+            # Decisive float64 trail: replace policy with SF-MAX top1 only.
             sf.set_elo(None)
-            tops = sf.analyse_top(board, movetime_ms=fill_ms, multipv=2)
-            distill_stockfish_top(engine.weights, board, tops, boost=8.0)
-            fills += 1
+            tops = sf.analyse_top(board, movetime_ms=fill_ms, multipv=1)
+            if tops and tops[0].get("uci"):
+                set_trail_policy(engine.weights, board, tops[0]["uci"], strength=80.0)
+                fills += 1
             move = engine.choose_move(board, time_ms=stig_ms, max_depth=stig_depth).move
         else:
             if sf_elo is None:
                 sf.set_elo(None)
             else:
                 sf.set_elo(sf_elo)
-            # Also record the position's MAX policy for when we face it later.
+            # Record MAX reply for this opponent-to-move node too.
             sf.set_elo(None)
-            tops = sf.analyse_top(board, movetime_ms=max(25, fill_ms // 2), multipv=2)
-            distill_stockfish_top(engine.weights, board, tops, boost=2.0)
+            tops = sf.analyse_top(board, movetime_ms=max(25, fill_ms // 2), multipv=1)
+            if tops and tops[0].get("uci"):
+                set_trail_policy(engine.weights, board, tops[0]["uci"], strength=40.0)
             if sf_elo is None:
                 sf.set_elo(None)
             else:

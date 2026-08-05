@@ -64,6 +64,24 @@ def _reinforce_trail(
     slot[uci[:4]] = slot.get(uci[:4], 0.0) + amount
 
 
+def set_trail_policy(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    uci: str,
+    *,
+    strength: float = 50.0,
+) -> None:
+    """Replace a position's trail with a single decisive float64 policy move."""
+    key = trail_key(board)
+    move = uci[:4]
+    weights.trails[key] = {move: float(strength)}
+    path = "".join(m.uci()[:4] for m in board.move_stack)
+    _reinforce_book_entry(weights, path, move, strength)
+    lm = _lm_key(board, chess.Move.from_uci(uci if len(uci) > 4 else move))
+    if lm is not None:
+        weights.learned_moves[lm] = float(weights.learned_moves.get(lm, 0.0)) + strength
+
+
 def _reinforce_book_entry(
     weights: StigmergyWeights,
     path: str,
