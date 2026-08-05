@@ -79,24 +79,21 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Make Stigmergy insanely good (2026-08-05)
+## Task: Grandmaster push — high-precision weights (2026-08-05)
 
-Goal: Hybrid tactical floor + field residual, SEE/PVS search, stronger
-overnight schedule; keep uniqueness (not SF/NNUE clone). Push Elo hard.
+Goal: DO NOT STOP until SF-ladder / honest probe shows grandmaster
+(~2500+ Elo, target 2800–3000). Higher-precision float weights (no ternary
+collapse). Unique DPFE residual kept; classical floor + float trails carry
+strength.
 
 Plan:
-[X] tactics.py: material+PST+SEE+hanging floor
-[X] evaluate.py: floor + pheromone residual (fast path for qsearch)
-[X] search.py: SEE ordering, delta/futility, PVS, deeper defaults
-[X] JS mirror + uniqueness fingerprint bumps
-[X] Overnight: deeper stig search, winnable SF Elo bias
-[X] Tests / ruff / commit / push / PR update
-[X] Restart overnight from latest/ckpt_book; probe Elo
+[ ] formatVersion 4: float64 fields + continuous book scores + full float moves
+[ ] Stronger phased PST / king safety / threats; faster search
+[ ] Kill weak overnight; run intensive GM trainer until probe >= 2500
+[ ] Ship gm_weights.json + elo report; commit; PR
 
-Lessons:
-- Eval = tactical_floor + field_residual (never double-count full material).
-- Quiescence should use fast=True (1 diffusion step); floor stays exact.
-- Prefer wins vs SF 1500–2200 for distillation volume over MAX crush games.
+Success gate: probe ladder score >= 50% vs SF UCI_Elo 2500 (GM floor)
+and estimated Elo >= 2500.
 
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 

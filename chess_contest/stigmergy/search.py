@@ -90,8 +90,11 @@ class Searcher:
             return None
         scored: list[tuple[chess.Move, float]] = []
         for move in board.legal_moves:
-            uci = move.uci()[:4]
-            w = pos_trails.get(uci)
+            uci_full = move.uci()
+            uci = uci_full[:4]
+            w = pos_trails.get(uci_full)
+            if w is None:
+                w = pos_trails.get(uci)
             if w is not None:
                 scored.append((move, float(w)))
         if not scored:
@@ -99,7 +102,10 @@ class Searcher:
         scored.sort(key=lambda t: t[1], reverse=True)
         best_move, best_w = scored[0]
         second_w = scored[1][1] if len(scored) > 1 else 0.0
-        if best_w >= 1.5 and (second_w <= 0.0 or best_w >= second_w * 1.25):
+        # Play anytime we have a clear continuous-trail leader (float precision).
+        if best_w >= 0.75 and (second_w <= 0.0 or best_w >= second_w * 1.15):
+            return best_move
+        if best_w >= 2.0:
             return best_move
         return None
 

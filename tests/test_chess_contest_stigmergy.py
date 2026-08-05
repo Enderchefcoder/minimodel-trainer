@@ -96,9 +96,9 @@ def test_trail_move_requires_confidence_gap() -> None:
     w = default_weights()
     board = chess.Board()
     key = trail_key(board)
-    w.trails[key] = {"e2e4": 1.0, "d2d4": 0.9}
+    w.trails[key] = {"e2e4": 1.0, "d2d4": 0.95}
     assert Searcher(w).trail_move(board) is None
-    w.trails[key]["e2e4"] = 2.0
+    w.trails[key]["e2e4"] = 2.5
     move = Searcher(w).trail_move(board)
     assert move is not None
     assert move.uci()[:4] == "e2e4"
