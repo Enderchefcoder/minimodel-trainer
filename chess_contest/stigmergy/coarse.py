@@ -8,19 +8,17 @@ nearby positions so honest UCI_Elo games do not fall off a cliff after ply 10.
 from __future__ import annotations
 
 import chess
-import chess.polyglot
 
+from chess_contest.stigmergy.tactics import material_of, see
 from chess_contest.stigmergy.weights import StigmergyWeights
 
 
 def coarse_trail_key(board: chess.Board) -> str:
-    """Stable midgame key: pawns + material counts + castling + side to move."""
-    # Polyglot pawn hash is built for pawns; fold material + rights manually.
-    pawn_h = 0
-    for sq in board.pieces(chess.PAWN, chess.WHITE):
-        pawn_h ^= chess.polyglot.POLYGLOT_RANDOM_ARRAY[64 * 0 + sq]
-    for sq in board.pieces(chess.PAWN, chess.BLACK):
-        pawn_h ^= chess.polyglot.POLYGLOT_RANDOM_ARRAY[64 * 1 + sq]
+    """Midgame policy key: material + pawn files + king files + side.
+
+    Intentionally ignores piece placement so SF-MAX policy transfers across
+    move-order noise that shares structure.
+    """
     mat = (
         len(board.pieces(chess.KNIGHT, chess.WHITE))
         + 16 * len(board.pieces(chess.BISHOP, chess.WHITE))
@@ -31,9 +29,18 @@ def coarse_trail_key(board: chess.Board) -> str:
         + 768 * len(board.pieces(chess.ROOK, chess.BLACK))
         + 12288 * len(board.pieces(chess.QUEEN, chess.BLACK))
     )
+    wp = bp = 0
+    for sq in board.pieces(chess.PAWN, chess.WHITE):
+        wp |= 1 << chess.square_file(sq)
+    for sq in board.pieces(chess.PAWN, chess.BLACK):
+        bp |= 1 << chess.square_file(sq)
+    wk = board.king(chess.WHITE)
+    bk = board.king(chess.BLACK)
+    wk_f = 0 if wk is None else chess.square_file(wk)
+    bk_f = 0 if bk is None else chess.square_file(bk)
     rights = board.castling_rights & 15
     side = 1 if board.turn == chess.WHITE else 0
-    return f"c{pawn_h:016x}{mat:05x}{rights:x}{side}"
+    return f"c{mat:05x}{wp:02x}{bp:02x}{wk_f}{bk_f}{rights:x}{side}"
 
 
 def set_coarse_policy(weights: StigmergyWeights, board: chess.Board, uci: str, strength: float) -> None:
@@ -51,7 +58,7 @@ def set_coarse_policy(weights: StigmergyWeights, board: chess.Board, uci: str, s
 
 
 def coarse_trail_move(weights: StigmergyWeights, board: chess.Board) -> chess.Move | None:
-    """Best legal move under the coarse trail, if confident."""
+    """Best legal move under the coarse trail, if confident and tactically safe."""
     slot = weights.trails.get(coarse_trail_key(board))
     if not slot:
         return None
@@ -65,8 +72,28 @@ def coarse_trail_move(weights: StigmergyWeights, board: chess.Board) -> chess.Mo
     if not scored:
         return None
     scored.sort(key=lambda t: t[1], reverse=True)
-    best, bw = scored[0]
-    second = scored[1][1] if len(scored) > 1 else 0.0
-    if bw >= second * 1.05 or bw >= 20.0:
-        return best
-    return best if bw >= 5.0 else None
+
+    def _safe(move: chess.Move) -> bool:
+        if see(board, move) < -50:
+            return False
+        board.push(move)
+        try:
+            for reply in board.legal_moves:
+                if not board.is_capture(reply):
+                    continue
+                if see(board, reply) < 0:
+                    continue
+                victim = board.piece_at(reply.to_square)
+                if victim is not None and material_of(victim.piece_type) >= 300:
+                    return False
+        finally:
+            board.pop()
+        return True
+
+    for move, bw in scored:
+        second = scored[1][1] if len(scored) > 1 else 0.0
+        if not (bw >= second * 1.05 or bw >= 20.0 or bw >= 5.0):
+            continue
+        if _safe(move):
+            return move
+    return None
