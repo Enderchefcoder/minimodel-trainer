@@ -71,10 +71,10 @@ class TestCrushRecipe:
         mix = get_mixture("crush-glint2")
         weights = dict(mix.normalized_weights())
         assert pytest.approx(sum(weights.values())) == 1.0
-        assert pytest.approx(weights["fineweb-edu-10bt"], abs=0.01) == 0.50
-        assert pytest.approx(weights["dclm-100bt"], abs=0.01) == 0.32
-        assert pytest.approx(weights["tinystories"], abs=0.01) == 0.15
-        assert pytest.approx(weights["slm-next-token-qa"], abs=0.01) == 0.03
+        assert pytest.approx(weights["fineweb-edu-10bt"], abs=0.01) == 0.55
+        assert pytest.approx(weights["dclm-100bt"], abs=0.01) == 0.28
+        assert pytest.approx(weights["tinystories"], abs=0.01) == 0.12
+        assert pytest.approx(weights["slm-next-token-qa"], abs=0.01) == 0.05
         resolved = resolve_mixture("crush-glint2")
         assert len(resolved) == 4
         assert get_dataset("dclm-100bt").repo == "HuggingFaceFW/dclm_100BT"
@@ -87,6 +87,8 @@ class TestCrushRecipe:
         assert "dense_1_4m" in text
         assert "3.0e-3" in text or "0.003" in text
         assert "wsd" in text
+        assert "soft_label_kl_every: 10" in text
+        assert "seq_len: 1024" in text
 
     def test_colab_notebook_is_single_run_cell(self):
         path = Path("notebooks/03_crush_glint2_colab.ipynb")
@@ -95,8 +97,15 @@ class TestCrushRecipe:
         code_cells = [c for c in nb["cells"] if c["cell_type"] == "code"]
         assert len(code_cells) == 1
         src = "".join(code_cells[0]["source"])
+        compile(src, str(path), "exec")
         assert "dense_1_4m" in src
         assert "DRIVE_ROOT" in src
         assert "HOURS = 4" in src
         assert "slm_next_token_dataset" in src
         assert "soft_kl_loss" in src
+        assert "wall_clock_lr" in src
+        assert "EMA_DECAY" in src
+        assert "GLINT_TARGETS" in src
+        assert "autocast" in src
+        assert 'MIX = {"fineweb-edu": 0.55' in src
+        assert "SEQ_CANDIDATES" in src

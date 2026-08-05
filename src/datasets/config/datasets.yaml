@@ -678,16 +678,15 @@ mixtures:
 
   crush-glint2:
     description: >-
-      1.4M Glint-2 crusher mix. FineWeb-Edu carries ARC/WikiText knowledge,
-      DCLM carries HellaSwag-style commonsensical text, TinyStories bootstraps
-      fluency/BLiMP at tiny scale, and the soft-label QA JSON is oversampled so
-      the model learns those exact prompt→answer continuations.
+      1.4M Glint-2 crusher mix (v2). FineWeb-Edu-heavy for ARC/WikiText,
+      DCLM for HellaSwag-style text, TinyStories for fluency/BLiMP, and
+      soft-label QA oversampled so prompt→answer continuations stick.
     stage: pretrain
     components:
-      - { dataset: fineweb-edu-10bt, weight: 0.50 }
-      - { dataset: dclm-100bt, weight: 0.32 }
-      - { dataset: tinystories, weight: 0.15 }
-      - { dataset: slm-next-token-qa, weight: 0.03 }
+      - { dataset: fineweb-edu-10bt, weight: 0.55 }
+      - { dataset: dclm-100bt, weight: 0.28 }
+      - { dataset: tinystories, weight: 0.12 }
+      - { dataset: slm-next-token-qa, weight: 0.05 }
 
   sft-general:
     description: >-

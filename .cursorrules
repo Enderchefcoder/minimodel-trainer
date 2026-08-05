@@ -65,7 +65,26 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Full bakeoff grade for 20 mm1m candidates (2026-08-04)
+## Task: Crush Glint-2 notebook v2 (2026-08-05)
+
+Goal: make the one-cell Colab Beat-Glint2 notebook stronger for the 1.4M
+dense recipe (more tokens/hour, edu-heavier mix, guaranteed LR decay, EMA
+export, end-of-run Glint-matched eval).
+
+Plan:
+[X] Review notebook / config / report 11
+[X] Rewrite notebook v2 (AMP, compile, wall-clock WSD, seq-1024 probe, EMA,
+    packed windows, FineWeb score filter, Glint eval)
+[X] Sync mixture + config + report 11 + template notes + tests
+[X] ruff / pytest / smoke / commit / push / PR
+
+Lessons:
+- Colab T4: fp16 GradScaler > bf16; probe seq 1024 then fall back to 512.
+- Wall-clock WSD beats fixed-horizon schedules when tok/s is unknown a priori.
+- Soft-KL after CE accum needs its own scaled backward (same GradScaler).
+- Prior notebook had a broken `try:` without `except` around generate_text.
+
+## Task: Full bakeoff grade for 20 mm1m candidates (2026-08-04) — DONE
 
 Goal: grade all 20 ~1M candidates with the report-03 protocol (TinyStories,
 300 steps, BLiMP/ARC-E/WikiText), merge with the original 5 arch_* results,
