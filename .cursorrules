@@ -70,6 +70,8 @@ notes: reusable lessons first, then a scratchpad for the active task.
   MLE Elo vs fixed anchors (and take max with sequential).
 - Self-play hill-climb must beat the *current* baseline score, not merely
   score >= 0.5 vs weak refs — otherwise every mutation is adopted.
+- Overnight field imitation must use *additive clipped* deposit updates;
+  multiplicative `deposit *= 1+lr` exploded eval to ~1e62 within an hour.
 
 # Scratchpad
 
