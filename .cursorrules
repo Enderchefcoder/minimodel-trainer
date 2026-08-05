@@ -76,7 +76,7 @@ Plan:
 [X] Rewrite notebook v2 (AMP, compile, wall-clock WSD, seq-1024 probe, EMA,
     packed windows, FineWeb score filter, Glint eval)
 [X] Sync mixture + config + report 11 + template notes + tests
-[ ] ruff / pytest / smoke / commit / push / PR
+[X] ruff / pytest / smoke / commit / push / PR
 
 Lessons:
 - Colab T4: fp16 GradScaler > bf16; probe seq 1024 then fall back to 512.
