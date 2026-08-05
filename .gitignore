@@ -55,6 +55,8 @@ research/data/eval/
 !research/data/corpus/**
 !src/vision/data/
 !src/vision/data/**
+# Re-includes can resurrect caches; keep them ignored.
+src/vision/data/**/__pycache__/
 research/baselines/glint2/*.pt
 research/baselines/glint2/tokenizer.json
 research/experiments/runs/

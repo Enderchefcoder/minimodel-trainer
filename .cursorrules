@@ -59,9 +59,17 @@ notes: reusable lessons first, then a scratchpad for the active task.
 - Root `.gitignore` pattern `data/` matches *any* path segment named `data/`
   (including `src/vision/data/` and `research/data/`). Re-include package trees with
   `!src/vision/data/**` (and `git check-ignore -v` before assuming files track).
+  After a `!path/**` re-include, re-ignore `__pycache__/` under that tree or
+  pyc files get committed.
 - RG-LRU log-space parallel scan NaNs past ~16–32 tokens at init (cumsum of
   `log(a)` underflows → `exp(-C)` overflows). Prefer a sequential float32 scan
   for hybrid recurrence so streaming matches full forward.
+- `import chess` does not load `chess.polyglot`; need `import chess.polyglot`
+  before `chess.polyglot.zobrist_hash(board)`.
+- Sequential Elo from a low prior underestimates dominant ladders; report
+  MLE Elo vs fixed anchors (and take max with sequential).
+- Self-play hill-climb must beat the *current* baseline score, not merely
+  score >= 0.5 vs weak refs — otherwise every mutation is adopted.
 
 # Scratchpad
 
@@ -83,8 +91,8 @@ Plan:
 [X] Contest framework (bracket, uniqueness, scoring)
 [X] Responsive HTML player (fixed square sizing)
 [X] Notebooks + docs + tests
-[ ] Train base weights on VM + ELO eval
-[ ] Commit / push / PR
+[X] Train base weights on VM + ELO eval (~1715 MLE; uniqueness 100)
+[X] Commit / push / PR (#7)
 
 ## Task: Full bakeoff grade for 20 mm1m candidates (2026-08-04)
 
