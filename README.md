@@ -15,6 +15,11 @@ instruction-based editing).
 pip install -e .
 minimodel quickstart          # tokenizer -> data -> train -> eval -> chat, offline, ~1 min
 minimodel vision quickstart   # the same for image models, on synthetic sprites
+
+# Chess contest entry (unique Stigmergy pheromone-field engine)
+python chess_contest/scripts/train_base.py --device cpu
+python chess_contest/scripts/eval_elo.py
+cd chess_contest/web && python3 -m http.server 8765
 ```
 
 ## Why small models
@@ -27,6 +32,15 @@ repository is built around that workflow - every stage runs on a laptop, and
 every stage scales up when you get GPUs.
 
 ## What's inside
+
+### Chess contest — Stigmergy-DPFE
+
+A deliberately unique engine for architecture contests (scored on Elo, bracket
+W/L, and uniqueness). Evaluation is a **10-channel diffusive pheromone field**
+with bilinear cross-color interactions — not Stockfish, NNUE, or AlphaZero.
+Train in Python, play in `chess_contest/web/` after loading JSON weights. See
+[`chess_contest/README.md`](chess_contest/README.md) and
+[`docs/chess_contest/`](docs/chess_contest/).
 
 ### Six language-model architectures, one interface
 

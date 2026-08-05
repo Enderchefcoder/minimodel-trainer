@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions follow
 [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Chess contest (Stigmergy-DPFE)
+- Unique **diffusive pheromone field** chess engine (not Stockfish/NNUE/AlphaZero):
+  multi-channel Jacobi diffusion, bilinear cross-color scoring, king resonance,
+  ternary ant-trail opening book, deep IDAS search.
+- Python train/export (`chess_contest/scripts/train_base.py`) + responsive HTML
+  player (`chess_contest/web/`) that loads JSON weights.
+- Contest framework: Elo ladder, round-robin bracket, uniqueness rubric + composite.
+- Notebooks `04`–`06`; docs under `docs/chess_contest/`.
+
 ## [0.1.0] - 2026-08-02
 
 The initial complete toolkit.

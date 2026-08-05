@@ -65,6 +65,27 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
+## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
+
+Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
+(CPU/CUDA) + HTML play site; notebooks; train base weights; report ELO.
+
+Architecture lock (max uniqueness):
+- Multi-channel diffusive pheromone fields (not PST/NNUE/AlphaZero)
+- Cross-channel bilinear interaction eval + king-resonance
+- Ternary ant-trail opening book + move biases
+- Deep IDAS search (TT, null-move, LMR, quiescence) — slow OK
+- Contest: ELO + bracket W/L + uniqueness rubric
+
+Plan:
+[X] Branch cursor/chess-stigmergy-contest-976e
+[X] Python package chess_contest/stigmergy (fields/eval/search/train/elo)
+[X] Contest framework (bracket, uniqueness, scoring)
+[X] Responsive HTML player (fixed square sizing)
+[X] Notebooks + docs + tests
+[ ] Train base weights on VM + ELO eval
+[ ] Commit / push / PR
+
 ## Task: Full bakeoff grade for 20 mm1m candidates (2026-08-04)
 
 Goal: grade all 20 ~1M candidates with the report-03 protocol (TinyStories,
