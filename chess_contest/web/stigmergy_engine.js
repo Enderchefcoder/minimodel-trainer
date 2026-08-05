@@ -41,37 +41,39 @@
     return f.map((ch) => ch.map((row) => row.slice()));
   }
 
-  function defaultField() {
-    const deposit = [
-      [1.0, 0.05, 1.2, 0.4, 0.1, 0.05, 0.0, 0.3, 0.2, 0.15],
-      [3.2, 0.15, 0.0, 0.2, 0.8, 1.1, 0.6, 0.1, 0.5, 0.9],
-      [3.3, 0.15, 0.0, 0.15, 1.4, 0.9, 0.7, 0.2, 0.4, 1.1],
-      [5.0, 0.2, 0.1, 1.5, 0.3, 0.7, 0.5, 0.4, 0.3, 0.6],
-      [9.0, 0.35, 0.1, 0.8, 0.6, 1.0, 0.9, 0.3, 0.6, 0.8],
-      [0.0, 2.5, 0.0, 0.1, 0.2, 0.05, 0.0, 0.0, 0.1, 0.4],
-    ];
-    const interaction = Array.from({ length: CHANNELS }, (_, i) =>
-      Array.from({ length: CHANNELS }, (_, j) => (i === j ? -0.35 : 0))
-    );
-    interaction[0][1] = -0.55;
-    interaction[1][0] = -0.55;
-    interaction[3][7] = 0.25;
-    interaction[7][3] = -0.2;
-    interaction[4][4] = -0.15;
-    interaction[5][5] = 0.1;
-    return {
-      deposit,
-      decay: Array(CHANNELS).fill(0.55),
-      mix: Array(CHANNELS).fill(0.45),
-      interaction,
-      selfEnergy: [0.02, -0.08, 0.05, 0.04, 0.03, 0.06, 0.02, -0.03, 0.04, 0.02],
-      kingResonance: [-0.4, -1.2, -0.1, -0.25, -0.15, -0.2, -0.35, -0.05, -0.1, -0.15],
-      materialAnchor: 1.0,
-      tempoBonus: 10.0,
-      passedPawnScale: 1.15,
-      mobilityScale: 1.25,
-    };
-  }
+    function defaultField() {
+      const deposit = [
+        [1.0, 0.05, 1.2, 0.4, 0.1, 0.05, 0.0, 0.3, 0.2, 0.15],
+        [3.2, 0.15, 0.0, 0.2, 0.8, 1.1, 0.6, 0.1, 0.5, 0.9],
+        [3.3, 0.15, 0.0, 0.15, 1.4, 0.9, 0.7, 0.2, 0.4, 1.1],
+        [5.0, 0.2, 0.1, 1.5, 0.3, 0.7, 0.5, 0.4, 0.3, 0.6],
+        [9.0, 0.35, 0.1, 0.8, 0.6, 1.0, 0.9, 0.3, 0.6, 0.8],
+        [0.0, 2.5, 0.0, 0.1, 0.2, 0.05, 0.0, 0.0, 0.1, 0.4],
+      ];
+      const interaction = Array.from({ length: CHANNELS }, (_, i) =>
+        Array.from({ length: CHANNELS }, (_, j) => (i === j ? -0.35 : 0))
+      );
+      interaction[0][1] = -0.55;
+      interaction[1][0] = -0.55;
+      interaction[3][7] = 0.25;
+      interaction[7][3] = -0.2;
+      interaction[4][4] = -0.15;
+      interaction[5][5] = 0.1;
+      return {
+        deposit,
+        decay: Array(CHANNELS).fill(0.55),
+        mix: Array(CHANNELS).fill(0.45),
+        interaction,
+        selfEnergy: [0.02, -0.08, 0.05, 0.04, 0.03, 0.06, 0.02, -0.03, 0.04, 0.02],
+        kingResonance: [-0.4, -1.2, -0.1, -0.25, -0.15, -0.2, -0.35, -0.05, -0.1, -0.15],
+        materialAnchor: 1.0,
+        tempoBonus: 10.0,
+        passedPawnScale: 1.15,
+        mobilityScale: 1.25,
+        fieldHead: Array(24).fill(0),
+        swarmScale: 1.0,
+      };
+    }
 
   function dequantizeLearned(q) {
     if (!q || !q.codes) return {};
@@ -231,7 +233,23 @@
     let mobility = chessInst.moves().length * p.mobilityScale;
     if (chessInst.turn() === "b") mobility = -mobility;
     const tempo = chessInst.turn() === "w" ? p.tempoBonus : -p.tempoBonus;
-    return material + passed + mobility + tempo + 18 * bilinear + 4 * (selfW - selfB) + 55 * kingTerm;
+    let swarm = 0;
+    if (p.fieldHead && p.fieldHead.length) {
+      // Lightweight swarm readout (channel mean diffs + material).
+      const feats = new Array(24).fill(0);
+      for (let c = 0; c < Math.min(CHANNELS, 10); c++) {
+        let mw = 0, mb = 0;
+        for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++) {
+          mw += fw[c][r][f]; mb += fb[c][r][f];
+        }
+        feats[c] = (mw - mb) / 64;
+      }
+      feats[12] = dep.material / 1000;
+      const n = Math.min(feats.length, p.fieldHead.length);
+      for (let i = 0; i < n; i++) swarm += p.fieldHead[i] * feats[i];
+      swarm *= p.swarmScale || 1;
+    }
+    return material + passed + mobility + tempo + 18 * bilinear + 4 * (selfW - selfB) + 55 * kingTerm + 12 * swarm;
   }
 
   function relativeEval(chessInst, weights) {
