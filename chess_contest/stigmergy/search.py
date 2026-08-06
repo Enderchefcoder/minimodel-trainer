@@ -540,16 +540,25 @@ class Searcher:
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
         """Iterative deepening that keeps the best completed-depth move."""
-        # High-confidence offline trail — skip when swarm is loaded so polluted
-        # or out-of-distribution trails cannot short-circuit long-think search.
-        # (Offline SF trails still bias move ordering via pos_trails scoring.)
-        if _SWARM is None:
-            trail = self.trail_move(board)
-            if trail is not None:
+        # Offline SF trails: with swarm, only autoplay very strong distilled lines
+        # (strength ≥40 from pure_gm teacher). Weaker/polluted trails stay order-bias.
+        trail = self.trail_move(board)
+        if trail is not None:
+            if _SWARM is None:
+                return SearchResult(
+                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
+                )
+            # Confirm mass is SF-teacher grade before short-circuiting search.
+            pos = self.weights.trails.get(trail_key(board)) or {}
+            tw = float(pos.get(trail.uci(), pos.get(trail.uci()[:4], 0.0)))
+            if tw >= 40.0 and see(board, trail) >= -20 and not self._major_hang_quick(
+                board, trail
+            ):
                 return SearchResult(
                     move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
                 )
 
+        if _SWARM is None:
             book = self.book_move(board)
             if book is not None:
                 return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)

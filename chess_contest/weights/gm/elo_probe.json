@@ -1,17 +1,18 @@
 {
-  "estimated_elo": 1861.4,
+  "estimated_elo": 1832.0,
   "ladder": [
     {
       "sf_elo": 1320,
-      "score": 1.5,
-      "games": 6,
-      "winrate": 0.25,
-      "our_elo_after": 1861.4,
-      "think_ms": 3000
+      "score": 2.5,
+      "games": 8,
+      "winrate": 0.3125,
+      "our_elo_after": 1832.0,
+      "think_ms": 8000
     }
   ],
   "gm": false,
   "above_gm": false,
   "stockfish_at_play": false,
-  "oracle_runtime": false
+  "oracle_runtime": false,
+  "note": "Pure mode after INF/hang fixes; climbing with long think. Not GM yet."
 }
