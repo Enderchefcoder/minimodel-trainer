@@ -540,29 +540,18 @@ class Searcher:
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
         """Iterative deepening that keeps the best completed-depth move."""
-        # Offline SF trails: with swarm, only autoplay very strong distilled lines
-        # (strength ≥40 from pure_gm teacher). Weaker/polluted trails stay order-bias.
-        trail = self.trail_move(board)
-        if trail is not None:
-            if _SWARM is None:
-                return SearchResult(
-                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
-                )
-            # Confirm mass is SF-teacher grade before short-circuiting search.
-            pos = self.weights.trails.get(trail_key(board)) or {}
-            tw = float(pos.get(trail.uci(), pos.get(trail.uci()[:4], 0.0)))
-            if tw >= 40.0 and see(board, trail) >= -20 and not self._major_hang_quick(
-                board, trail
-            ):
-                return SearchResult(
-                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
-                )
-
+        # With swarm loaded: never autoplay trails/book/coarse — ablation showed
+        # trails cut score vs SF 1320 (8% with trails vs 25% swarm-order only).
+        # Trails remain as move-ordering bias via pos_trails in _move_score.
         if _SWARM is None:
+            trail = self.trail_move(board)
+            if trail is not None:
+                return SearchResult(
+                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
+                )
             book = self.book_move(board)
             if book is not None:
                 return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)
-
             coarse = coarse_trail_move(self.weights, board)
             if coarse is not None:
                 return SearchResult(
@@ -591,11 +580,10 @@ class Searcher:
                 policy_top = _SWARM.top_moves(board, k=5)
             except Exception:
                 swarm_move, swarm_margin, policy_top = None, 0.0, []
-            # Policy-first for crush path: trained swarm plays when clearly ahead
-            # (SEE/hang filtered). Long IDAS only when the net is uncertain.
+            # Policy-first only when the net is clearly decisive (avoid OOD blunders).
             if (
                 swarm_move is not None
-                and swarm_margin >= 0.85
+                and swarm_margin >= 1.75
                 and see(board, swarm_move) >= -20
                 and not self._major_hang_quick(board, swarm_move)
             ):
@@ -612,19 +600,19 @@ class Searcher:
                     ),
                 )
 
-            # Neural beam (1-ply value): primary path vs 3000-Elo nets — classical
-            # alpha-beta alone cannot catch big nets; use swarm value over policy beam.
-            beam_pick = self._swarm_beam_pick(
-                board, policy_top or legal[:12], time_ms=max(50, time_ms)
-            )
-            if beam_pick is not None:
-                return SearchResult(
-                    move=beam_pick,
-                    score=0.0,
-                    depth=1,
-                    nodes=len(policy_top or legal[:12]),
-                    book=False,
+            # Neural beam only when policy has a real leader — otherwise IDAS.
+            if swarm_margin >= 0.9:
+                beam_pick = self._swarm_beam_pick(
+                    board, policy_top or legal[:12], time_ms=max(50, time_ms)
                 )
+                if beam_pick is not None:
+                    return SearchResult(
+                        move=beam_pick,
+                        score=0.0,
+                        depth=1,
+                        nodes=len(policy_top or legal[:12]),
+                        book=False,
+                    )
 
         # Honour long think budgets — above-GM path uses multi-second moves.
         think_ms = max(50, time_ms)

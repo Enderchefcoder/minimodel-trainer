@@ -91,15 +91,21 @@ Design (locked — cloud autonomy; user asked to beat 3000-Elo nets):
 - Success: estimated Elo ≥ 2800 (aim 3000+) , stockfish_at_play=false
 
 Plan:
-[ ] Kill slow ~1800 probe; ship crush_3000 pipeline
-[ ] Stronger SwarmNet v2 (aux planes + field channels) + train
-[ ] Policy-first choose_move path for high-margin moves
-[ ] Long-think ladder vs SF 2500–3000 until floor
-[ ] STATUS/report/commit/PR
+[X] Kill slow ~1800 probe; ship crush_3000 pipeline
+[X] Stronger SwarmNet v2 (aux planes + field channels) + train (80k, top1=53%)
+[X] Gate policy/beam; skip trail autoplay with swarm (ablation)
+[ ] More data/epochs until OOD policy match ≥60%; ladder to 2800+
+[X] STATUS/report/commit/PR (in progress)
 
 Lessons:
 - Pure classical+small net ≈1800; 3000 requires SF-distilled neural strength
   at play (offline teacher only), not deeper alpha-beta alone.
+- Ablation vs SF1320: classical 0%, swarm-order 25%, trails+swarm 8% —
+  disable trail autoplay when swarm loaded.
+- Half-trained neural beam 0% vs SF1320; gate beam (margin≥0.9) /
+  policy-first (margin≥1.75); else IDAS + policy ordering.
+- SwarmNet v2 80k@d11 → 42% OOD SF match / 53% train top1 — need ≥200k
+  + more epochs for 3000-Elo territory.
 - Runtime SF (`oracle_runtime`) hit ~2656 but is forbidden.
 - ±1e18 windows false-cutoff null-move (use INF=MATE*10).
 - Never commit 100MB+ weight JSONs.
