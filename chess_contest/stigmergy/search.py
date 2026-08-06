@@ -522,17 +522,25 @@ class Searcher:
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
         """Iterative deepening that keeps the best completed-depth move."""
-        trail = self.trail_move(board)
-        if trail is not None:
-            return SearchResult(move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True)
+        # High-confidence offline trail — skip when swarm is loaded so polluted
+        # or out-of-distribution trails cannot short-circuit long-think search.
+        # (Offline SF trails still bias move ordering via pos_trails scoring.)
+        if _SWARM is None:
+            trail = self.trail_move(board)
+            if trail is not None:
+                return SearchResult(
+                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
+                )
 
-        book = self.book_move(board)
-        if book is not None:
-            return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)
+            book = self.book_move(board)
+            if book is not None:
+                return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)
 
-        coarse = coarse_trail_move(self.weights, board)
-        if coarse is not None:
-            return SearchResult(move=coarse, score=0.0, depth=0, nodes=0, book=True, trail=True)
+            coarse = coarse_trail_move(self.weights, board)
+            if coarse is not None:
+                return SearchResult(
+                    move=coarse, score=0.0, depth=0, nodes=0, book=True, trail=True
+                )
 
         legal = list(board.legal_moves)
         if not legal:
@@ -559,7 +567,7 @@ class Searcher:
             # Only auto-play extremely confident, SEE-safe policy moves.
             if (
                 swarm_move is not None
-                and swarm_margin >= 2.5
+                and swarm_margin >= 4.0
                 and see(board, swarm_move) >= -20
                 and not self._major_hang_quick(board, swarm_move)
             ):
