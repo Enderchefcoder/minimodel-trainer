@@ -612,6 +612,20 @@ class Searcher:
                     ),
                 )
 
+            # Neural beam (1-ply value): primary path vs 3000-Elo nets — classical
+            # alpha-beta alone cannot catch big nets; use swarm value over policy beam.
+            beam_pick = self._swarm_beam_pick(
+                board, policy_top or legal[:12], time_ms=max(50, time_ms)
+            )
+            if beam_pick is not None:
+                return SearchResult(
+                    move=beam_pick,
+                    score=0.0,
+                    depth=1,
+                    nodes=len(policy_top or legal[:12]),
+                    book=False,
+                )
+
         # Honour long think budgets — above-GM path uses multi-second moves.
         think_ms = max(50, time_ms)
         self.nodes = 0
@@ -709,6 +723,72 @@ class Searcher:
             book=False,
             pv=[best_move.uci()] if best_move else None,
         )
+
+    def _swarm_beam_pick(
+        self,
+        board: chess.Board,
+        candidates: list[chess.Move],
+        *,
+        time_ms: int,
+    ) -> chess.Move | None:
+        """1-ply (optionally 2-ply) swarm value beam — neural play without SF.
+
+        Longer ``time_ms`` widens the beam and enables a shallow reply look-ahead.
+        """
+        if _SWARM is None or not candidates:
+            return None
+        # Widen beam with think budget (still tiny vs alpha-beta node counts).
+        width = 8 if time_ms < 2000 else (12 if time_ms < 10000 else 16)
+        depth2 = time_ms >= 8000
+        cands = []
+        for m in candidates:
+            if m not in board.legal_moves:
+                continue
+            if see(board, m) < -80:
+                continue
+            if self._major_hang_quick(board, m):
+                continue
+            cands.append(m)
+            if len(cands) >= width:
+                break
+        if not cands:
+            return None
+
+        scored: list[tuple[float, chess.Move]] = []
+        mover_white = board.turn == chess.WHITE
+        for cand in cands:
+            board.push(cand)
+            try:
+                if board.is_checkmate():
+                    return cand
+                floor = tactical_floor_fast(board)
+                classical = floor if mover_white else -floor
+                # After our move, opponent STM value — lower is better for us.
+                swarm_v = -float(_SWARM.value_stm(board))
+                score = 0.7 * swarm_v + 0.3 * classical
+                if depth2:
+                    # Cheap 2-ply: opponent's best policy reply, then our value.
+                    with contextlib.suppress(Exception):
+                        reply = _SWARM.choose(board)
+                        if reply is not None and see(board, reply) >= -50:
+                            board.push(reply)
+                            try:
+                                # Side to move is us again.
+                                score = 0.55 * float(_SWARM.value_stm(board)) + 0.25 * swarm_v
+                                score += 0.2 * (
+                                    tactical_floor_fast(board)
+                                    if board.turn == chess.WHITE
+                                    else -tactical_floor_fast(board)
+                                )
+                            finally:
+                                board.pop()
+                scored.append((score, cand))
+            finally:
+                board.pop()
+        if not scored:
+            return None
+        scored.sort(key=lambda t: t[0], reverse=True)
+        return scored[0][1]
 
     def _major_hang_quick(self, board: chess.Board, move: chess.Move) -> bool:
         board.push(move)
