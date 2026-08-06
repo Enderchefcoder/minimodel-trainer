@@ -88,7 +88,8 @@ Unique stigmergy trails/fields + distilled swarm value/policy + deep search.
 Plan:
 [X] Rip out oracle_runtime / any SF calls from search/choose_move
 [X] Stronger swarm (policy beam + root re-rank); classical leaves only
-[ ] Long-think pure_gm train+probe until Elo ≥ 2500 (above GM)
+[X] Fix INF/hang/trail bugs that caused 0% vs SF 1320
+[ ] Long-think pure_probe until Elo ≥ 2500 (above GM) — in progress
 [X] Revoke false oracle GM STATUS/report; commit; push; PR update
 
 Success gate: honest SF UCI_Elo ladder, **choose_move never calls SF**,
@@ -99,8 +100,8 @@ Lessons:
   pure play only; revoke any GM claim that used it.
 - Swarm value on every search leaf destroys NPS; classical leaves + swarm
   root policy/re-rank only.
-- Weak overnight trails short-circuit search; with swarm loaded require
-  trail strength ≥8 and clear margin before auto-play.
+- Weak overnight trails short-circuit search; with swarm loaded skip
+  trail/book/coarse autoplay (keep as move-order bias only).
 - Legacy flat swarm checkpoints (no state_dict/channels) must be rejected.
 - Alpha-beta must NOT use ±1e18: float64 makes `1e18-1 == 1e18`, so
   null-window (-β,-β+1) + quiesce stand-pat false-cutoffs every depth≥3
