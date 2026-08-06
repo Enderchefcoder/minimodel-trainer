@@ -87,15 +87,20 @@ Deadline: ~2 hours. No Stockfish at play. Aim Elo ≥3000 on SF UCI_Elo ladder.
 
 Plan:
 [X] Kill slow crush; wire set_policy_sprint + sprint_3000.py
-[ ] Warm-train 12+ epochs on 80k (from 52% top1 ckpt) + extra SF labels
-[ ] Fast policy-sprint ladder 1320→3100
-[ ] Second burst if below floor; STATUS / commit / PR
+[X] Warm-train → overfit (65% train / 25% OOD); restored pre-sprint prior
+[X] OOD early-stop train path; IDAS blitz ladder (not pure policy)
+[ ] IDAS probe ladder 1320→3100 with restored net
+[ ] Extra SF labels + OOD-gated fine-tune if time
+[ ] STATUS / commit / PR
 
 Lessons:
-- 15s IDAS ladder cannot finish in 2h; policy-sprint required for probes.
+- 15s IDAS ladder cannot finish in 2h; policy-sprint required for probes BUT
+  pure policy sprint ≈12% vs SF1320 (weaker than swarm-order IDAS 25%).
 - Ablation: swarm-order 25% vs SF1320; trails hurt; ungated beam toxic.
 - Warm-start must LOG failures (silent suppress wiped a 52% ckpt cycle).
 - Epoch ≈6min @ 80k/192×10 CPU — budget ~10–15 epochs/hour.
+- Train-top1 ≠ strength: 10ep → 66% train / 25% OOD. Early-stop on OOD.
+- Keep swarm_net_pre_sprint.pt (or *_best_ood.pt) before long fine-tunes.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

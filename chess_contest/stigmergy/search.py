@@ -603,9 +603,10 @@ class Searcher:
                     )
 
             # Policy-first only when the net is clearly decisive (avoid OOD blunders).
+            # Thresholds stay high: half-trained nets often report large wrong margins.
             if (
                 swarm_move is not None
-                and swarm_margin >= 1.75
+                and swarm_margin >= 2.5
                 and see(board, swarm_move) >= -20
                 and not self._major_hang_quick(board, swarm_move)
             ):
@@ -623,7 +624,8 @@ class Searcher:
                 )
 
             # Neural beam only when policy has a real leader — otherwise IDAS.
-            if swarm_margin >= 0.9:
+            # Ablation: ungated/low-margin beam scored 0% vs SF 1320.
+            if swarm_margin >= 2.0:
                 beam_pick = self._swarm_beam_pick(
                     board, policy_top or legal[:12], time_ms=max(50, time_ms)
                 )
