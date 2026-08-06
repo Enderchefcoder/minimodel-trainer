@@ -171,14 +171,18 @@ def see(board: chess.Board, move: chess.Move) -> int:
 
 
 def hanging_penalty(board: chess.Board) -> float:
-    """Penalize undefended attacked pieces (white-positive)."""
+    """Penalize undefended attacked pieces (white-positive).
+
+    Coefficient is intentionally harsh: search leaves previously ignored hangs
+    and would happily leave knights en prise when only material+PST was used.
+    """
     score = 0.0
     for sq, piece in board.piece_map().items():
         if piece.piece_type == chess.KING:
             continue
         enemy = not piece.color
         if board.is_attacked_by(enemy, sq) and not board.is_attacked_by(piece.color, sq):
-            pen = 0.55 * material_of(piece.piece_type)
+            pen = 0.9 * material_of(piece.piece_type)
             score += -pen if piece.color == chess.WHITE else pen
     return score
 

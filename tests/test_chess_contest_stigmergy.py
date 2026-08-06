@@ -104,6 +104,27 @@ def test_search_has_no_runtime_stockfish() -> None:
     set_swarm(None)
 
 
+def test_search_inf_is_float_safe() -> None:
+    """±1e18 null-windows collapse in float64 and false-cutoff null move."""
+    from chess_contest.stigmergy.search import INF, Searcher
+
+    assert (1e18 - 1) == 1e18
+    assert (INF - 1) != INF
+    w = default_weights()
+    w.book.clear()
+    w.trails.clear()
+    board = chess.Board()
+    # Alekhine-like hang trap that previously returned -inf at depth>=3.
+    for u in ["b1c3", "d7d5", "g1f3", "d5d4", "c3e4", "e7e5", "e2e3", "d4e3", "f3e5", "d8d5"]:
+        board.push(chess.Move.from_uci(u))
+    s = Searcher(w)
+    result = s.search_with_root_update(board, time_ms=800, max_depth=8)
+    assert result.move is not None
+    assert abs(result.score) < 1e12
+    # Must not play Nc3 hanging the knight on e5.
+    assert result.move.uci() != "e4c3"
+
+
 def test_swarm_top_moves_and_engine_strips_oracle_flag() -> None:
     from chess_contest.stigmergy.engine import StigmergyEngine
     from chess_contest.stigmergy.search import set_swarm
