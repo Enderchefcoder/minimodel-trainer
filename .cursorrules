@@ -72,6 +72,8 @@ notes: reusable lessons first, then a scratchpad for the active task.
   score >= 0.5 vs weak refs — otherwise every mutation is adopted.
 - Overnight field imitation must use *additive clipped* deposit updates;
   multiplicative `deposit *= 1+lr` exploded eval to ~1e62 within an hour.
+- Warm-start each train cycle from existing swarm_net.pt — never swallow
+  load errors silently (a suppressed failure cold-started and wiped 52% top1).
 - Full recursive SEE on every move-order call is too slow on CPU; use
   MVV-LVA for ordering and a cheap 2-ply SEE only in quiescence pruning.
 - Hybrid eval = tactical_floor + field_residual (do not double-count full
@@ -79,36 +81,21 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Crush 3000-Elo neural competitors — ZERO runtime SF (2026-08-06)
+## Task: 2-HOUR SPRINT — beat 3000 Elo (2026-08-06 20:44Z)
 
-Goal: Beat ~3000 Elo neural engines on SF UCI_Elo ladder with **no Stockfish
-at play**. Long think OK. Keep stigmergy identity (fields/trails + swarm).
-
-Design (locked — cloud autonomy; user asked to beat 3000-Elo nets):
-- Scale swarm residual net (richer board+field planes, 192ch/10 blocks)
-- Offline SF full-strength teacher: large MultiPV soft-label set
-- Play: policy-first + hang/SEE filter; long IDAS only when uncertain
-- Success: estimated Elo ≥ 2800 (aim 3000+) , stockfish_at_play=false
+Deadline: ~2 hours. No Stockfish at play. Aim Elo ≥3000 on SF UCI_Elo ladder.
 
 Plan:
-[X] Kill slow ~1800 probe; ship crush_3000 pipeline
-[X] Stronger SwarmNet v2 (aux planes + field channels) + train (80k, top1=53%)
-[X] Gate policy/beam; skip trail autoplay with swarm (ablation)
-[ ] More data/epochs until OOD policy match ≥60%; ladder to 2800+
-[X] STATUS/report/commit/PR (in progress)
+[X] Kill slow crush; wire set_policy_sprint + sprint_3000.py
+[ ] Warm-train 12+ epochs on 80k (from 52% top1 ckpt) + extra SF labels
+[ ] Fast policy-sprint ladder 1320→3100
+[ ] Second burst if below floor; STATUS / commit / PR
 
 Lessons:
-- Pure classical+small net ≈1800; 3000 requires SF-distilled neural strength
-  at play (offline teacher only), not deeper alpha-beta alone.
-- Ablation vs SF1320: classical 0%, swarm-order 25%, trails+swarm 8% —
-  disable trail autoplay when swarm loaded.
-- Half-trained neural beam 0% vs SF1320; gate beam (margin≥0.9) /
-  policy-first (margin≥1.75); else IDAS + policy ordering.
-- SwarmNet v2 80k@d11 → 42% OOD SF match / 53% train top1 — need ≥200k
-  + more epochs for 3000-Elo territory.
-- Runtime SF (`oracle_runtime`) hit ~2656 but is forbidden.
-- ±1e18 windows false-cutoff null-move (use INF=MATE*10).
-- Never commit 100MB+ weight JSONs.
+- 15s IDAS ladder cannot finish in 2h; policy-sprint required for probes.
+- Ablation: swarm-order 25% vs SF1320; trails hurt; ungated beam toxic.
+- Warm-start must LOG failures (silent suppress wiped a 52% ckpt cycle).
+- Epoch ≈6min @ 80k/192×10 CPU — budget ~10–15 epochs/hour.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

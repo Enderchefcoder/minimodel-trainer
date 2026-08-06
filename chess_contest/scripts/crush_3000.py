@@ -355,9 +355,11 @@ def main(argv: list[str] | None = None) -> int:
             _log(log, f"=== crush cycle {cycle}/{args.cycles} ===")
             net = SwarmNet(channels=args.channels, blocks=args.blocks, in_ch=IN_CH)
             if net_path.is_file():
-                with contextlib.suppress(Exception):
+                try:
                     net.load(net_path)
                     _log(log, f"warm-started from {net_path}")
+                except Exception as exc:
+                    _log(log, f"warm-start FAILED ({exc}); cold start")
             train_swarm(net, data, log, epochs=args.epochs)
             # Fresh teacher batch each cycle.
             extra = generate_dataset(
@@ -433,8 +435,10 @@ def write_reports(out: Path, probe: dict, args) -> None:
         f"Estimated Elo **{elo}** "
         f"(floor target {args.floor}; crush-3000={probe.get('crush_3000')}).\n\n"
         "`choose_move` never calls Stockfish. SwarmNet v2 distilled from "
-        "full-strength SF offline; policy-first play + long-think IDAS.\n\n"
-        f"Think budget: {args.stig_ms} ms / move.\n",
+        "full-strength SF offline; policy-sprint/policy-first + IDAS.\n\n"
+        f"Think budget: {args.stig_ms} ms / move.\n"
+        f"policy_sprint={probe.get('policy_sprint', False)} "
+        f"ood_match={probe.get('policy_match_ood', 'n/a')}\n",
         encoding="utf-8",
     )
 

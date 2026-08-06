@@ -30,12 +30,25 @@ MATE = 100_000
 INF = MATE * 10
 DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
 _SWARM = None  # optional SwarmNet — set by pure_gm / try_load_swarm
+# When True + swarm loaded: skip IDAS; play top SEE/hang-safe policy (sprint probes).
+_POLICY_SPRINT = False
 
 
 def set_swarm(net) -> None:
     """Install the offline-distilled swarm net for search (or None to clear)."""
     global _SWARM
     _SWARM = net
+
+
+def set_policy_sprint(enabled: bool) -> None:
+    """Enable instant policy play for fast ladders (still Stockfish-free)."""
+    global _POLICY_SPRINT
+    _POLICY_SPRINT = bool(enabled)
+
+
+def policy_sprint_enabled() -> bool:
+    """Whether choose_move skips IDAS for swarm policy-sprint play."""
+    return _POLICY_SPRINT
 
 
 def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
@@ -577,9 +590,18 @@ class Searcher:
         if _SWARM is not None:
             try:
                 swarm_move, swarm_margin = _SWARM.choose_with_margin(board)
-                policy_top = _SWARM.top_moves(board, k=5)
+                policy_top = _SWARM.top_moves(board, k=8)
             except Exception:
                 swarm_move, swarm_margin, policy_top = None, 0.0, []
+
+            # Sprint: always policy+tactics among SEE/hang-safe candidates (no IDAS).
+            if _POLICY_SPRINT:
+                sprint = self._policy_sprint_pick(board, policy_top or legal, swarm_move)
+                if sprint is not None:
+                    return SearchResult(
+                        move=sprint, score=0.0, depth=0, nodes=len(legal), book=False
+                    )
+
             # Policy-first only when the net is clearly decisive (avoid OOD blunders).
             if (
                 swarm_move is not None
@@ -711,6 +733,57 @@ class Searcher:
             book=False,
             pv=[best_move.uci()] if best_move else None,
         )
+
+    def _policy_sprint_pick(
+        self,
+        board: chess.Board,
+        candidates: list[chess.Move],
+        swarm_move: chess.Move | None,
+    ) -> chess.Move | None:
+        """Instant play: best SEE/hang-safe candidate by policy + tactical floor.
+
+        Used for 2-hour crush probes so ladders finish in seconds per game.
+        Still never calls Stockfish.
+        """
+        if _SWARM is None:
+            return None
+        pool: list[chess.Move] = []
+        for m in candidates:
+            if m not in board.legal_moves:
+                continue
+            if see(board, m) < -50:
+                continue
+            if self._major_hang_quick(board, m):
+                continue
+            pool.append(m)
+        if not pool and swarm_move is not None and swarm_move in board.legal_moves:
+            pool = [swarm_move]
+        if not pool:
+            legal = list(board.legal_moves)
+            if not legal:
+                return None
+            return max(legal, key=lambda m: see(board, m))
+
+        scored: list[tuple[float, chess.Move]] = []
+        mover_white = board.turn == chess.WHITE
+        for cand in pool:
+            pol = 0.0
+            with contextlib.suppress(Exception):
+                pol = float(_SWARM.policy_score(board, cand))
+            board.push(cand)
+            try:
+                if board.is_checkmate():
+                    return cand
+                floor = tactical_floor_fast(board) + hanging_penalty(board)
+                classical = floor if mover_white else -floor
+                swarm_v = 0.0
+                with contextlib.suppress(Exception):
+                    swarm_v = -float(_SWARM.value_stm(board))
+                scored.append((0.45 * classical + 0.35 * swarm_v + 15.0 * pol, cand))
+            finally:
+                board.pop()
+        scored.sort(key=lambda t: t[0], reverse=True)
+        return scored[0][1]
 
     def _swarm_beam_pick(
         self,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import time
 from pathlib import Path
 
 import chess
@@ -123,6 +124,36 @@ def test_search_inf_is_float_safe() -> None:
     assert abs(result.score) < 1e12
     # Must not play Nc3 hanging the knight on e5.
     assert result.move.uci() != "e4c3"
+
+
+def test_policy_sprint_instant_and_safe() -> None:
+    """Policy sprint skips IDAS, still returns a legal non-None move."""
+    from chess_contest.stigmergy.engine import StigmergyEngine
+    from chess_contest.stigmergy.search import set_policy_sprint, set_swarm
+    from chess_contest.stigmergy.swarm_net import SwarmNet
+
+    set_swarm(None)
+    set_policy_sprint(False)
+    net = SwarmNet(channels=16, blocks=1)
+    set_swarm(net)
+    set_policy_sprint(True)
+    try:
+        w = default_weights()
+        w.book.clear()
+        w.trails.clear()
+        eng = StigmergyEngine(w, load_swarm=False)
+        set_swarm(net)
+        board = chess.Board()
+        t0 = time.perf_counter()
+        res = eng.choose_move(board, time_ms=5000, max_depth=12)
+        elapsed = time.perf_counter() - t0
+        assert res.move is not None
+        assert res.move in board.legal_moves
+        # Sprint must not burn the full think budget on IDAS.
+        assert elapsed < 2.0
+    finally:
+        set_policy_sprint(False)
+        set_swarm(None)
 
 
 def test_swarm_top_moves_and_engine_strips_oracle_flag() -> None:
