@@ -153,6 +153,7 @@ def train_swarm(
     epochs: int,
     batch_size: int = 48,
     lr: float = 1.0e-3,
+    save_path: Path | None = None,
 ) -> None:
     import torch as T
     import torch.nn.functional as F
@@ -161,6 +162,7 @@ def train_swarm(
     sched = T.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, epochs))
     net.net.train()
     n = len(data)
+    ckpt = save_path or (Path(log).parent / "swarm_net.pt")
     for epoch in range(1, epochs + 1):
         order = np.random.permutation(n)
         total = 0.0
@@ -194,9 +196,8 @@ def train_swarm(
             f"epoch {epoch}/{epochs} loss={total / max(1, steps):.4f} "
             f"top1={top1 / max(1, seen):.3f} lr={lr:.1e}",
         )
-        # Checkpoint every epoch so a killed sprint does not lose progress.
         with contextlib.suppress(Exception):
-            net.save(Path(log).parent / "swarm_net.pt")
+            net.save(ckpt)
     net.net.eval()
     net._logit_cache.clear()
 

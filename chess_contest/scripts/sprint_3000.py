@@ -87,12 +87,14 @@ def sprint_ladder(
     *,
     games_per: int,
     targets: list[int],
-    stig_ms: int = 80,
+    stig_ms: int = 500,
+    stig_depth: int = 6,
+    use_policy_sprint: bool = False,
 ) -> dict:
-    """Fast policy-sprint ladder; SF is opponent only."""
+    """Fast ladder; SF is opponent only. Default = short IDAS + swarm order."""
     our = 2000.0
     rows = []
-    set_policy_sprint(True)
+    set_policy_sprint(use_policy_sprint)
     try:
         for target in targets:
             sc = 0.0
@@ -103,7 +105,9 @@ def sprint_ladder(
                     if board.is_game_over(claim_draw=True):
                         break
                     if (board.turn == chess.WHITE) == stig_white:
-                        mv = engine.choose_move(board, time_ms=stig_ms, max_depth=1).move
+                        mv = engine.choose_move(
+                            board, time_ms=stig_ms, max_depth=stig_depth
+                        ).move
                         if mv is None:
                             break
                         board.push(mv)
@@ -126,7 +130,8 @@ def sprint_ladder(
                     "winrate": wr,
                     "our_elo_after": round(our, 1),
                     "think_ms": stig_ms,
-                    "policy_sprint": True,
+                    "stig_depth": stig_depth,
+                    "policy_sprint": use_policy_sprint,
                 }
             )
             _log(
@@ -147,7 +152,7 @@ def sprint_ladder(
         "crush_3000": our >= 3000,
         "stockfish_at_play": False,
         "oracle_runtime": False,
-        "policy_sprint": True,
+        "policy_sprint": use_policy_sprint,
     }
 
 
@@ -159,7 +164,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--sf-depth", type=int, default=8)
     p.add_argument("--games-per", type=int, default=6)
     p.add_argument("--batch-size", type=int, default=64)
-    p.add_argument("--stig-ms", type=int, default=80)
+    p.add_argument("--stig-ms", type=int, default=500)
+    p.add_argument("--stig-depth", type=int, default=6)
+    p.add_argument("--policy-sprint", action="store_true")
     p.add_argument("--skip-gen", action="store_true")
     p.add_argument("--probe-only", action="store_true")
     p.add_argument("--floor", type=float, default=3000.0)
@@ -222,6 +229,8 @@ def main(argv: list[str] | None = None) -> int:
                 games_per=args.games_per,
                 targets=[1320, 1600, 2000, 2200, 2500, 2700, 2800, 2900, 3000, 3100],
                 stig_ms=args.stig_ms,
+                stig_depth=args.stig_depth,
+                use_policy_sprint=args.policy_sprint,
             )
             match = policy_match(net, sf, n=80)
             _log(log, f"OOD policy match={match:.0%}")
@@ -229,20 +238,12 @@ def main(argv: list[str] | None = None) -> int:
             write_reports(out, probe, args)
             return 0
 
-        # Hard warm-train on existing set (lower LR — do not wipe distilled prior).
-        train_swarm(net, data, log, epochs=args.epochs, batch_size=args.batch_size, lr=3.0e-4)
-        net.save(net_path)
-        match = policy_match(net, sf, n=100)
-        _log(log, f"after warm-train OOD match={match:.0%}")
-
+        # Expand teacher set first (diversity), then short fine-tunes with OOD early-stop.
+        # Long train on a fixed 80k overfits (65% train-top1 → 25% OOD).
         if not args.skip_gen and args.extra_positions > 0:
             extra = generate_dataset(
                 sf, log, n_positions=args.extra_positions, depth=args.sf_depth, weights=None
             )
-            train_swarm(
-                net, extra, log, epochs=max(4, args.epochs // 2), batch_size=args.batch_size, lr=3.0e-4
-            )
-            # Merge + save expanded set (cap 160k).
             data = (data + extra)[-160_000:]
             np.savez_compressed(
                 data_path,
@@ -251,13 +252,32 @@ def main(argv: list[str] | None = None) -> int:
                 values=np.asarray([d[2] for d in data], dtype=np.float32),
             )
             _log(log, f"expanded dataset → {len(data)}")
-            train_swarm(
-                net, data, log, epochs=max(3, args.epochs // 3), batch_size=args.batch_size, lr=1.0e-4
-            )
-            net.save(net_path)
-            match = policy_match(net, sf, n=120)
-            _log(log, f"after extra OOD match={match:.0%}")
 
+        best_path = out / "swarm_net_best_ood.pt"
+        best_ood = policy_match(net, sf, n=80)
+        _log(log, f"baseline OOD match={best_ood:.0%}")
+        net.save(best_path)
+        net.save(net_path)
+
+        # Few epochs; keep the checkpoint with best OOD (not train top1).
+        for ep in range(1, args.epochs + 1):
+            train_swarm(net, data, log, epochs=1, batch_size=args.batch_size, lr=1.0e-4)
+            ood = policy_match(net, sf, n=100)
+            _log(log, f"epoch-ood {ep}/{args.epochs} OOD={ood:.0%} best={best_ood:.0%}")
+            if ood >= best_ood - 0.005:
+                if ood > best_ood:
+                    best_ood = ood
+                    net.save(best_path)
+                    net.save(net_path)
+                    _log(log, f"new best OOD={best_ood:.0%} saved")
+            else:
+                # Restore best and stop — further train hurts generalization.
+                _log(log, f"OOD dropped ({ood:.0%} < {best_ood:.0%}); early-stop")
+                net.load(best_path)
+                break
+
+        match = best_ood
+        net.load(best_path)
         set_swarm(net)
         eng = StigmergyEngine(weights, load_swarm=False)
         set_swarm(net)
@@ -268,6 +288,8 @@ def main(argv: list[str] | None = None) -> int:
             games_per=args.games_per,
             targets=[1320, 1600, 2000, 2200, 2500, 2700, 2800, 2900, 3000, 3100],
             stig_ms=args.stig_ms,
+            stig_depth=args.stig_depth,
+            use_policy_sprint=args.policy_sprint,
         )
         probe["policy_match_ood"] = round(match, 4)
         write_reports(out, probe, args)
@@ -277,24 +299,21 @@ def main(argv: list[str] | None = None) -> int:
             f"match={match:.0%}",
         )
 
-        # If still weak, second train burst + re-probe mid ladder.
         if probe["estimated_elo"] < args.floor:
-            _log(log, "below floor — second train burst")
-            train_swarm(net, data, log, epochs=max(6, args.epochs // 2), batch_size=args.batch_size, lr=1.0e-4)
-            net.save(net_path)
-            set_swarm(net)
+            _log(log, "below floor — longer-think confirm ladder")
             probe2 = sprint_ladder(
                 eng,
                 sf,
                 log,
                 games_per=max(8, args.games_per),
                 targets=[2000, 2200, 2500, 2700, 2800, 2900, 3000, 3100],
-                stig_ms=args.stig_ms,
+                stig_ms=max(args.stig_ms, 2000),
+                stig_depth=max(args.stig_depth, 10),
+                use_policy_sprint=False,
             )
-            match2 = policy_match(net, sf, n=100)
-            probe2["policy_match_ood"] = round(match2, 4)
+            probe2["policy_match_ood"] = round(match, 4)
             write_reports(out, probe2, args)
-            _log(log, f"SPRINT2 Elo ≈ {probe2['estimated_elo']} match={match2:.0%}")
+            _log(log, f"SPRINT2 Elo ≈ {probe2['estimated_elo']} match={match:.0%}")
     finally:
         sf.close()
         set_swarm(None)
