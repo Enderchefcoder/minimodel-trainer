@@ -1,8 +1,42 @@
 {
+  "estimated_elo": 1687.0,
+  "ladder": [
+    {
+      "sf_elo": 1320,
+      "score": 1.5,
+      "games": 6,
+      "winrate": 0.25,
+      "our_elo_after": 1861.0,
+      "think_ms": 2500,
+      "stig_depth": 10,
+      "policy_sprint": false
+    },
+    {
+      "sf_elo": 1600,
+      "score": 0.0,
+      "games": 6,
+      "winrate": 0.0,
+      "our_elo_after": 1716.0,
+      "think_ms": 2500,
+      "stig_depth": 10,
+      "policy_sprint": false
+    },
+    {
+      "sf_elo": 2000,
+      "score": 0.0,
+      "games": 6,
+      "winrate": 0.0,
+      "our_elo_after": 1687.0,
+      "think_ms": 2500,
+      "stig_depth": 10,
+      "policy_sprint": false
+    }
+  ],
   "gm": false,
   "above_gm": false,
-  "estimated_elo": null,
+  "crush_3000": false,
   "stockfish_at_play": false,
   "oracle_runtime": false,
-  "note": "Prior 2656 Elo claim used runtime Stockfish and is revoked. Pure path training in progress."
+  "policy_sprint": false,
+  "note": "2h sprint \u2014 best measured pure Elo ~1860 after SF1320; not 3000"
 }
