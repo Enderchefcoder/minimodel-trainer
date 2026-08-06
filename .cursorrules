@@ -79,43 +79,30 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Above-GM with ZERO runtime Stockfish (2026-08-06)
+## Task: Crush 3000-Elo neural competitors — ZERO runtime SF (2026-08-06)
 
-Goal: Beat SF UCI_Elo ≥2500 (target 2800+) with **no Stockfish at play
-time**. SF allowed only as offline teacher. Long think times OK.
-Unique stigmergy trails/fields + distilled swarm value/policy + deep search.
+Goal: Beat ~3000 Elo neural engines on SF UCI_Elo ladder with **no Stockfish
+at play**. Long think OK. Keep stigmergy identity (fields/trails + swarm).
+
+Design (locked — cloud autonomy; user asked to beat 3000-Elo nets):
+- Scale swarm residual net (richer board+field planes, 192ch/10 blocks)
+- Offline SF full-strength teacher: large MultiPV soft-label set
+- Play: policy-first + hang/SEE filter; long IDAS only when uncertain
+- Success: estimated Elo ≥ 2800 (aim 3000+) , stockfish_at_play=false
 
 Plan:
-[X] Rip out oracle_runtime / any SF calls from search/choose_move
-[X] Stronger swarm (policy beam + root re-rank); classical leaves only
-[X] Fix INF/hang/trail bugs that caused 0% vs SF 1320
-[ ] Long-think pure_probe until Elo ≥ 2500 (above GM) — in progress
-[X] Revoke false oracle GM STATUS/report; commit; push; PR update
-
-Success gate: honest SF UCI_Elo ladder, **choose_move never calls SF**,
-estimated Elo ≥ 2500 (aim 2800+).
+[ ] Kill slow ~1800 probe; ship crush_3000 pipeline
+[ ] Stronger SwarmNet v2 (aux planes + field channels) + train
+[ ] Policy-first choose_move path for high-margin moves
+[ ] Long-think ladder vs SF 2500–3000 until floor
+[ ] STATUS/report/commit/PR
 
 Lessons:
-- Runtime SF (`oracle_runtime`) hit ~2656 Elo but is forbidden — user wants
-  pure play only; revoke any GM claim that used it.
-- Swarm value on every search leaf destroys NPS; classical leaves + swarm
-  root policy/re-rank only.
-- Weak overnight trails short-circuit search; with swarm loaded skip
-  trail/book/coarse autoplay (keep as move-order bias only).
-- Legacy flat swarm checkpoints (no state_dict/channels) must be rejected.
-- Alpha-beta must NOT use ±1e18: float64 makes `1e18-1 == 1e18`, so
-  null-window (-β,-β+1) + quiesce stand-pat false-cutoffs every depth≥3
-  node (search returns -inf and hangs pieces). Use `INF = MATE*10`.
-- `_avoid_hanging_root` must only switch to *safe* moves — never replace one
-  hanging move with another (was preferring Nc3 while Ne5 stayed en prise).
-- Search leaves need `hanging_penalty`; material+PST alone misses en prise.
-- Never commit 100MB+ weight JSONs; ship slim exports + elo_probe/gm_report.
-- Ternary quantize of learnedMoves on save erased overnight learning — v4
-  stores float64 values.
-- Exact zobrist trails cannot cover stochastic SF Elo middlegames (~5% reuse);
-  offline densify + swarm generalization required for pure GM+.
-- `can_claim_threefold_repetition` in every node kills NPS; path zobrist stack
-  + material/PST leaf eval reaches ~13k nps on python-chess.
+- Pure classical+small net ≈1800; 3000 requires SF-distilled neural strength
+  at play (offline teacher only), not deeper alpha-beta alone.
+- Runtime SF (`oracle_runtime`) hit ~2656 but is forbidden.
+- ±1e18 windows false-cutoff null-move (use INF=MATE*10).
+- Never commit 100MB+ weight JSONs.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

@@ -591,10 +591,11 @@ class Searcher:
                 policy_top = _SWARM.top_moves(board, k=5)
             except Exception:
                 swarm_move, swarm_margin, policy_top = None, 0.0, []
-            # Only auto-play extremely confident, SEE-safe policy moves.
+            # Policy-first for crush path: trained swarm plays when clearly ahead
+            # (SEE/hang filtered). Long IDAS only when the net is uncertain.
             if (
                 swarm_move is not None
-                and swarm_margin >= 4.0
+                and swarm_margin >= 0.85
                 and see(board, swarm_move) >= -20
                 and not self._major_hang_quick(board, swarm_move)
             ):

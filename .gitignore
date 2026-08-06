@@ -93,3 +93,5 @@ research/artifacts/
 .DS_Store
 Thumbs.db
 chess_contest/weights/gm/swarm_dataset.npz
+chess_contest/weights/gm/crush_dataset.npz
+chess_contest/weights/gm/crush_3000.log
