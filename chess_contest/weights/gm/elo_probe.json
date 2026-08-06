@@ -1,34 +1,54 @@
 {
-  "estimated_elo": 1687.0,
+  "estimated_elo": 1750.6,
   "ladder": [
     {
       "sf_elo": 1320,
-      "score": 1.5,
-      "games": 6,
-      "winrate": 0.25,
-      "our_elo_after": 1861.0,
-      "think_ms": 2500,
-      "stig_depth": 10,
+      "score": 0.0,
+      "games": 4,
+      "winrate": 0.0,
+      "our_elo_after": 1875.3,
+      "think_ms": 2000,
+      "stig_depth": 8,
       "policy_sprint": false
     },
     {
       "sf_elo": 1600,
-      "score": 0.0,
-      "games": 6,
-      "winrate": 0.0,
-      "our_elo_after": 1716.0,
-      "think_ms": 2500,
-      "stig_depth": 10,
+      "score": 0.5,
+      "games": 4,
+      "winrate": 0.125,
+      "our_elo_after": 1789.6,
+      "think_ms": 2000,
+      "stig_depth": 8,
       "policy_sprint": false
     },
     {
       "sf_elo": 2000,
       "score": 0.0,
-      "games": 6,
+      "games": 4,
       "winrate": 0.0,
-      "our_elo_after": 1687.0,
-      "think_ms": 2500,
-      "stig_depth": 10,
+      "our_elo_after": 1761.6,
+      "think_ms": 2000,
+      "stig_depth": 8,
+      "policy_sprint": false
+    },
+    {
+      "sf_elo": 2200,
+      "score": 0.0,
+      "games": 4,
+      "winrate": 0.0,
+      "our_elo_after": 1752.3,
+      "think_ms": 2000,
+      "stig_depth": 8,
+      "policy_sprint": false
+    },
+    {
+      "sf_elo": 2500,
+      "score": 0.0,
+      "games": 4,
+      "winrate": 0.0,
+      "our_elo_after": 1750.6,
+      "think_ms": 2000,
+      "stig_depth": 8,
       "policy_sprint": false
     }
   ],
@@ -38,5 +58,5 @@
   "stockfish_at_play": false,
   "oracle_runtime": false,
   "policy_sprint": false,
-  "note": "2h sprint \u2014 best measured pure Elo ~1860 after SF1320; not 3000"
+  "policy_match_ood": 0.2875
 }
