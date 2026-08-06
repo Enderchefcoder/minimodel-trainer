@@ -22,7 +22,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from chess_contest.stigmergy.distill import set_trail_policy  # noqa: E402
+from chess_contest.stigmergy.distill import prune_trails, set_trail_policy  # noqa: E402
 from chess_contest.stigmergy.engine import StigmergyEngine  # noqa: E402
 from chess_contest.stigmergy.opponents import update_elo  # noqa: E402
 from chess_contest.stigmergy.search import set_swarm  # noqa: E402
@@ -36,11 +36,7 @@ from chess_contest.stigmergy.swarm_net import (  # noqa: E402
     encode_board,
     move_index,
 )
-from chess_contest.stigmergy.weights import (  # noqa: E402
-    load_weights,
-    prune_trails,
-    save_weights,
-)
+from chess_contest.stigmergy.weights import load_weights, save_weights  # noqa: E402
 
 
 def _log(path: Path, msg: str) -> None:
