@@ -152,11 +152,12 @@ def train_swarm(
     *,
     epochs: int,
     batch_size: int = 48,
+    lr: float = 1.0e-3,
 ) -> None:
     import torch as T
     import torch.nn.functional as F
 
-    opt = T.optim.AdamW(net.net.parameters(), lr=1.0e-3, weight_decay=1e-4)
+    opt = T.optim.AdamW(net.net.parameters(), lr=lr, weight_decay=1e-4)
     sched = T.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(1, epochs))
     net.net.train()
     n = len(data)
@@ -191,8 +192,11 @@ def train_swarm(
         _log(
             log,
             f"epoch {epoch}/{epochs} loss={total / max(1, steps):.4f} "
-            f"top1={top1 / max(1, seen):.3f}",
+            f"top1={top1 / max(1, seen):.3f} lr={lr:.1e}",
         )
+        # Checkpoint every epoch so a killed sprint does not lose progress.
+        with contextlib.suppress(Exception):
+            net.save(Path(log).parent / "swarm_net.pt")
     net.net.eval()
     net._logit_cache.clear()
 

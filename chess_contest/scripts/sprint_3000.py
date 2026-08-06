@@ -229,8 +229,8 @@ def main(argv: list[str] | None = None) -> int:
             write_reports(out, probe, args)
             return 0
 
-        # Hard warm-train on existing set.
-        train_swarm(net, data, log, epochs=args.epochs, batch_size=args.batch_size)
+        # Hard warm-train on existing set (lower LR — do not wipe distilled prior).
+        train_swarm(net, data, log, epochs=args.epochs, batch_size=args.batch_size, lr=3.0e-4)
         net.save(net_path)
         match = policy_match(net, sf, n=100)
         _log(log, f"after warm-train OOD match={match:.0%}")
@@ -239,7 +239,9 @@ def main(argv: list[str] | None = None) -> int:
             extra = generate_dataset(
                 sf, log, n_positions=args.extra_positions, depth=args.sf_depth, weights=None
             )
-            train_swarm(net, extra, log, epochs=max(4, args.epochs // 2), batch_size=args.batch_size)
+            train_swarm(
+                net, extra, log, epochs=max(4, args.epochs // 2), batch_size=args.batch_size, lr=3.0e-4
+            )
             # Merge + save expanded set (cap 160k).
             data = (data + extra)[-160_000:]
             np.savez_compressed(
@@ -249,7 +251,9 @@ def main(argv: list[str] | None = None) -> int:
                 values=np.asarray([d[2] for d in data], dtype=np.float32),
             )
             _log(log, f"expanded dataset → {len(data)}")
-            train_swarm(net, data, log, epochs=max(3, args.epochs // 3), batch_size=args.batch_size)
+            train_swarm(
+                net, data, log, epochs=max(3, args.epochs // 3), batch_size=args.batch_size, lr=1.0e-4
+            )
             net.save(net_path)
             match = policy_match(net, sf, n=120)
             _log(log, f"after extra OOD match={match:.0%}")
@@ -276,7 +280,7 @@ def main(argv: list[str] | None = None) -> int:
         # If still weak, second train burst + re-probe mid ladder.
         if probe["estimated_elo"] < args.floor:
             _log(log, "below floor — second train burst")
-            train_swarm(net, data, log, epochs=max(6, args.epochs // 2), batch_size=args.batch_size)
+            train_swarm(net, data, log, epochs=max(6, args.epochs // 2), batch_size=args.batch_size, lr=1.0e-4)
             net.save(net_path)
             set_swarm(net)
             probe2 = sprint_ladder(
