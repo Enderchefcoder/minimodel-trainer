@@ -254,11 +254,14 @@ class Searcher:
             moves = [
                 m
                 for m in board.legal_moves
-                if board.is_capture(m) or m.promotion or board.is_en_passant(m)
+                if board.is_capture(m)
+                or m.promotion
+                or board.is_en_passant(m)
+                or board.gives_check(m)
             ]
         moves.sort(key=lambda m: self._move_score(board, m, ply, None), reverse=True)
 
-        for move in moves[:28]:
+        for move in moves[:32]:
             if not in_check and board.is_capture(move):
                 # Delta pruning: skip captures that cannot raise alpha.
                 victim = board.piece_at(move.to_square)
