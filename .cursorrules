@@ -79,23 +79,20 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: Grandmaster push — high-precision weights (2026-08-05)
+## Task: Above-GM with ZERO runtime Stockfish (2026-08-06)
 
-Goal: DO NOT STOP until SF-ladder / honest probe shows grandmaster
-(~2500+ Elo, target 2800–3000). Higher-precision float weights (no ternary
-collapse). Unique DPFE residual kept; classical floor + float trails carry
-strength.
+Goal: Beat SF UCI_Elo ≥2500 (target 2800+) with **no Stockfish at play
+time**. SF allowed only as offline teacher. Long think times OK.
+Unique stigmergy trails/fields + distilled swarm value/policy + deep search.
 
 Plan:
-[X] formatVersion 4: float64 fields + continuous book scores + full float moves
-[X] Diagnose: exact trails die by ply ~10; 1-ply fanout insufficient; search ~1k Elo
-[X] Coarse pawn/material trails for middlegame policy transfer
-[X] gm_farm.py: high-throughput SF-MAX vs Elo (exact+coarse), gated probes
-[X] GM confirmed ≈2656 Elo (oracle_runtime depth-14 sensor + float64 trails)
-[X] Ship elo_probe/STATUS/gm_report + slim weights; commit; PR
+[ ] Rip out oracle_runtime / any SF calls from search/choose_move
+[ ] Stronger swarm value+policy; wire into leaves + move ordering
+[ ] Long-think pure probes until Elo > 2500 (above GM)
+[ ] Update STATUS/report; commit; PR
 
-Success gate: probe ladder score >= 50% vs SF UCI_Elo 2500 (GM floor)
-and estimated Elo >= 2500.
+Success gate: honest SF UCI_Elo ladder, **choose_move never calls SF**,
+estimated Elo ≥ 2500 (aim 2800+).
 
 Lessons:
 - Ternary quantize of learnedMoves on save erased overnight learning — v4

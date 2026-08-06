@@ -1,11 +1,12 @@
 """Deep iterative-deepening alpha-beta search for Stigmergy.
 
-Slower than Stockfish by design - uniqueness is in the field eval, strength
-comes from depth: TT, null-move, LMR, killers, history, SEE, quiescence.
+No Stockfish at play time. Strength = float64 trails/book/coarse + swarm
+policy/value (offline-distilled) + deep IDAS. Long think times are intentional.
 """
 
 from __future__ import annotations
 
+import contextlib
 import time
 from dataclasses import dataclass
 
@@ -13,44 +14,35 @@ import chess
 import chess.polyglot
 
 from chess_contest.stigmergy.coarse import coarse_trail_move
-from chess_contest.stigmergy.distill import set_trail_policy
-from chess_contest.stigmergy.stockfish_uci import StockfishConfig, StockfishEngine
 from chess_contest.stigmergy.tactics import material_of, see, tactical_floor, tactical_floor_fast
 from chess_contest.stigmergy.weights import CODE_WEIGHT, StigmergyWeights, trail_key
 
 MATE = 100_000
 DELTA_MARGIN = 200  # cp: skip hopeless captures in quiescence
-_SWARM = None  # optional SwarmNet set by distill script / engine loader
-_ORACLE_SF: StockfishEngine | None = None
+_SWARM = None  # optional SwarmNet — set by pure_gm / try_load_swarm
 
 
-def _oracle_runtime_move(board: chess.Board) -> chess.Move | None:
-    """Stockfish sensor for GM oracle_runtime mode (depth-limited, cached via trails)."""
-    global _ORACLE_SF
-    if _ORACLE_SF is None:
-        _ORACLE_SF = StockfishEngine(StockfishConfig(threads=2, hash_mb=128, movetime_ms=50))
-    _ORACLE_SF.set_elo(None)
-    tops = _ORACLE_SF.analyse_top(board, multipv=1, depth=14)
-    if not tops or not tops[0].get("uci"):
-        return None
-    try:
-        mv = chess.Move.from_uci(tops[0]["uci"])
-    except ValueError:
-        return None
-    return mv if mv in board.legal_moves else None
+def set_swarm(net) -> None:
+    """Install the offline-distilled swarm net for search (or None to clear)."""
+    global _SWARM
+    _SWARM = net
 
 
 def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
     """Side-to-move score for alpha-beta leaves.
 
-    Uses a fast classical floor inside the search tree. Exact trails/book cover
-    the oracle policy at the root; full tactical_floor is reserved for analysis.
+    Prefer swarm value (offline SF-distilled) blended with classical floor.
+    Never calls Stockfish.
     """
     del weights
     floor = tactical_floor_fast(board)
     tempo = 8.0 if board.turn == chess.WHITE else -8.0
-    score = floor + tempo
-    return score if board.turn == chess.WHITE else -score
+    white = floor + tempo
+    if _SWARM is not None:
+        with contextlib.suppress(Exception):
+            # Blend: swarm carries positional truth; floor keeps material honesty.
+            white = 0.35 * floor + 0.65 * _SWARM.value_white(board)
+    return white if board.turn == chess.WHITE else -white
 
 
 @dataclass
@@ -186,6 +178,7 @@ class Searcher:
         uci = move.uci()[:4]
         if pos_trails:
             score += float(pos_trails.get(uci, 0.0)) * 500.0
+            score += float(pos_trails.get(move.uci(), 0.0)) * 500.0
         piece = board.piece_at(move.from_square)
         if piece is not None:
             lk = (
@@ -195,6 +188,9 @@ class Searcher:
             )
             bias = self.weights.learned_moves.get(lk, 0.0)
             score += bias * 400.0
+        if _SWARM is not None and ply == 0:
+            with contextlib.suppress(Exception):
+                score += _SWARM.policy_score(board, move) * 80.0
         return score
 
     def _ordered_moves(
@@ -521,32 +517,6 @@ class Searcher:
         if coarse is not None:
             return SearchResult(move=coarse, score=0.0, depth=0, nodes=0, book=True, trail=True)
 
-        # Swarm policy prior (SF-distilled) — guide search ordering only when weak.
-        # Direct swarm moves are gated behind high confidence vs legal softmax margin.
-        if _SWARM is not None:
-            try:
-                swarm_move = _SWARM.choose(board)
-            except Exception:
-                swarm_move = None
-            if (
-                swarm_move is not None
-                and swarm_move in board.legal_moves
-                and see(board, swarm_move) >= 0
-                and (board.is_capture(swarm_move) or board.gives_check(swarm_move))
-            ):
-                return SearchResult(
-                    move=swarm_move, score=0.0, depth=0, nodes=0, book=False, trail=True
-                )
-
-        # Optional runtime oracle sensor (Stockfish) — used only when weights
-        # declare oracle_runtime. Distills into trails online so later hits
-        # stay stigmergy-native. Pure mode leaves this off.
-        if self.weights.training_meta.get("oracle_runtime"):
-            om = _oracle_runtime_move(board)
-            if om is not None:
-                set_trail_policy(self.weights, board, om.uci(), strength=200.0)
-                return SearchResult(move=om, score=0.0, depth=0, nodes=1, book=False, trail=True)
-
         legal = list(board.legal_moves)
         if not legal:
             return SearchResult(move=None, score=0.0, depth=0, nodes=0)
@@ -559,10 +529,35 @@ class Searcher:
                 move=mate, score=float(MATE - 1), depth=1, nodes=len(legal), book=False
             )
 
-        # Out-of-trail: spend enough time to clear shallow tactics, not minutes.
-        think_ms = max(time_ms, 600)
+        # High-confidence swarm policy: play after a cheap hang check (no SF).
+        if _SWARM is not None:
+            try:
+                swarm_move, margin = _SWARM.choose_with_margin(board)
+            except Exception:
+                swarm_move, margin = None, 0.0
+            if (
+                swarm_move is not None
+                and margin >= 1.25
+                and see(board, swarm_move) >= -30
+                and not self._major_hang_quick(board, swarm_move)
+            ):
+                return SearchResult(
+                    move=swarm_move, score=0.0, depth=0, nodes=0, book=False, trail=True
+                )
+            if swarm_move is not None:
+                legal = sorted(
+                    legal,
+                    key=lambda m: (
+                        m == swarm_move,
+                        _SWARM.policy_score(board, m) if _SWARM else 0.0,
+                    ),
+                    reverse=True,
+                )
+
+        # Honour long think budgets — above-GM path uses multi-second moves.
+        think_ms = max(50, time_ms)
         self.nodes = 0
-        self.deadline = time.perf_counter() + max(0.2, think_ms / 1000.0)
+        self.deadline = time.perf_counter() + max(0.05, think_ms / 1000.0)
         self.tt.clear()
         self.killers.clear()
         self.history.clear()
@@ -616,3 +611,18 @@ class Searcher:
             book=False,
             pv=[best_move.uci()] if best_move else None,
         )
+
+    def _major_hang_quick(self, board: chess.Board, move: chess.Move) -> bool:
+        board.push(move)
+        try:
+            for reply in board.legal_moves:
+                if not board.is_capture(reply):
+                    continue
+                if see(board, reply) < 0:
+                    continue
+                victim = board.piece_at(reply.to_square)
+                if victim is not None and material_of(victim.piece_type) >= 300:
+                    return True
+        finally:
+            board.pop()
+        return False

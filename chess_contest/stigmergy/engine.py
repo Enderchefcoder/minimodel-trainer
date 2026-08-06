@@ -21,9 +21,21 @@ class EngineInfo:
 class StigmergyEngine:
     """Play / analyze with a weight set."""
 
-    def __init__(self, weights: StigmergyWeights | None = None):
+    def __init__(self, weights: StigmergyWeights | None = None, *, load_swarm: bool = True):
         self.weights = weights or default_weights()
         self.info = EngineInfo()
+        # Strip any legacy runtime-SF flag — play path is Stockfish-free.
+        if self.weights.training_meta.get("oracle_runtime"):
+            self.weights.training_meta["oracle_runtime"] = False
+            self.weights.training_meta["stockfish_at_play"] = False
+        if load_swarm:
+            from chess_contest.stigmergy.search import set_swarm
+            from chess_contest.stigmergy.swarm_net import try_load_swarm
+
+            swarm_path = self.weights.training_meta.get("swarm_net", "chess_contest/weights/gm/swarm_net.pt")
+            net = try_load_swarm(swarm_path)
+            if net is not None:
+                set_swarm(net)
 
     @classmethod
     def from_file(cls, path: str) -> StigmergyEngine:

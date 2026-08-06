@@ -92,3 +92,4 @@ research/artifacts/
 # OS noise
 .DS_Store
 Thumbs.db
+chess_contest/weights/gm/swarm_dataset.npz

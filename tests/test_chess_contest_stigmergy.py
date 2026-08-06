@@ -93,6 +93,15 @@ def test_coarse_trail_generalizes_pawn_structure() -> None:
     assert coarse_trail_move(w, a).uci()[:4] == "d2d3"
 
 
+def test_search_has_no_runtime_stockfish() -> None:
+    import chess_contest.stigmergy.search as search_mod
+
+    assert not hasattr(search_mod, "_oracle_runtime_move")
+    src = Path(search_mod.__file__).read_text(encoding="utf-8")
+    assert "StockfishEngine" not in src
+    assert "oracle_runtime" not in src
+
+
 def test_set_trail_policy_decisive() -> None:
     from chess_contest.stigmergy.distill import set_trail_policy
     from chess_contest.stigmergy.search import Searcher
