@@ -136,9 +136,13 @@ class Searcher:
         second_w = scored[1][1] if len(scored) > 1 else 0.0
         # With swarm: only auto-play strong offline-distilled trails (still SF-free).
         if _SWARM is not None:
-            if best_w >= 8.0 and best_w >= second_w * 1.25 and see(board, best_move) >= -30:
-                if not self._major_hang_quick(board, best_move):
-                    return best_move
+            if (
+                best_w >= 8.0
+                and best_w >= second_w * 1.25
+                and see(board, best_move) >= -30
+                and not self._major_hang_quick(board, best_move)
+            ):
+                return best_move
             return None
         if best_w >= second_w * 1.08 or best_w >= 1.0:
             return best_move
