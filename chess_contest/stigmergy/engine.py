@@ -7,7 +7,8 @@ from dataclasses import dataclass
 import chess
 
 from chess_contest.stigmergy.evaluate import evaluate_board
-from chess_contest.stigmergy.search import Searcher, SearchResult
+from chess_contest.stigmergy.search import Searcher, SearchResult, set_swarm
+from chess_contest.stigmergy.swarm_net import try_load_swarm
 from chess_contest.stigmergy.weights import StigmergyWeights, default_weights, load_weights
 
 
@@ -19,23 +20,24 @@ class EngineInfo:
 
 
 class StigmergyEngine:
-    """Play / analyze with a weight set."""
+    """Play / analyze with a weight set. Play path never calls Stockfish."""
 
     def __init__(self, weights: StigmergyWeights | None = None, *, load_swarm: bool = True):
         self.weights = weights or default_weights()
         self.info = EngineInfo()
+        self.swarm = None
         # Strip any legacy runtime-SF flag — play path is Stockfish-free.
         if self.weights.training_meta.get("oracle_runtime"):
             self.weights.training_meta["oracle_runtime"] = False
             self.weights.training_meta["stockfish_at_play"] = False
         if load_swarm:
-            from chess_contest.stigmergy.search import set_swarm
-            from chess_contest.stigmergy.swarm_net import try_load_swarm
-
-            swarm_path = self.weights.training_meta.get("swarm_net", "chess_contest/weights/gm/swarm_net.pt")
+            swarm_path = self.weights.training_meta.get(
+                "swarm_net", "chess_contest/weights/gm/swarm_net.pt"
+            )
             net = try_load_swarm(swarm_path)
             if net is not None:
                 set_swarm(net)
+                self.swarm = net
 
     @classmethod
     def from_file(cls, path: str) -> StigmergyEngine:

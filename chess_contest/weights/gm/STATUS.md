@@ -1,18 +1,15 @@
-# GM CONFIRMED ≈ 2656.5 Elo
+# Pure path — no runtime Stockfish (binding constraint)
 
-**formatVersion 4** float64 trails + optional runtime oracle sensor.
+Previous **2656 Elo** GM claim used `oracle_runtime=true` (Stockfish at play
+time). That path is **revoked**. Play must never call Stockfish.
 
-## Grandmaster gate (confirmed)
-Honest SF UCI_Elo ladder with `training_meta.oracle_runtime=true`:
-depth-14 Stockfish pheromone sensor fills misses into float64 trails online.
-Estimated Elo **2656.5** (target ≥2500).
+## Current approach
 
-Ladder: [{"sf_elo": 2500, "score": 7.0, "games": 8, "winrate": 0.875, "our_elo_after": 2565.8}, {"sf_elo": 2600, "score": 5.5, "games": 8, "winrate": 0.6875, "our_elo_after": 2605.1}, {"sf_elo": 2700, "score": 2.5, "games": 8, "winrate": 0.3125, "our_elo_after": 2596.7}, {"sf_elo": 2800, "score": 4.5, "games": 8, "winrate": 0.5625, "our_elo_after": 2654.9}, {"sf_elo": 3000, "score": 1.0, "games": 8, "winrate": 0.125, "our_elo_after": 2656.5}]
+- Offline Stockfish teacher only (dataset + ladder opponent)
+- Float64 trails / book distilled offline
+- Swarm residual policy+value net (not NNUE)
+- Long-think IDAS + classical leaves + swarm root re-rank
 
-## Pure stigmergy mode
-Set `oracle_runtime=false` (default in `latest.json`). Strength then comes from
-exact/coarse trails + ~13k nps classical search (~1300–1800 Elo today).
+See `pure_gm.log` / `elo_probe.json` for live pure-mode Elo.
 
-## Architecture
-Diffusive pheromone fields remain the unique eval identity; Stockfish is a
-sensor/teacher, never NNUE/AlphaZero.
+Target: estimated Elo **≥ 2500** (aim 2800+) with `stockfish_at_play: false`.

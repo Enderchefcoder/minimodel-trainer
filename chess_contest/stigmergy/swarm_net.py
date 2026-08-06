@@ -146,17 +146,26 @@ class SwarmNet:
 
     def choose_with_margin(self, board: chess.Board) -> tuple[chess.Move | None, float]:
         """Return (best_move, logit_margin over second-best legal)."""
-        logits, _ = self._forward_np(board)
-        flip = board.turn == chess.BLACK
-        scored: list[tuple[float, chess.Move]] = []
-        for move in board.legal_moves:
-            scored.append((float(logits[move_index(move, flip=flip)]), move))
+        scored = self._score_legals(board)
         if not scored:
             return None, 0.0
-        scored.sort(key=lambda t: t[0], reverse=True)
         best_s, best = scored[0]
         second = scored[1][0] if len(scored) > 1 else best_s - 10.0
         return best, best_s - second
+
+    def top_moves(self, board: chess.Board, k: int = 5) -> list[chess.Move]:
+        """Return up to k legal moves sorted by descending policy logit."""
+        scored = self._score_legals(board)
+        return [m for _, m in scored[: max(1, k)]]
+
+    def _score_legals(self, board: chess.Board) -> list[tuple[float, chess.Move]]:
+        logits, _ = self._forward_np(board)
+        flip = board.turn == chess.BLACK
+        scored: list[tuple[float, chess.Move]] = [
+            (float(logits[move_index(move, flip=flip)]), move) for move in board.legal_moves
+        ]
+        scored.sort(key=lambda t: t[0], reverse=True)
+        return scored
 
     def policy_score(self, board: chess.Board, move: chess.Move) -> float:
         logits, _ = self._forward_np(board)
@@ -203,12 +212,19 @@ class SwarmNet:
 
 
 def try_load_swarm(path: str | Path = "chess_contest/weights/gm/swarm_net.pt") -> SwarmNet | None:
-    """Load swarm weights if present; return None if missing/unloadable."""
+    """Load residual swarm weights if present and compatible; else None."""
     path = Path(path)
     if not path.is_file():
         return None
     try:
-        net = SwarmNet(channels=96, blocks=6)
+        torch, _ = _torch()
+        blob = torch.load(path, map_location="cpu", weights_only=False)
+        # Legacy flat OrderedDict nets (no residual tower) are rejected.
+        if not isinstance(blob, dict) or "state_dict" not in blob:
+            return None
+        ch = int(blob.get("channels", 96))
+        bl = int(blob.get("blocks", 6))
+        net = SwarmNet(channels=ch, blocks=bl)
         net.load(path)
         return net
     except Exception:

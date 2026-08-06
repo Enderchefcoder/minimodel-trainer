@@ -29,19 +29,15 @@ def set_swarm(net) -> None:
 
 
 def _search_eval(board: chess.Board, weights: StigmergyWeights) -> float:
-    """Side-to-move score for alpha-beta leaves.
+    """Side-to-move score for alpha-beta leaves — classical only (fast).
 
-    Prefer swarm value (offline SF-distilled) blended with classical floor.
-    Never calls Stockfish.
+    Swarm value is applied at the root (policy prior / re-rank), never in the
+    hot tree, so long-think IDAS keeps ~10k+ nps. No Stockfish.
     """
     del weights
     floor = tactical_floor_fast(board)
     tempo = 8.0 if board.turn == chess.WHITE else -8.0
     white = floor + tempo
-    if _SWARM is not None:
-        with contextlib.suppress(Exception):
-            # Blend: swarm carries positional truth; floor keeps material honesty.
-            white = 0.35 * floor + 0.65 * _SWARM.value_white(board)
     return white if board.turn == chess.WHITE else -white
 
 
@@ -116,7 +112,11 @@ class Searcher:
             return None
 
     def trail_move(self, board: chess.Board) -> chess.Move | None:
-        """High-confidence continuous ant-trail move from distilled oracle lines."""
+        """High-confidence continuous ant-trail move from distilled oracle lines.
+
+        Thresholds rise when a swarm net is loaded so weak overnight trails do not
+        short-circuit long-think search that the swarm+IDAS path needs for GM+.
+        """
         pos_trails = self.weights.trails.get(trail_key(board))
         if not pos_trails:
             return None
@@ -134,7 +134,11 @@ class Searcher:
         scored.sort(key=lambda t: t[1], reverse=True)
         best_move, best_w = scored[0]
         second_w = scored[1][1] if len(scored) > 1 else 0.0
-        # Prefer a clear leader; otherwise still play the best trail if mass is real.
+        # With swarm: only auto-play very strong offline-distilled trails.
+        if _SWARM is not None:
+            if best_w >= 25.0 and best_w >= second_w * 1.5 and see(board, best_move) >= -30:
+                return best_move
+            return None
         if best_w >= second_w * 1.08 or best_w >= 1.0:
             return best_move
         if len(scored) == 1 and best_w >= 0.3:
@@ -529,29 +533,34 @@ class Searcher:
                 move=mate, score=float(MATE - 1), depth=1, nodes=len(legal), book=False
             )
 
-        # High-confidence swarm policy: play after a cheap hang check (no SF).
+        # Swarm policy priors for ordering / optional instant play (no SF).
+        swarm_move = None
+        swarm_margin = 0.0
+        policy_top: list[chess.Move] = []
         if _SWARM is not None:
             try:
-                swarm_move, margin = _SWARM.choose_with_margin(board)
+                swarm_move, swarm_margin = _SWARM.choose_with_margin(board)
+                policy_top = _SWARM.top_moves(board, k=5)
             except Exception:
-                swarm_move, margin = None, 0.0
+                swarm_move, swarm_margin, policy_top = None, 0.0, []
+            # Only auto-play extremely confident, SEE-safe policy moves.
             if (
                 swarm_move is not None
-                and margin >= 1.25
-                and see(board, swarm_move) >= -30
+                and swarm_margin >= 2.5
+                and see(board, swarm_move) >= -20
                 and not self._major_hang_quick(board, swarm_move)
             ):
                 return SearchResult(
                     move=swarm_move, score=0.0, depth=0, nodes=0, book=False, trail=True
                 )
-            if swarm_move is not None:
+            if policy_top:
+                preferred = {m: i for i, m in enumerate(policy_top)}
                 legal = sorted(
                     legal,
                     key=lambda m: (
-                        m == swarm_move,
-                        _SWARM.policy_score(board, m) if _SWARM else 0.0,
+                        preferred.get(m, 99),
+                        -(_SWARM.policy_score(board, m) if _SWARM else 0.0),
                     ),
-                    reverse=True,
                 )
 
         # Honour long think budgets — above-GM path uses multi-second moves.
@@ -603,6 +612,45 @@ class Searcher:
                 best_move = self._last_best_move
 
         best_move = self._avoid_hanging_root(board, best_move, legal)
+        # Root re-rank: search score + swarm value over policy beam + PV.
+        if _SWARM is not None:
+            candidates: list[chess.Move] = []
+            for m in [best_move, swarm_move, *policy_top, *legal[:8]]:
+                if m is not None and m in board.legal_moves and m not in candidates:
+                    candidates.append(m)
+            scored: list[tuple[float, chess.Move]] = []
+            mover_white = board.turn == chess.WHITE
+            for cand in candidates:
+                if see(board, cand) < -120:
+                    continue
+                board.push(cand)
+                try:
+                    if board.is_checkmate():
+                        scored.append((50_000.0, cand))
+                        continue
+                    floor = tactical_floor_fast(board)
+                    # White-positive floor → score for the side that just moved.
+                    classical = (-floor) if mover_white else floor
+                    swarm_v = 0.0
+                    with contextlib.suppress(Exception):
+                        # Opponent STM value: lower is better for us.
+                        swarm_v = -_SWARM.value_stm(board)
+                    # Prefer swarm when trained; keep classical as tactical guardrail.
+                    scored.append((0.65 * swarm_v + 0.35 * classical, cand))
+                finally:
+                    board.pop()
+            if scored:
+                scored.sort(key=lambda t: t[0], reverse=True)
+                # Refuse a swarm pick that hangs a major vs the search PV.
+                pick = scored[0][1]
+                if not self._major_hang_quick(board, pick):
+                    best_move = pick
+                    best_score = scored[0][0]
+                elif not self._major_hang_quick(board, best_move):
+                    pass
+                else:
+                    best_move = self._avoid_hanging_root(board, pick, legal)
+
         return SearchResult(
             move=best_move,
             score=best_score,

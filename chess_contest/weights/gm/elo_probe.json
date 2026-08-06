@@ -1,41 +1,6 @@
 {
-  "estimated_elo": 2656.5,
-  "ladder": [
-    {
-      "sf_elo": 2500,
-      "score": 7.0,
-      "games": 8,
-      "winrate": 0.875,
-      "our_elo_after": 2565.8
-    },
-    {
-      "sf_elo": 2600,
-      "score": 5.5,
-      "games": 8,
-      "winrate": 0.6875,
-      "our_elo_after": 2605.1
-    },
-    {
-      "sf_elo": 2700,
-      "score": 2.5,
-      "games": 8,
-      "winrate": 0.3125,
-      "our_elo_after": 2596.7
-    },
-    {
-      "sf_elo": 2800,
-      "score": 4.5,
-      "games": 8,
-      "winrate": 0.5625,
-      "our_elo_after": 2654.9
-    },
-    {
-      "sf_elo": 3000,
-      "score": 1.0,
-      "games": 8,
-      "winrate": 0.125,
-      "our_elo_after": 2656.5
-    }
-  ],
-  "gm": true
+  "estimated_elo": null,
+  "stockfish_at_play": false,
+  "oracle_runtime": false,
+  "note": "Awaiting pure_gm probe results"
 }

@@ -95,11 +95,31 @@ def test_coarse_trail_generalizes_pawn_structure() -> None:
 
 def test_search_has_no_runtime_stockfish() -> None:
     import chess_contest.stigmergy.search as search_mod
+    from chess_contest.stigmergy.search import set_swarm
 
     assert not hasattr(search_mod, "_oracle_runtime_move")
     src = Path(search_mod.__file__).read_text(encoding="utf-8")
     assert "StockfishEngine" not in src
     assert "oracle_runtime" not in src
+    set_swarm(None)
+
+
+def test_swarm_top_moves_and_engine_strips_oracle_flag() -> None:
+    from chess_contest.stigmergy.engine import StigmergyEngine
+    from chess_contest.stigmergy.search import set_swarm
+    from chess_contest.stigmergy.swarm_net import SwarmNet
+
+    set_swarm(None)
+    net = SwarmNet(channels=16, blocks=1)
+    board = chess.Board()
+    tops = net.top_moves(board, k=3)
+    assert len(tops) >= 1
+    assert all(m in board.legal_moves for m in tops)
+    w = default_weights()
+    w.training_meta["oracle_runtime"] = True
+    eng = StigmergyEngine(w, load_swarm=False)
+    assert eng.weights.training_meta.get("oracle_runtime") is False
+    set_swarm(None)
 
 
 def test_set_trail_policy_decisive() -> None:

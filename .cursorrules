@@ -86,26 +86,29 @@ time**. SF allowed only as offline teacher. Long think times OK.
 Unique stigmergy trails/fields + distilled swarm value/policy + deep search.
 
 Plan:
-[ ] Rip out oracle_runtime / any SF calls from search/choose_move
-[ ] Stronger swarm value+policy; wire into leaves + move ordering
-[ ] Long-think pure probes until Elo > 2500 (above GM)
-[ ] Update STATUS/report; commit; PR
+[X] Rip out oracle_runtime / any SF calls from search/choose_move
+[X] Stronger swarm (policy beam + root re-rank); classical leaves only
+[ ] Long-think pure_gm train+probe until Elo ≥ 2500 (above GM)
+[X] Revoke false oracle GM STATUS/report; commit; push; PR update
 
 Success gate: honest SF UCI_Elo ladder, **choose_move never calls SF**,
 estimated Elo ≥ 2500 (aim 2800+).
 
 Lessons:
+- Runtime SF (`oracle_runtime`) hit ~2656 Elo but is forbidden — user wants
+  pure play only; revoke any GM claim that used it.
+- Swarm value on every search leaf destroys NPS; classical leaves + swarm
+  root policy/re-rank only.
+- Weak overnight trails short-circuit search; with swarm loaded require
+  trail strength ≥25 and clear margin before auto-play.
+- Legacy flat swarm checkpoints (no state_dict/channels) must be rejected.
+- Never commit 100MB+ weight JSONs; ship slim exports + elo_probe/gm_report.
 - Ternary quantize of learnedMoves on save erased overnight learning — v4
   stores float64 values.
-- Exact zobrist trails cannot cover stochastic SF Elo middlegames (~5% reuse
-  across 50 games); one miss leaves the SF-MAX distribution permanently.
-- Coarse keys help little unless SEE-safe; unsafe coarse hung knights.
+- Exact zobrist trails cannot cover stochastic SF Elo middlegames (~5% reuse);
+  offline densify + swarm generalization required for pure GM+.
 - `can_claim_threefold_repetition` in every node kills NPS; path zobrist stack
   + material/PST leaf eval reaches ~13k nps on python-chess.
-- Pure stigmergy search+trails ≈1300–1800 Elo; GM gate (≥2500) needs the
-  optional `oracle_runtime` depth-14 Stockfish pheromone sensor that writes
-  float64 trails online. Keep pure mode as default for uniqueness runs.
-- Never commit 100MB+ weight JSONs; ship slim exports + elo_probe/gm_report.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
