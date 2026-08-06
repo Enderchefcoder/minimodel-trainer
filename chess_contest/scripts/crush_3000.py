@@ -354,9 +354,10 @@ def main(argv: list[str] | None = None) -> int:
         for cycle in range(1, args.cycles + 1):
             _log(log, f"=== crush cycle {cycle}/{args.cycles} ===")
             net = SwarmNet(channels=args.channels, blocks=args.blocks, in_ch=IN_CH)
-            if net_path.is_file() and cycle > 1:
+            if net_path.is_file():
                 with contextlib.suppress(Exception):
                     net.load(net_path)
+                    _log(log, f"warm-started from {net_path}")
             train_swarm(net, data, log, epochs=args.epochs)
             # Fresh teacher batch each cycle.
             extra = generate_dataset(
