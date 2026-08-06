@@ -89,9 +89,8 @@ Plan:
 [X] Kill slow crush; wire set_policy_sprint + sprint_3000.py
 [X] Warm-train → overfit (65% train / 25% OOD); restored pre-sprint prior
 [X] OOD early-stop train path; IDAS blitz ladder (not pure policy)
-[ ] IDAS probe ladder 1320→3100 with restored net
-[ ] Extra SF labels + OOD-gated fine-tune if time
-[ ] STATUS / commit / PR
+[X] IDAS probe: best 25% vs SF1320 → ≈1861; NOT 3000
+[X] Extra SF labels + OOD early-stop (held 29%); STATUS / commit / PR
 
 Lessons:
 - 15s IDAS ladder cannot finish in 2h; policy-sprint required for probes BUT
@@ -101,6 +100,7 @@ Lessons:
 - Epoch ≈6min @ 80k/192×10 CPU — budget ~10–15 epochs/hour.
 - Train-top1 ≠ strength: 10ep → 66% train / 25% OOD. Early-stop on OOD.
 - Keep swarm_net_pre_sprint.pt (or *_best_ood.pt) before long fine-tunes.
+- 2h crush-3000 FAILED honestly: peak ≈1861, crush_3000=false.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
