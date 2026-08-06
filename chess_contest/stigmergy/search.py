@@ -452,7 +452,25 @@ class Searcher:
         beta: float,
         pv_move: chess.Move,
     ) -> float:
-        moves = self._ordered_moves(board, 0, pv_move, check_checks=False)
+        moves = self._ordered_moves(board, 0, pv_move, check_checks=True)
+        # With swarm: focus root nodes on policy beam + tactics (deeper effective search).
+        if _SWARM is not None and len(moves) > 14:
+            beam: set[chess.Move] = set()
+            with contextlib.suppress(Exception):
+                beam.update(_SWARM.top_moves(board, k=10))
+            if pv_move is not None:
+                beam.add(pv_move)
+            filtered = [
+                m
+                for m in moves
+                if m in beam
+                or board.is_capture(m)
+                or board.is_en_passant(m)
+                or m.promotion
+                or board.gives_check(m)
+            ]
+            if len(filtered) >= 8:
+                moves = filtered
         best = -INF
         best_move = moves[0]
         for i, move in enumerate(moves):

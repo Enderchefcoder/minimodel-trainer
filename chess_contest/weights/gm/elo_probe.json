@@ -1,6 +1,17 @@
 {
-  "estimated_elo": null,
+  "estimated_elo": 1861.4,
+  "ladder": [
+    {
+      "sf_elo": 1320,
+      "score": 1.5,
+      "games": 6,
+      "winrate": 0.25,
+      "our_elo_after": 1861.4,
+      "think_ms": 3000
+    }
+  ],
+  "gm": false,
+  "above_gm": false,
   "stockfish_at_play": false,
-  "oracle_runtime": false,
-  "note": "Awaiting pure_gm probe results"
+  "oracle_runtime": false
 }
