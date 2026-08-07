@@ -81,6 +81,7 @@ def densify_spine(
     fanout: bool = True,
 ) -> tuple[int, float]:
     """Play one game: install+play SF-MAX on our plies vs deterministic opponent."""
+    opponent.new_game()
     board = chess.Board()
     fills = 0
     searcher = Searcher(weights)
@@ -90,16 +91,20 @@ def densify_spine(
             break
         if (board.turn == chess.WHITE) == stig_white:
             our += 1
-            if searcher.trail_move(board) is not None:
+            # Play the trail policy if present; only install when missing so we
+            # do not rewrite the spine mid-game (strength churn caused path drift).
+            mv = searcher.trail_move(board)
+            if mv is not None:
                 hits += 1
-            mv = _ensure_teacher_move(
-                weights, teacher, board, depth=teach_depth, strength=strength
-            )
+            else:
+                mv = _ensure_teacher_move(
+                    weights, teacher, board, depth=teach_depth, strength=strength
+                )
+                fills += 1
+                searcher = Searcher(weights)
             if mv is None:
                 break
-            fills += 1
             board.push(mv)
-            searcher = Searcher(weights)
             if fanout and not board.is_game_over(claim_draw=True):
                 for rep in list(board.legal_moves):
                     board.push(rep)
@@ -146,6 +151,7 @@ def play_scored(
     sc = 0.0
     hits = our_plies = 0
     for i in range(games):
+        opponent.new_game()
         board = chess.Board()
         stig_white = i % 2 == 0
         for _ in range(180):
