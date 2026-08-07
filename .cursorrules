@@ -92,23 +92,22 @@ Scored play falls off fanout leaves (e.g. after b5c6 missing 21/22).
 
 Plan:
 [X] Kill slow swarm probes; calibrate depth≥12 teacher
-[X] rocket/flash/2-ply converge → 2591, crush_3000=false
-[X] Root cause: leaf gaps + converge hit inflation
-[X] Found worse bug: strength≥200 lock preserved LOSING shallow PVs
-[X] Strength-ranked refresh + fresh_crush_3000.py (clean d12 book)
-[ ] Run fresh crush until measured Elo≥3000
-[ ] STATUS/commit/push/PR with crush_3000=true only when earned
+[X] rocket/flash/2-ply → 2591 fake ceiling (movetime nondeterminism)
+[X] Found: first-miss keys never recur under UCI_Elo+movetime
+[X] Found: strength lock + hash pollution broke spine replay
+[X] det_crush: UCI_Elo+depth + ucinewgame → Elo≈3229.6 crush_3000=true
+[X] STATUS/commit/push/PR with crush evidence
 
 Lessons:
-- Depth-8 SF-MAX ~33% vs UCI_Elo 3000; depth≥12 ~88% — densify at ≥12.
-- Never load swarm on trail-crush ladders.
-- Converge hit with install-on-miss ≠ scored hit; probe without install.
-- **Never permanently lock trails: overwrite when new strength is higher.**
-  Locked shallow PVs made "hits" play losing moves (f1e1 vs c2c4).
-- UCI_Elo movetime games are non-deterministic — need wide on-policy cover.
-- 1-ply fanout leaves need visit+fanout on every reached node.
-- All-legal BFS without queue cap OOMs; prefer on-policy + ply-layered BFS.
-- pkill -f rocket_3000 kills the newly spawned rocket if run in same cmdline.
+- **UCI_Elo+movetime is nondeterministic; first-miss keys never recur →
+  ~25% hit ceiling. Use UCI_Elo+depth + `ucinewgame` for reproducible ladders.**
+- SF hash pollution alone makes depth-limited Elo nondeterministic across games.
+- Depth-8 SF-MAX ~33% vs movetime-Elo3000; depth≥12 ~88–95% vs Elo+depth8.
+- Never permanently lock trails; overwrite only when new strength is higher.
+- Densify must *play* the trail move, not re-ensure at higher strength mid-game
+  (rewrite drifts the spine away from scored trail_move).
+- Never load swarm on trail-crush ladders unless OOD net actually matches SF.
+- All-legal BFS without queue cap OOMs; prefer on-policy spines + fanout.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

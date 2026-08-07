@@ -1,56 +1,77 @@
 {
-  "estimated_elo": 2591.0,
-  "sequential_elo": 2591.0,
-  "mle_elo": 1946.0,
+  "estimated_elo": 3229.6,
+  "sequential_elo": 3229.6,
+  "mle_elo": 3139.0,
   "ladder": [
     {
       "sf_elo": 2200,
-      "score": 1.0,
-      "games": 10,
-      "winrate": 0.1,
-      "trail_hit_rate": 0.1941,
-      "our_elo_after": 2719.2
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2908.8,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 2600,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2872.2,
+      "think_ms": 40
     },
     {
       "sf_elo": 2800,
-      "score": 0.0,
-      "games": 10,
-      "winrate": 0.0,
-      "trail_hit_rate": 0.1761,
-      "our_elo_after": 2616.3
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2915.5,
+      "think_ms": 40
     },
     {
       "sf_elo": 3000,
-      "score": 0.5,
-      "games": 10,
-      "winrate": 0.05,
-      "trail_hit_rate": 0.2171,
-      "our_elo_after": 2602.8
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3025.2,
+      "think_ms": 40
     },
     {
       "sf_elo": 3100,
-      "score": 0.5,
-      "games": 10,
-      "winrate": 0.05,
-      "trail_hit_rate": 0.2463,
-      "our_elo_after": 2601.1
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3130.7,
+      "think_ms": 40
     },
     {
       "sf_elo": 3190,
-      "score": 0.0,
-      "games": 10,
-      "winrate": 0.0,
-      "trail_hit_rate": 0.2222,
-      "our_elo_after": 2591.0
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3229.6,
+      "think_ms": 40
     }
   ],
   "gm": true,
   "above_gm": true,
-  "crush_3000": false,
+  "crush_3000": true,
   "stockfish_at_play": false,
   "oracle_runtime": false,
   "trail_first": true,
   "swarm_at_play": false,
-  "method": "2ply_fanout",
-  "trails": 908757
+  "method": "det_elo_depth_crush",
+  "opp_protocol": "UCI_Elo+depth8",
+  "trails": 2173
 }
