@@ -28,6 +28,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
+from chess_contest.scripts.bfs_densify import bfs_densify, quick_probe  # noqa: E402
 from chess_contest.stigmergy.distill import prune_trails, set_trail_policy  # noqa: E402
 from chess_contest.stigmergy.engine import StigmergyEngine  # noqa: E402
 from chess_contest.stigmergy.opponents import update_elo  # noqa: E402
@@ -173,7 +174,8 @@ def farm_on_policy(
                             board.pop()
             else:
                 opponent.set_elo(target)
-                board.push(opponent.choose(board, movetime_ms=25))
+                # Match ladder opponent clock so farm covers the same noise.
+                board.push(opponent.choose(board, movetime_ms=50))
         if (gi + 1) % 50 == 0 or gi + 1 == games:
             _log(
                 log,
@@ -311,6 +313,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--start-elo", type=float, default=2600.0)
     p.add_argument("--probe-only", action="store_true")
     p.add_argument("--keep-trails", type=int, default=900_000)
+    p.add_argument("--bfs-nodes", type=int, default=120_000)
+    p.add_argument("--bfs-plies", type=int, default=5)
+    p.add_argument("--bfs-branch", type=int, default=64)
+    p.add_argument("--min-hit-rate", type=float, default=0.55)
     args = p.parse_args(argv)
 
     if not stockfish_available():
@@ -368,6 +374,24 @@ def main(argv: list[str] | None = None) -> int:
 
         for cy in range(1, args.cycles + 1):
             _log(log, f"=== rocket cycle {cy}/{args.cycles} ===")
+            # Full-ish reply BFS so limited-Elo noise stays on-trail early.
+            if args.bfs_nodes > 0:
+                filled = bfs_densify(
+                    weights,
+                    teacher,
+                    log,
+                    max_our_plies=args.bfs_plies,
+                    branch=args.bfs_branch,
+                    max_nodes=args.bfs_nodes,
+                    sf_depth=args.sf_depth,
+                    strength=240.0,
+                    seed=1000 + cy,
+                )
+                _log(
+                    log,
+                    f"bfs filled={filled} trails={len(weights.trails)} "
+                    f"branch={args.bfs_branch} plies={args.bfs_plies}",
+                )
             stats = farm_on_policy(
                 weights,
                 teacher,
@@ -386,6 +410,28 @@ def main(argv: list[str] | None = None) -> int:
 
             eng = StigmergyEngine(weights, load_swarm=False)
             set_swarm(None)
+            # Gate: do not burn ladder time until openings stay on-trail.
+            hit_score, hit_rate = quick_probe(
+                eng,
+                opponent,
+                games=4,
+                target=2200,
+                stig_ms=args.stig_ms,
+                stig_depth=args.stig_depth,
+            )
+            _log(
+                log,
+                f"hit-gate vs2200 score={hit_score:.0%} hit={hit_rate:.0%} "
+                f"(need ≥{args.min_hit_rate:.0%})",
+            )
+            if hit_rate < args.min_hit_rate:
+                args.bfs_nodes = min(400_000, int(args.bfs_nodes * 1.5) + 20_000)
+                args.bfs_branch = min(80, args.bfs_branch + 8)
+                args.farm_games = min(2500, args.farm_games + 300)
+                args.fanout = min(16, args.fanout + 2)
+                _log(log, "hit-gate failed — densifying harder, skip full ladder")
+                continue
+
             probe = play_ladder(
                 eng,
                 opponent,

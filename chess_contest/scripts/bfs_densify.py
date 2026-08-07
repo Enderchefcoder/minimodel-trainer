@@ -54,7 +54,8 @@ def _pick_replies(
 ) -> list[chess.Move]:
     """Prioritize captures/checks/MultiPV, then random quiets, up to branch."""
     legal = list(board.legal_moves)
-    if len(legal) <= branch:
+    # branch>=60 ⇒ treat as "all legal" for opening densify (limited-Elo coverage).
+    if len(legal) <= branch or branch >= 60:
         return legal
     priority: list[chess.Move] = []
     rest: list[chess.Move] = []
@@ -149,7 +150,12 @@ def bfs_densify(
         if board.is_game_over(claim_draw=True):
             board.pop()
             continue
-        replies = _pick_replies(board, sf, branch=branch, depth=max(8, sf_depth - 2), rng=rng)
+        # Early plies: cover essentially all replies (limited Elo is noisy).
+        # Deeper: MultiPV-biased sample so midgame stays tractable.
+        local_branch = branch if our_ply < 3 else max(8, min(branch, 12))
+        replies = _pick_replies(
+            board, sf, branch=local_branch, depth=max(8, sf_depth - 2), rng=rng
+        )
         for reply in replies:
             child = board.copy(stack=False)
             child.push(reply)
