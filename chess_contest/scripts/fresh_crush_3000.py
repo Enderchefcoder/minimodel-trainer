@@ -44,6 +44,37 @@ def _log(path: Path, msg: str) -> None:
         f.write(line + "\n")
 
 
+def _fanout_replies(
+    board: chess.Board,
+    teacher: StockfishEngine,
+    *,
+    branch: int,
+) -> list[chess.Move]:
+    """Captures/checks + MultiPV-preferred replies (Elo noise without all-legal cost)."""
+    legal = list(board.legal_moves)
+    if len(legal) <= branch:
+        return legal
+    teacher.set_elo(None)
+    tops = teacher.analyse_top(board, multipv=min(10, branch), depth=10)
+    prefer = {info["uci"] for info in tops if info.get("uci")}
+    pri = [m for m in legal if board.is_capture(m) or board.gives_check(m)]
+    rest = sorted(
+        (m for m in legal if m not in pri),
+        key=lambda m: (0 if m.uci() in prefer else 1, m.uci()),
+    )
+    out: list[chess.Move] = []
+    seen: set[str] = set()
+    for m in pri + rest:
+        u = m.uci()
+        if u in seen:
+            continue
+        seen.add(u)
+        out.append(m)
+        if len(out) >= branch:
+            break
+    return out
+
+
 def farm_sfmax_spine(
     weights,
     teacher: StockfishEngine,
@@ -51,15 +82,12 @@ def farm_sfmax_spine(
     depth: int,
     strength: float,
     plies: int = 60,
+    branch: int = 24,
 ) -> int:
-    """Install SF-MAX for both sides on the principal variation + all 1-ply replies.
-
-    Elo-limited opponents diverge early, so pure Elo-farm never labels the
-    teacher spine — scored play then disagrees with depth-12 SF-MAX midgame.
-    """
+    """Install SF-MAX for both sides on the principal variation + preferred replies."""
     fills = 0
     board = chess.Board()
-    for _ in range(plies):
+    for ply in range(plies):
         if board.is_game_over(claim_draw=True):
             break
         mv = _ensure_teacher_move(
@@ -71,11 +99,16 @@ def farm_sfmax_spine(
         board.push(mv)
         if board.is_game_over(claim_draw=True):
             break
-        for rep in list(board.legal_moves):
+        # Full-width early, preferred later.
+        reps = (
+            list(board.legal_moves)
+            if ply < 8
+            else _fanout_replies(board, teacher, branch=branch)
+        )
+        for rep in reps:
             board.push(rep)
             try:
                 if not board.is_game_over(claim_draw=True):
-                    # Same depth as spine — shallow fanout PVs were disagreeing.
                     _ensure_teacher_move(
                         weights,
                         teacher,
@@ -98,10 +131,12 @@ def farm_game(
     stig_white: bool,
     depth: int,
     strength: float,
+    branch: int = 16,
 ) -> int:
-    """Install+play SF-MAX on our plies; 1-ply all-reply fill after each our move."""
+    """Install+play SF-MAX on our plies; preferred-reply fanout after each our move."""
     fills = 0
     board = chess.Board()
+    our_ply = 0
     for _ in range(160):
         if board.is_game_over(claim_draw=True):
             break
@@ -115,7 +150,12 @@ def farm_game(
             board.push(mv)
             if board.is_game_over(claim_draw=True):
                 break
-            for rep in list(board.legal_moves):
+            reps = (
+                list(board.legal_moves)
+                if our_ply < 6
+                else _fanout_replies(board, teacher, branch=branch)
+            )
+            for rep in reps:
                 board.push(rep)
                 try:
                     if not board.is_game_over(claim_draw=True):
@@ -129,6 +169,7 @@ def farm_game(
                         fills += 1
                 finally:
                     board.pop()
+            our_ply += 1
         else:
             opponent.set_elo(target)
             board.push(opponent.choose(board, movetime_ms=50))
