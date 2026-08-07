@@ -1,8 +1,9 @@
-"""Swarm policy/value net — offline-SF-distilled, never NNUE, never runtime SF.
+"""Swarm policy/value net - offline-SF-distilled, never NNUE, never runtime SF.
 
-v2: richer STM-centric planes (pieces + castling/ep/check + pheromone field
-summaries) and a deeper residual tower. Distilled from full-strength Stockfish
-offline so play can approach 3000-Elo neural competitors without calling SF.
+v3 (crush-big): ~20M+ residual tower (default 256ch x 12 blocks) with wider
+policy/value heads and stigmergy field planes. Distilled from full-strength
+Stockfish offline so play can climb toward 3000-Elo neural competitors
+without calling SF at move time.
 """
 
 from __future__ import annotations
@@ -17,8 +18,14 @@ from chess_contest.stigmergy.weights import default_field_params
 
 _TORCH = None
 
-# v2 input: 12 pieces + 4 castling + 1 ep + 1 check + 4 field summaries = 22
+# v2/v3 input: 12 pieces + 4 castling + 1 ep + 1 check + 4 field summaries = 22
 IN_CH = 22
+# Crush-big defaults - ~23M params (10M+ required for the 3000 push).
+DEFAULT_CHANNELS = 256
+DEFAULT_BLOCKS = 12
+DEFAULT_POLICY_PLANES = 64
+DEFAULT_VALUE_PLANES = 16
+DEFAULT_VALUE_HIDDEN = 512
 
 
 def _torch():
@@ -95,7 +102,6 @@ def encode_board(board: chess.Board) -> np.ndarray:
         fw, fb, _aux = deposit_fields(board, params)
         fw = diffuse(fw, params.decay, params.mix, steps=1)
         fb = diffuse(fb, params.decay, params.mix, steps=1)
-        # Channel means → 2 maps per color, STM-oriented.
         w_sum = fw.mean(axis=0).astype(np.float32)
         b_sum = fb.mean(axis=0).astype(np.float32)
         w_max = fw.max(axis=0).astype(np.float32)
@@ -104,10 +110,8 @@ def encode_board(board: chess.Board) -> np.ndarray:
             w_sum, b_sum = np.flipud(b_sum), np.flipud(w_sum)
             w_max, b_max = np.flipud(b_max), np.flipud(w_max)
         else:
-            # deposit uses row-from-top; align to rank-file plane layout.
             w_sum, b_sum = np.flipud(w_sum), np.flipud(b_sum)
             w_max, b_max = np.flipud(w_max), np.flipud(b_max)
-        # Normalize lightly.
         for arr, idx in ((w_sum, 18), (b_sum, 19), (w_max, 20), (b_max, 21)):
             scale = float(np.max(np.abs(arr))) + 1e-6
             planes[idx] = arr / scale
@@ -125,13 +129,25 @@ def move_index(move: chess.Move, *, flip: bool) -> int:
 
 
 class SwarmNet:
-    """Deep residual conv policy+value — stigmergy field-aware, not NNUE."""
+    """Deep residual conv policy+value - stigmergy field-aware, not NNUE."""
 
-    def __init__(self, channels: int = 192, blocks: int = 10, in_ch: int = IN_CH):
+    def __init__(
+        self,
+        channels: int = DEFAULT_CHANNELS,
+        blocks: int = DEFAULT_BLOCKS,
+        in_ch: int = IN_CH,
+        *,
+        policy_planes: int = DEFAULT_POLICY_PLANES,
+        value_planes: int = DEFAULT_VALUE_PLANES,
+        value_hidden: int = DEFAULT_VALUE_HIDDEN,
+    ):
         torch, nn = _torch()
         self.channels = channels
         self.blocks = blocks
         self.in_ch = in_ch
+        self.policy_planes = policy_planes
+        self.value_planes = value_planes
+        self.value_hidden = value_hidden
 
         class ResBlock(nn.Module):
             def __init__(self, c: int):
@@ -140,11 +156,21 @@ class SwarmNet:
                 self.bn1 = nn.BatchNorm2d(c)
                 self.conv2 = nn.Conv2d(c, c, 3, padding=1, bias=False)
                 self.bn2 = nn.BatchNorm2d(c)
+                # Lightweight channel attention (stigmergy-ish gating, not NNUE).
+                self.se = nn.Sequential(
+                    nn.AdaptiveAvgPool2d(1),
+                    nn.Flatten(),
+                    nn.Linear(c, max(8, c // 8)),
+                    nn.ReLU(),
+                    nn.Linear(max(8, c // 8), c),
+                    nn.Sigmoid(),
+                )
 
             def forward(self, x):
                 h = torch.relu(self.bn1(self.conv1(x)))
                 h = self.bn2(self.conv2(h))
-                return torch.relu(x + h)
+                gate = self.se(h).unsqueeze(-1).unsqueeze(-1)
+                return torch.relu(x + h * gate)
 
         class Net(nn.Module):
             def __init__(self):
@@ -155,13 +181,13 @@ class SwarmNet:
                     nn.ReLU(),
                 )
                 self.tower = nn.Sequential(*[ResBlock(channels) for _ in range(blocks)])
-                self.policy_conv = nn.Conv2d(channels, 32, 1)
-                self.policy = nn.Linear(32 * 64, 4096)
-                self.value_conv = nn.Conv2d(channels, 8, 1)
+                self.policy_conv = nn.Conv2d(channels, policy_planes, 1)
+                self.policy = nn.Linear(policy_planes * 64, 4096)
+                self.value_conv = nn.Conv2d(channels, value_planes, 1)
                 self.value = nn.Sequential(
-                    nn.Linear(8 * 64, 256),
+                    nn.Linear(value_planes * 64, value_hidden),
                     nn.ReLU(),
-                    nn.Linear(256, 1),
+                    nn.Linear(value_hidden, 1),
                     nn.Tanh(),
                 )
 
@@ -176,6 +202,10 @@ class SwarmNet:
         self.net.to(self.device)
         self.net.eval()
         self._logit_cache: dict[str, tuple[np.ndarray, float]] = {}
+
+    def count_params(self) -> int:
+        """Trainable parameter count (crush-big target is 10M+)."""
+        return int(sum(p.numel() for p in self.net.parameters()))
 
     def _forward_np(self, board: chess.Board) -> tuple[np.ndarray, float]:
         torch, _ = _torch()
@@ -243,7 +273,11 @@ class SwarmNet:
                 "channels": self.channels,
                 "blocks": self.blocks,
                 "in_ch": self.in_ch,
-                "version": 2,
+                "policy_planes": self.policy_planes,
+                "value_planes": self.value_planes,
+                "value_hidden": self.value_hidden,
+                "params": self.count_params(),
+                "version": 3,
             },
             path,
         )
@@ -256,15 +290,47 @@ class SwarmNet:
         ch = int(blob.get("channels", self.channels))
         bl = int(blob.get("blocks", self.blocks))
         inch = int(blob.get("in_ch", 12))
-        if ch != self.channels or bl != self.blocks or inch != self.in_ch:
-            self.__init__(channels=ch, blocks=bl, in_ch=inch)
-        self.net.load_state_dict(blob["state_dict"])
+        # Infer head widths from legacy v2 checkpoints (32/8/256).
+        pp = int(blob.get("policy_planes", 32 if int(blob.get("version", 2)) < 3 else self.policy_planes))
+        vp = int(blob.get("value_planes", 8 if int(blob.get("version", 2)) < 3 else self.value_planes))
+        vh = int(blob.get("value_hidden", 256 if int(blob.get("version", 2)) < 3 else self.value_hidden))
+        # Detect head sizes from state_dict when metadata missing.
+        sd = blob["state_dict"]
+        if "policy_conv.weight" in sd:
+            pp = int(sd["policy_conv.weight"].shape[0])
+        if "value_conv.weight" in sd:
+            vp = int(sd["value_conv.weight"].shape[0])
+        if "value.0.weight" in sd:
+            vh = int(sd["value.0.weight"].shape[0])
+        need = (
+            ch != self.channels
+            or bl != self.blocks
+            or inch != self.in_ch
+            or pp != self.policy_planes
+            or vp != self.value_planes
+            or vh != self.value_hidden
+        )
+        if need:
+            self.__init__(
+                channels=ch,
+                blocks=bl,
+                in_ch=inch,
+                policy_planes=pp,
+                value_planes=vp,
+                value_hidden=vh,
+            )
+        # Legacy v2 towers lack SE layers - reject incompatible towers.
+        if any(k.startswith("tower.0.se.") for k in self.net.state_dict()) and not any(
+            k.startswith("tower.0.se.") for k in sd
+        ):
+            raise ValueError("legacy residual tower without SE - retrain crush-big")
+        self.net.load_state_dict(sd)
         self.net.eval()
         self._logit_cache.clear()
 
 
 def try_load_swarm(path: str | Path = "chess_contest/weights/gm/swarm_net.pt") -> SwarmNet | None:
-    """Load residual swarm weights if present and v2-compatible; else None."""
+    """Load residual swarm weights if present and v2+/field-aware; else None."""
     path = Path(path)
     if not path.is_file():
         return None
@@ -273,12 +339,12 @@ def try_load_swarm(path: str | Path = "chess_contest/weights/gm/swarm_net.pt") -
         blob = torch.load(path, map_location="cpu", weights_only=False)
         if not isinstance(blob, dict) or "state_dict" not in blob:
             return None
-        # Reject legacy 12-plane / flat nets — crush path needs v2.
+        # Reject legacy 12-plane / flat nets - crush path needs field-aware input.
         inch = int(blob.get("in_ch", 12))
         if inch < 20:
             return None
-        ch = int(blob.get("channels", 192))
-        bl = int(blob.get("blocks", 10))
+        ch = int(blob.get("channels", DEFAULT_CHANNELS))
+        bl = int(blob.get("blocks", DEFAULT_BLOCKS))
         net = SwarmNet(channels=ch, blocks=bl, in_ch=inch)
         net.load(path)
         return net

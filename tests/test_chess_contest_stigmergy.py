@@ -126,6 +126,16 @@ def test_search_inf_is_float_safe() -> None:
     assert result.move.uci() != "e4c3"
 
 
+def test_swarm_big_param_floor() -> None:
+    """Crush-big default tower must clear the 10M-parameter floor."""
+    from chess_contest.stigmergy.swarm_net import SwarmNet
+
+    net = SwarmNet()  # 256x12 wide heads
+    assert net.count_params() >= 10_000_000
+    assert net.channels >= 256
+    assert net.blocks >= 12
+
+
 def test_policy_sprint_instant_and_safe() -> None:
     """Policy sprint skips IDAS, still returns a legal non-None move."""
     from chess_contest.stigmergy.engine import StigmergyEngine
@@ -134,7 +144,7 @@ def test_policy_sprint_instant_and_safe() -> None:
 
     set_swarm(None)
     set_policy_sprint(False)
-    net = SwarmNet(channels=16, blocks=1)
+    net = SwarmNet(channels=16, blocks=1, policy_planes=4, value_planes=2, value_hidden=16)
     set_swarm(net)
     set_policy_sprint(True)
     try:
@@ -162,7 +172,7 @@ def test_swarm_top_moves_and_engine_strips_oracle_flag() -> None:
     from chess_contest.stigmergy.swarm_net import SwarmNet
 
     set_swarm(None)
-    net = SwarmNet(channels=16, blocks=1)
+    net = SwarmNet(channels=16, blocks=1, policy_planes=4, value_planes=2, value_hidden=16)
     board = chess.Board()
     tops = net.top_moves(board, k=3)
     assert len(tops) >= 1

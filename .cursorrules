@@ -81,26 +81,21 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: 2-HOUR SPRINT — beat 3000 Elo (2026-08-06 20:44Z)
+## Task: BIG SwarmNet (~20M+) → 3000 Elo (2026-08-07)
 
-Deadline: ~2 hours. No Stockfish at play. Aim Elo ≥3000 on SF UCI_Elo ladder.
+Goal: scale SwarmNet to 10M+ (target ~20–25M via 256×12), distill hard,
+honest SF-Elo ladder ≥3000. No Stockfish at play.
 
 Plan:
-[X] Kill slow crush; wire set_policy_sprint + sprint_3000.py
-[X] Warm-train → overfit (65% train / 25% OOD); restored pre-sprint prior
-[X] OOD early-stop train path; IDAS blitz ladder (not pure policy)
-[X] IDAS probe: best 25% vs SF1320 → ≈1861; NOT 3000
-[X] Extra SF labels + OOD early-stop (held 29%); STATUS / commit / PR
+[ ] SwarmNet v3: 256ch×12 blocks, wider policy/value heads, param count API
+[ ] Generate 100k+ MultiPV labels; OOD early-stop train
+[ ] Long-think IDAS ladder 2200→3100
+[ ] STATUS / tests / commit / PR
 
-Lessons:
-- 15s IDAS ladder cannot finish in 2h; policy-sprint required for probes BUT
-  pure policy sprint ≈12% vs SF1320 (weaker than swarm-order IDAS 25%).
-- Ablation: swarm-order 25% vs SF1320; trails hurt; ungated beam toxic.
-- Warm-start must LOG failures (silent suppress wiped a 52% ckpt cycle).
-- Epoch ≈6min @ 80k/192×10 CPU — budget ~10–15 epochs/hour.
-- Train-top1 ≠ strength: 10ep → 66% train / 25% OOD. Early-stop on OOD.
-- Keep swarm_net_pre_sprint.pt (or *_best_ood.pt) before long fine-tunes.
-- 2h crush-3000 FAILED honestly: peak ≈1861, crush_3000=false.
+Prior: 192×10 already ~15.2M but OOD~29%, Elo~1861 — need capacity+data.
+## Task: 2-HOUR SPRINT — beat 3000 Elo (2026-08-06 20:44Z) — FAILED @ ~1861
+
+Verdict: DID NOT BEAT 3000. Best 25% vs SF1320 → ≈1861.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train

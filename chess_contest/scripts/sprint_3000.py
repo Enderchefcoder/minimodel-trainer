@@ -213,10 +213,14 @@ def main(argv: list[str] | None = None) -> int:
 
         net = try_load_swarm(net_path)
         if net is None:
-            net = SwarmNet(channels=192, blocks=10, in_ch=IN_CH)
-            _log(log, "cold-start SwarmNet 192x10")
+            net = SwarmNet(channels=256, blocks=12, in_ch=IN_CH)
+            _log(log, f"cold-start SwarmNet 256x12 params={net.count_params():,}")
         else:
-            _log(log, f"warm-start {net_path} ch={net.channels} bl={net.blocks}")
+            _log(
+                log,
+                f"warm-start {net_path} ch={net.channels} bl={net.blocks} "
+                f"params={net.count_params():,}",
+            )
 
         if args.probe_only:
             set_swarm(net)

@@ -286,8 +286,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--stig-depth", type=int, default=18)
     p.add_argument("--floor", type=float, default=2800.0)
     p.add_argument("--cycles", type=int, default=5)
-    p.add_argument("--channels", type=int, default=192)
-    p.add_argument("--blocks", type=int, default=10)
+    p.add_argument("--channels", type=int, default=256)
+    p.add_argument("--blocks", type=int, default=12)
     p.add_argument("--skip-gen", action="store_true")
     p.add_argument("--probe-only", action="store_true")
     args = p.parse_args(argv)
@@ -435,12 +435,15 @@ def write_reports(out: Path, probe: dict, args) -> None:
     (out / "elo_probe.json").write_text(json.dumps(probe, indent=2), encoding="utf-8")
     (out / "gm_report.json").write_text(json.dumps(probe, indent=2), encoding="utf-8")
     elo = probe["estimated_elo"]
+    params = probe.get("swarm_params", "n/a")
+    arch = probe.get("swarm_arch", "n/a")
     (out / "STATUS.md").write_text(
         "# Crush path - no runtime Stockfish\n\n"
         f"Estimated Elo **{elo}** "
         f"(floor target {args.floor}; crush-3000={probe.get('crush_3000')}).\n\n"
-        "`choose_move` never calls Stockfish. SwarmNet v2 distilled from "
-        "full-strength SF offline; policy-sprint/policy-first + IDAS.\n\n"
+        f"SwarmNet **{arch}** params={params}. "
+        "`choose_move` never calls Stockfish. Distilled from full-strength SF "
+        "offline; long-think IDAS + policy ordering.\n\n"
         f"Think budget: {args.stig_ms} ms / move.\n"
         f"policy_sprint={probe.get('policy_sprint', False)} "
         f"ood_match={probe.get('policy_match_ood', 'n/a')}\n",
