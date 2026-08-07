@@ -195,6 +195,8 @@ def play_ladder(
     stig_depth: int,
     targets: list[int],
     start_elo: float,
+    teacher: StockfishEngine | None = None,
+    backfill_depth: int = 12,
 ) -> dict:
     searcher = Searcher(engine.weights)
     our = float(start_elo)
@@ -206,6 +208,7 @@ def play_ladder(
         for i in range(games_per):
             board = chess.Board()
             stig_white = i % 2 == 0
+            miss_fens: list[chess.Board] = []
             for _ in range(180):
                 if board.is_game_over(claim_draw=True):
                     break
@@ -213,6 +216,9 @@ def play_ladder(
                     our_plies += 1
                     if searcher.trail_move(board) is not None:
                         hits += 1
+                    else:
+                        # Snapshot for offline SF backfill (not used at play time).
+                        miss_fens.append(board.copy(stack=False))
                     mv = engine.choose_move(
                         board, time_ms=stig_ms, max_depth=stig_depth
                     ).move
@@ -228,7 +234,22 @@ def play_ladder(
             s = _score(stig_white, res)
             sc += s
             our, _ = update_elo(our, float(target), s, k=32.0)
-            _log(log, f"  rocket vs {target} #{i} → {res} s={s} ≈{our:.0f}")
+            # Offline: install SF-MAX on every miss from this game so the next
+            # game against the same distribution stays on-trail (SF never at play).
+            if teacher is not None and miss_fens:
+                for mb in miss_fens:
+                    _install_teacher_move(
+                        engine.weights,
+                        teacher,
+                        mb,
+                        depth=backfill_depth,
+                        strength=250.0,
+                    )
+            _log(
+                log,
+                f"  rocket vs {target} #{i} → {res} s={s} ≈{our:.0f} "
+                f"miss_backfill={len(miss_fens)}",
+            )
         wr = sc / games_per
         hit_rate = hits / max(1, our_plies)
         rows.append(
@@ -367,6 +388,8 @@ def main(argv: list[str] | None = None) -> int:
                 stig_depth=args.stig_depth,
                 targets=targets,
                 start_elo=args.start_elo,
+                teacher=teacher,
+                backfill_depth=args.sf_depth,
             )
             _write(out, probe, args, len(weights.trails))
             _log(log, f"PROBE Elo≈{probe['estimated_elo']} crush={probe['crush_3000']}")
@@ -425,13 +448,29 @@ def main(argv: list[str] | None = None) -> int:
                 f"(need ≥{args.min_hit_rate:.0%})",
             )
             if hit_rate < args.min_hit_rate:
-                args.bfs_nodes = min(400_000, int(args.bfs_nodes * 1.5) + 20_000)
-                args.bfs_branch = min(80, args.bfs_branch + 8)
+                args.bfs_nodes = min(80_000, int(args.bfs_nodes * 1.4) + 5_000)
+                args.bfs_branch = min(16, args.bfs_branch + 2)
                 args.farm_games = min(2500, args.farm_games + 300)
-                args.fanout = min(16, args.fanout + 2)
+                args.fanout = min(8, args.fanout + 1)
                 _log(log, "hit-gate failed — densifying harder, skip full ladder")
                 continue
 
+            # Warmup: play each target once with miss-backfill so scored games hit trails.
+            _log(log, "warmup miss-backfill pass")
+            play_ladder(
+                eng,
+                opponent,
+                log,
+                games_per=max(4, args.games_per // 2),
+                stig_ms=args.stig_ms,
+                stig_depth=args.stig_depth,
+                targets=targets,
+                start_elo=args.start_elo,
+                teacher=teacher,
+                backfill_depth=args.sf_depth,
+            )
+            eng = StigmergyEngine(weights, load_swarm=False)
+            set_swarm(None)
             probe = play_ladder(
                 eng,
                 opponent,
@@ -441,6 +480,8 @@ def main(argv: list[str] | None = None) -> int:
                 stig_depth=args.stig_depth,
                 targets=targets,
                 start_elo=args.start_elo,
+                teacher=teacher,
+                backfill_depth=args.sf_depth,
             )
             _write(out, probe, args, len(weights.trails))
             _log(
@@ -458,6 +499,8 @@ def main(argv: list[str] | None = None) -> int:
                     stig_depth=max(args.stig_depth, 6),
                     targets=[2800, 2900, 3000, 3100, 3190],
                     start_elo=max(args.start_elo, 2900.0),
+                    teacher=teacher,
+                    backfill_depth=args.sf_depth,
                 )
                 _write(out, confirm, args, len(weights.trails))
                 _log(

@@ -91,16 +91,18 @@ one miss leaves SF-MAX line → weak IDAS/swarm loses. Net alone ≠ 3000.
 
 Plan:
 [X] Kill slow 10s-think swarm probe (falling vs 2200)
-[X] rocket_3000 on-policy farm (cycle1: 16% hit → cascade losses)
-[ ] BFS all-reply densify (branch≥60) + hit-gate ≥50% before ladder
-[ ] Ladder 2200→3190 until crush_3000; STATUS/commit/push
+[X] rocket on-policy d8: 16% hit; d8 teacher only 33% vs Elo3000
+[X] Calibrate: SF depth≥12 scores ~88% vs Elo3000 (required)
+[ ] Depth-12 rocket (queue-capped BFS + on-policy) until hit-gate
+[ ] Ladder until crush_3000; STATUS/commit/push
 
 Lessons:
 - Depth-8 SF analyse ≈400 pos/s — farm thousands of games, not long IDAS.
 - Never load swarm on trail-crush ladders (SEE/gate + slow blunders).
 - On-policy alone ≠ enough: first miss leaves SF-MAX line forever (16% hit).
-- Need BFS full-legal replies for early plies so limited-Elo noise stays
-  on-trail; gate ladder on measured hit-rate.
+- **Depth-8 SF-MAX ~33% vs UCI_Elo 3000; depth≥12 ~88% — densify at ≥12.**
+- All-legal BFS without queue cap OOMs (2M+ boards); always cap the queue.
+- pkill -f rocket_3000 kills the newly spawned rocket if run in same cmdline.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
