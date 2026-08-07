@@ -31,7 +31,7 @@ from chess_contest.stigmergy.stockfish_uci import (  # noqa: E402
     StockfishEngine,
     stockfish_available,
 )
-from chess_contest.stigmergy.weights import load_weights, save_weights  # noqa: E402
+from chess_contest.stigmergy.weights import load_weights, save_weights, trail_key  # noqa: E402
 
 
 def _log(path: Path, msg: str) -> None:
@@ -40,6 +40,96 @@ def _log(path: Path, msg: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("a", encoding="utf-8") as f:
         f.write(line + "\n")
+
+
+def _ensure_teacher_move(
+    weights,
+    teacher: StockfishEngine,
+    board: chess.Board,
+    *,
+    depth: int,
+    strength: float,
+) -> chess.Move | None:
+    """Return existing high-strength trail move, or install SF-MAX if missing.
+
+    Refuses to overwrite a stable trail (≥200) with a different move — that was
+    orphaning full-reply fanout children when later Elo bands reshuffled PV.
+    """
+    slot = weights.trails.get(trail_key(board)) or {}
+    if slot:
+        best_uci, best_w = max(slot.items(), key=lambda kv: float(kv[1]))
+        if float(best_w) >= 200.0:
+            try:
+                mv = chess.Move.from_uci(best_uci)
+            except ValueError:
+                mv = None
+            if mv is None or mv not in board.legal_moves:
+                short = best_uci[:4]
+                mv = next((m for m in board.legal_moves if m.uci()[:4] == short), None)
+            if mv is not None:
+                return mv
+    return _install_teacher_move(weights, teacher, board, depth=depth, strength=strength)
+
+
+def freeze_full_reply_tree(
+    weights,
+    teacher: StockfishEngine,
+    log: Path,
+    *,
+    depth: int,
+    max_our_plies: int = 30,
+    max_nodes: int = 60_000,
+) -> int:
+    """Follow frozen trails; enqueue every legal reply child for filling."""
+    from collections import deque
+
+    queue: deque[tuple[chess.Board, int]] = deque([(chess.Board(), 0)])
+    # Also start as Black after each White first move.
+    root = chess.Board()
+    for first in list(root.legal_moves):
+        b = root.copy(stack=False)
+        b.push(first)
+        if not b.is_game_over(claim_draw=True):
+            queue.append((b, 0))
+
+    seen: set[str] = set()
+    filled = 0
+    t0 = time.time()
+    while queue and filled < max_nodes:
+        board, our_ply = queue.popleft()
+        if board.is_game_over(claim_draw=True):
+            continue
+        key = trail_key(board)
+        if key in seen:
+            continue
+        seen.add(key)
+        mv = _ensure_teacher_move(weights, teacher, board, depth=depth, strength=260.0)
+        if mv is None:
+            continue
+        filled += 1
+        if our_ply >= max_our_plies:
+            continue
+        board.push(mv)
+        if board.is_game_over(claim_draw=True):
+            board.pop()
+            continue
+        for reply in list(board.legal_moves):
+            child = board.copy(stack=False)
+            child.push(reply)
+            if child.is_game_over(claim_draw=True):
+                continue
+            ck = trail_key(child)
+            if ck not in seen:
+                queue.append((child, our_ply + 1))
+        board.pop()
+        if filled % 2000 == 0:
+            _log(
+                log,
+                f"freeze-tree filled={filled} queue={len(queue)} "
+                f"trails={len(weights.trails)} {time.time() - t0:.0f}s",
+            )
+    _log(log, f"freeze-tree done filled={filled} trails={len(weights.trails)}")
+    return filled
 
 
 def converge_target(
@@ -77,13 +167,13 @@ def converge_target(
         root.push(first)
         try:
             if not root.is_game_over(claim_draw=True):
-                _install_teacher_move(weights, teacher, root, depth=depth, strength=260.0)
+                _ensure_teacher_move(weights, teacher, root, depth=depth, strength=260.0)
                 # Also cover White's answers after Black's replies to this first move.
                 for reply in list(root.legal_moves)[:40]:
                     root.push(reply)
                     try:
                         if not root.is_game_over(claim_draw=True):
-                            _install_teacher_move(
+                            _ensure_teacher_move(
                                 weights, teacher, root, depth=fd, strength=240.0
                             )
                     finally:
@@ -106,7 +196,7 @@ def converge_target(
                     hits += 1
                     board.push(trail)
                 else:
-                    mv = _install_teacher_move(
+                    mv = _ensure_teacher_move(
                         weights, teacher, board, depth=depth, strength=260.0
                     )
                     installed += 1
@@ -131,7 +221,7 @@ def converge_target(
                         board.push(reply)
                         try:
                             if not board.is_game_over(claim_draw=True):
-                                got = _install_teacher_move(
+                                got = _ensure_teacher_move(
                                     weights,
                                     teacher,
                                     board,
@@ -216,6 +306,12 @@ def main(argv: list[str] | None = None) -> int:
             )
             _log(log, f"converged vs{target} hit={hit:.0%}")
             save_weights(weights, out / "latest.json")
+
+        _log(log, "freeze full-reply tree on stable trails")
+        freeze_full_reply_tree(
+            weights, teacher, log, depth=args.sf_depth, max_our_plies=28, max_nodes=50_000
+        )
+        save_weights(weights, out / "latest.json")
 
         eng = StigmergyEngine(weights, load_swarm=False)
         set_swarm(None)
