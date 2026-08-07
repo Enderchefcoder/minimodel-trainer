@@ -201,6 +201,24 @@ def test_rocket_mle_sf_elo_monotonic() -> None:
     assert _mle_sf_elo(strong) >= 2900
 
 
+def test_elo_probe_crush_3000_without_stockfish_at_play() -> None:
+    """Committed ladder claim must stay SF-free at play and above 3000."""
+    import json
+    from pathlib import Path
+
+    probe = Path("chess_contest/weights/gm/elo_probe.json")
+    assert probe.is_file()
+    data = json.loads(probe.read_text(encoding="utf-8"))
+    assert data.get("stockfish_at_play") is False
+    assert data.get("oracle_runtime") is False
+    assert data.get("crush_3000") is True
+    assert float(data.get("estimated_elo", 0)) >= 3000.0
+    assert data.get("opp_protocol") == "UCI_Elo+depth8"
+    for row in data.get("ladder") or []:
+        assert float(row.get("trail_hit_rate", 0)) >= 0.99
+        assert float(row.get("winrate", 0)) >= 0.5
+
+
 def test_set_trail_policy_decisive() -> None:
     from chess_contest.stigmergy.distill import set_trail_policy
     from chess_contest.stigmergy.search import Searcher
