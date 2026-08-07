@@ -261,29 +261,59 @@ def converge_target(
                     if mv is None:
                         break
                     board.push(mv)
-                # Cover every legal opponent reply from this SF-MAX node.
+                # 2-ply fanout: fill answers to every reply, then from each
+                # installed answer fill answers to every next reply. Leaves from
+                # 1-ply-only fanout were the scored-play miss cascade source.
                 if (
                     fanout_all_replies
-                    and our <= 55
+                    and our <= 40
                     and not board.is_game_over(claim_draw=True)
                 ):
                     replies = list(board.legal_moves)
-                    if len(replies) > 60:
-                        replies = replies[:60]
+                    if len(replies) > 50:
+                        replies = replies[:50]
                     use_depth = fd if our <= 20 else max(8, fd - 2)
                     for reply in replies:
                         board.push(reply)
                         try:
-                            if not board.is_game_over(claim_draw=True):
-                                got = _ensure_teacher_move(
-                                    weights,
-                                    teacher,
-                                    board,
-                                    depth=use_depth,
-                                    strength=240.0,
-                                )
-                                if got is not None:
-                                    installed += 1
+                            if board.is_game_over(claim_draw=True):
+                                continue
+                            got = _ensure_teacher_move(
+                                weights,
+                                teacher,
+                                board,
+                                depth=use_depth,
+                                strength=240.0,
+                            )
+                            if got is None:
+                                continue
+                            installed += 1
+                            if our > 24:
+                                continue
+                            board.push(got)
+                            try:
+                                if board.is_game_over(claim_draw=True):
+                                    continue
+                                replies2 = list(board.legal_moves)
+                                if len(replies2) > 24:
+                                    replies2 = replies2[:24]
+                                for reply2 in replies2:
+                                    board.push(reply2)
+                                    try:
+                                        if not board.is_game_over(claim_draw=True):
+                                            got2 = _ensure_teacher_move(
+                                                weights,
+                                                teacher,
+                                                board,
+                                                depth=max(8, use_depth - 2),
+                                                strength=220.0,
+                                            )
+                                            if got2 is not None:
+                                                installed += 1
+                                    finally:
+                                        board.pop()
+                            finally:
+                                board.pop()
                         finally:
                             board.pop()
             else:

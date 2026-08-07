@@ -93,7 +93,8 @@ Plan:
 [X] Kill slow 10s-think swarm probe (falling vs 2200)
 [X] rocket on-policy d8: 16% hit; d8 teacher only 33% vs Elo3000
 [X] Calibrate: SF depth≥12 scores ~88% vs Elo3000 (required)
-[ ] Depth-12 rocket (queue-capped BFS + on-policy) until hit-gate
+[X] Depth-12 trails; full-reply / DFS / 2-ply fanout (in flight)
+[ ] Scored hit still ~15–25% until 2-ply fill proves out; keep going
 [ ] Ladder until crush_3000; STATUS/commit/push
 
 Lessons:
