@@ -94,20 +94,20 @@ Plan:
 [X] Kill slow swarm probes; calibrate depth≥12 teacher
 [X] rocket/flash/2-ply converge → 2591, crush_3000=false
 [X] Root cause: leaf gaps + converge hit inflation
-[X] Preserve-strong fanout (don't orphan children on PV churn)
-[X] until_3000.py: train+all-reply fanout → honest probe → ladder
-[ ] Run until_3000 until measured Elo≥3000
+[X] Found worse bug: strength≥200 lock preserved LOSING shallow PVs
+[X] Strength-ranked refresh + fresh_crush_3000.py (clean d12 book)
+[ ] Run fresh crush until measured Elo≥3000
 [ ] STATUS/commit/push/PR with crush_3000=true only when earned
 
 Lessons:
 - Depth-8 SF-MAX ~33% vs UCI_Elo 3000; depth≥12 ~88% — densify at ≥12.
 - Never load swarm on trail-crush ladders.
 - Converge hit with install-on-miss ≠ scored hit; probe without install.
-- 1-ply fanout along one spine leaves answers as leaves — next opp reply
-  after playing that answer misses. Need visit+fanout on every reached node
-  (many on-policy games) or ply_depth≥2 early.
-- Don't overwrite strength≥200 trails (PV churn orphans fanout children).
-- All-legal BFS without queue cap OOMs; prefer on-policy + DFS.
+- **Never permanently lock trails: overwrite when new strength is higher.**
+  Locked shallow PVs made "hits" play losing moves (f1e1 vs c2c4).
+- UCI_Elo movetime games are non-deterministic — need wide on-policy cover.
+- 1-ply fanout leaves need visit+fanout on every reached node.
+- All-legal BFS without queue cap OOMs; prefer on-policy + ply-layered BFS.
 - pkill -f rocket_3000 kills the newly spawned rocket if run in same cmdline.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 

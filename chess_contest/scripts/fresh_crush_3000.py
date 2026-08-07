@@ -44,6 +44,51 @@ def _log(path: Path, msg: str) -> None:
         f.write(line + "\n")
 
 
+def farm_sfmax_spine(
+    weights,
+    teacher: StockfishEngine,
+    *,
+    depth: int,
+    strength: float,
+    plies: int = 60,
+) -> int:
+    """Install SF-MAX for both sides on the principal variation + all 1-ply replies.
+
+    Elo-limited opponents diverge early, so pure Elo-farm never labels the
+    teacher spine — scored play then disagrees with depth-12 SF-MAX midgame.
+    """
+    fills = 0
+    board = chess.Board()
+    for _ in range(plies):
+        if board.is_game_over(claim_draw=True):
+            break
+        mv = _ensure_teacher_move(
+            weights, teacher, board, depth=depth, strength=strength
+        )
+        if mv is None:
+            break
+        fills += 1
+        board.push(mv)
+        if board.is_game_over(claim_draw=True):
+            break
+        for rep in list(board.legal_moves):
+            board.push(rep)
+            try:
+                if not board.is_game_over(claim_draw=True):
+                    # Same depth as spine — shallow fanout PVs were disagreeing.
+                    _ensure_teacher_move(
+                        weights,
+                        teacher,
+                        board,
+                        depth=depth,
+                        strength=strength - 10.0,
+                    )
+                    fills += 1
+            finally:
+                board.pop()
+    return fills
+
+
 def farm_game(
     weights,
     teacher: StockfishEngine,
@@ -78,8 +123,8 @@ def farm_game(
                             weights,
                             teacher,
                             board,
-                            depth=max(8, depth - 2),
-                            strength=strength - 20.0,
+                            depth=depth,
+                            strength=strength - 10.0,
                         )
                         fills += 1
                 finally:
@@ -141,6 +186,19 @@ def main(argv: list[str] | None = None) -> int:
         for cycle in range(1, args.cycles + 1):
             _log(log, f"--- cycle {cycle}/{args.cycles} ---")
             t0 = time.time()
+            # Plant / refresh the SF-MAX spine every cycle (both colours).
+            spine_fills = farm_sfmax_spine(
+                weights,
+                teacher,
+                depth=args.sf_depth,
+                strength=args.strength,
+                plies=80,
+            )
+            _log(
+                log,
+                f"sfmax-spine fills={spine_fills} trails={len(weights.trails)} "
+                f"{time.time() - t0:.0f}s",
+            )
             fills = 0
             for gi in range(args.farm_games):
                 target = targets_farm[gi % len(targets_farm)]
