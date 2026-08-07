@@ -120,6 +120,7 @@ def bfs_densify(
     seen: set[str] = set()
     filled = 0
     t0 = time.time()
+    queue_cap = max(max_nodes * 3, 50_000)
     while queue and filled < max_nodes:
         board, our_ply = queue.popleft()
         if board.is_game_over(claim_draw=True):
@@ -150,13 +151,16 @@ def bfs_densify(
         if board.is_game_over(claim_draw=True):
             board.pop()
             continue
-        # Early plies: cover essentially all replies (limited Elo is noisy).
-        # Deeper: MultiPV-biased sample so midgame stays tractable.
-        local_branch = branch if our_ply < 3 else max(8, min(branch, 12))
+        # Early plies: wider reply coverage. Deeper: keep the queue bounded.
+        local_branch = branch if our_ply < 3 else max(6, min(branch, 10))
+        if len(queue) >= queue_cap:
+            local_branch = min(local_branch, 4)
         replies = _pick_replies(
             board, sf, branch=local_branch, depth=max(8, sf_depth - 2), rng=rng
         )
         for reply in replies:
+            if len(queue) >= queue_cap:
+                break
             child = board.copy(stack=False)
             child.push(reply)
             if child.is_game_over(claim_draw=True):
