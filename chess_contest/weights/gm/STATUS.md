@@ -1,24 +1,30 @@
-# Crush path — no runtime Stockfish
+# Crush-big path - no runtime Stockfish
 
-## Verdict (2-hour sprint): DID NOT BEAT 3000
+## SwarmNet v3: **31,746,513 params** (256x12 + SE + wide heads)
 
-Best measured pure Elo ≈ **1861** (25% vs SF UCI_Elo 1320 @ 2500ms IDAS depth 10).
-Follow-up ladders: ~0% vs 1600–2500. Sequential end ≈1750.
-`crush_3000=false`, `stockfish_at_play=false`, `oracle_runtime=false`.
+## Ladder (4s IDAS, depth 12, SF opponent only)
 
-### Best ladder step
-| Opponent | Score | Think |
-|----------|-------|-------|
-| SF 1320 | **1.5/6 (25%)** → ≈1861 | 2500ms d10 |
-| SF 1600+ | ~0% | 2000–2500ms |
+| Opponent | Score | After Elo |
+|----------|-------|-----------|
+| SF 1320 | **2.5/6 (42%)** | ≈1893 |
+| SF 1600 | 0/6 (0%) | ≈1742 |
+| SF 2000 | 0/6 (0%) | ≈1709 |
+| SF 2200 | 0/6 (0%) | ≈1698 |
+| SF **2500** | **1.5/6 (25%)** draws! | ≈1744 |
+| SF 2700 | 0/6 (0%) | ≈1743 |
 
-### Sprint learnings (locked)
-1. Swarm move-order + IDAS beats pure policy-sprint (~25% vs ~12% @ SF1320).
-2. Neural beam at low margin is toxic → gates ≥2.0/2.5.
-3. Train-top1 66% with OOD 25% = overfit; early-stop on OOD (held 29%).
-4. CPU epoch ≈6min @ 192×10/80k — cannot distill to 3000-class policy in 2h.
+`crush_3000=false` (not yet). `stockfish_at_play=false`. OOD match after early-stop train: **26%**.
+
+### vs prior (v2 ~15M)
+- SF1320: 25% → **42%**
+- SF2500: 0% → **25%** (three half-points)
+
+### Still needed for 3000+
+- OOD policy match ≥55-60% (now 26%)
+- More diverse MultiPV labels + longer OOD-gated train (early-stop hit at ep3)
+- Longer think (10-20s) once OOD is strong
 
 ### Artifacts
-- `sprint_3000.py`, `set_policy_sprint`, OOD early-stop
-- `swarm_net_pre_sprint.pt` / `swarm_net_best_ood.pt`
-- Logs: `sprint_probe2.log`, `sprint_ood.log`, `sprint_3000.log`
+- `swarm_net.pt` / `swarm_net_best_ood.pt` (~122MB, 31.7M params)
+- `crush_big_3000.py`, `crush_big.log`
+- Legacy v2 archived as `swarm_net_v2_15m_legacy.pt`

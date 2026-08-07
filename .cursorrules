@@ -81,18 +81,17 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: BIG SwarmNet (~20M+) → 3000 Elo (2026-08-07)
+## Task: BIG SwarmNet (~32M) → 3000 Elo (2026-08-07)
 
-Goal: scale SwarmNet to 10M+ (target ~20–25M via 256×12), distill hard,
-honest SF-Elo ladder ≥3000. No Stockfish at play.
+Goal: SwarmNet v3 256x12 SE (~31.7M), distill hard, ladder ≥3000. No SF at play.
 
 Plan:
-[ ] SwarmNet v3: 256ch×12 blocks, wider policy/value heads, param count API
-[ ] Generate 100k+ MultiPV labels; OOD early-stop train
-[ ] Long-think IDAS ladder 2200→3100
-[ ] STATUS / tests / commit / PR
+[X] SwarmNet v3 256x12 + SE + wide heads (31,746,513 params)
+[X] 135k MultiPV labels; OOD early-stop (peak OOD 26% @ ep2)
+[X] Ladder: 42% vs SF1320, 25% vs SF2500; NOT 3000 yet
+[X] STATUS / tests / commit / PR
 
-Prior: 192×10 already ~15.2M but OOD~29%, Elo~1861 — need capacity+data.
+Next: more data + looser OOD patience; longer think once OOD≥50%.
 ## Task: 2-HOUR SPRINT — beat 3000 Elo (2026-08-06 20:44Z) — FAILED @ ~1861
 
 Verdict: DID NOT BEAT 3000. Best 25% vs SF1320 → ≈1861.
