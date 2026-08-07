@@ -195,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             ood = policy_match(net, sf, n=120)
             _log(log, f"epoch-ood {ep}/{args.epochs} OOD={ood:.0%} best={best_ood:.0%}")
-            if ood >= best_ood - 0.01:
+            if ood >= best_ood - 0.03:
                 if ood > best_ood:
                     best_ood = ood
                     net.save(best_path)
