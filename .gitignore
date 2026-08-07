@@ -95,3 +95,7 @@ Thumbs.db
 chess_contest/weights/gm/swarm_dataset.npz
 chess_contest/weights/gm/crush_dataset.npz
 chess_contest/weights/gm/crush_3000.log
+
+chess_contest/weights/gm/rocket_weights.json
+chess_contest/weights/gm/blitz_weights.json
+chess_contest/weights/gm/STATUS.json

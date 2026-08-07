@@ -184,6 +184,23 @@ def test_swarm_top_moves_and_engine_strips_oracle_flag() -> None:
     set_swarm(None)
 
 
+
+def test_rocket_mle_sf_elo_monotonic() -> None:
+    """MLE Elo vs SF anchors rises when high-Elo scores improve."""
+    from chess_contest.scripts.rocket_3000 import _mle_sf_elo
+
+    weak = [
+        {"sf_elo": 2200, "score": 1.0, "games": 8},
+        {"sf_elo": 3000, "score": 0.0, "games": 8},
+    ]
+    strong = [
+        {"sf_elo": 2200, "score": 7.0, "games": 8},
+        {"sf_elo": 3000, "score": 5.0, "games": 8},
+    ]
+    assert _mle_sf_elo(strong) > _mle_sf_elo(weak)
+    assert _mle_sf_elo(strong) >= 2900
+
+
 def test_set_trail_policy_decisive() -> None:
     from chess_contest.stigmergy.distill import set_trail_policy
     from chess_contest.stigmergy.search import Searcher

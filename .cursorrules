@@ -81,32 +81,25 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
-## Task: DO NOT STOP until 3000+ Elo (2026-08-07 03:18Z)
+## Task: DO NOT STOP until 3000+ Elo (2026-08-07)
 
-User: keep going until 3000+. Claim: someone hit 3000 in 12 min
-(likely oracle/SF-at-play — we will NOT re-enable runtime SF).
+User: don't stop until 3000+; claim someone hit 3000 in 12 min.
+Constraint: stockfish_at_play=false / no SF in choose_move.
 
-Plan:
-[ ] Keep crush-big 31.7M training (OOD climb from 34%)
-[ ] Massive more SF MultiPV labels + longer OOD-gated train
-[ ] Long-think ladders 2500→3100 until crush_3000=true
-[ ] STATUS only with stockfish_at_play=false
-
-Prior crush-big: 42% vs1320, 25% vs2500, peak≈1893, OOD~26-34%.
-## Task: BIG SwarmNet (~32M) → 3000 Elo (2026-08-07)
-
-Goal: SwarmNet v3 256x12 SE (~31.7M), distill hard, ladder ≥3000. No SF at play.
+Root cause of ~2231: trail hit-rate ~2–12% vs noisy opponents —
+one miss leaves SF-MAX line → weak IDAS/swarm loses. Net alone ≠ 3000.
 
 Plan:
-[X] SwarmNet v3 256x12 + SE + wide heads (31,746,513 params)
-[X] 135k MultiPV labels; OOD early-stop (peak OOD 26% @ ep2)
-[X] Ladder: 42% vs SF1320, 25% vs SF2500; NOT 3000 yet
-[X] STATUS / tests / commit / PR
+[X] Kill slow 10s-think swarm probe (falling vs 2200)
+[ ] rocket_3000: dual-SF on-policy farm (depth-8 labels) until hit≥70%
+[ ] No-swarm trail-first ladder 2200→3190 until crush_3000
+[ ] STATUS/commit/push — honest evidence only
 
-Next: more data + looser OOD patience; longer think once OOD≥50%.
-## Task: 2-HOUR SPRINT — beat 3000 Elo (2026-08-06 20:44Z) — FAILED @ ~1861
-
-Verdict: DID NOT BEAT 3000. Best 25% vs SF1320 → ≈1861.
+Lessons:
+- Depth-8 SF analyse ≈400 pos/s — farm thousands of games, not long IDAS.
+- Never load swarm on trail-crush ladders (SEE/gate + slow blunders).
+- On-policy farm (play SF-MAX vs target Elo while labeling) matches ladder
+  distribution; random/BFS-only coverage stays sparse in the midgame.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
 Goal: Unique (non-Stockfish) chess engine + contest framework. Python train
