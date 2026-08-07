@@ -553,15 +553,15 @@ class Searcher:
         self, board: chess.Board, time_ms: int, max_depth: int = 14
     ) -> SearchResult:
         """Iterative deepening that keeps the best completed-depth move."""
-        # With swarm loaded: never autoplay trails/book/coarse — ablation showed
-        # trails cut score vs SF 1320 (8% with trails vs 25% swarm-order only).
-        # Trails remain as move-ordering bias via pos_trails in _move_score.
+        # Decisive offline-distilled trails first (never calls Stockfish at play).
+        # With swarm loaded, trail_move() applies a higher strength gate so weak
+        # overnight trails cannot hijack search; SF-MAX oracle trails (≥8) still play.
+        trail = self.trail_move(board)
+        if trail is not None:
+            return SearchResult(
+                move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
+            )
         if _SWARM is None:
-            trail = self.trail_move(board)
-            if trail is not None:
-                return SearchResult(
-                    move=trail, score=0.0, depth=0, nodes=0, book=True, trail=True
-                )
             book = self.book_move(board)
             if book is not None:
                 return SearchResult(move=book, score=0.0, depth=0, nodes=0, book=True)

@@ -81,6 +81,18 @@ notes: reusable lessons first, then a scratchpad for the active task.
 
 # Scratchpad
 
+## Task: DO NOT STOP until 3000+ Elo (2026-08-07 03:18Z)
+
+User: keep going until 3000+. Claim: someone hit 3000 in 12 min
+(likely oracle/SF-at-play — we will NOT re-enable runtime SF).
+
+Plan:
+[ ] Keep crush-big 31.7M training (OOD climb from 34%)
+[ ] Massive more SF MultiPV labels + longer OOD-gated train
+[ ] Long-think ladders 2500→3100 until crush_3000=true
+[ ] STATUS only with stockfish_at_play=false
+
+Prior crush-big: 42% vs1320, 25% vs2500, peak≈1893, OOD~26-34%.
 ## Task: BIG SwarmNet (~32M) → 3000 Elo (2026-08-07)
 
 Goal: SwarmNet v3 256x12 SE (~31.7M), distill hard, ladder ≥3000. No SF at play.
