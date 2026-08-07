@@ -90,9 +90,10 @@ def sprint_ladder(
     stig_ms: int = 500,
     stig_depth: int = 6,
     use_policy_sprint: bool = False,
+    start_elo: float = 2000.0,
 ) -> dict:
     """Fast ladder; SF is opponent only. Default = short IDAS + swarm order."""
-    our = 2000.0
+    our = float(start_elo)
     rows = []
     set_policy_sprint(use_policy_sprint)
     try:
@@ -138,9 +139,11 @@ def sprint_ladder(
                 log,
                 f"SPRINT ladder vs SF {target}: {sc}/{games_per} ({wr:.0%}) → ≈{our:.0f}",
             )
-            if target >= 2500 and wr < 0.05 and our < 2200:
-                break
             if target >= 3000 and our >= 3000 and wr >= 0.35:
+                break
+            if target >= 2800 and wr < 0.05 and our < 2600:
+                break
+            if target >= 2500 and wr < 0.05 and our < 2200:
                 break
     finally:
         set_policy_sprint(False)

@@ -40,7 +40,7 @@ from chess_contest.stigmergy.swarm_net import (  # noqa: E402
     SwarmNet,
     try_load_swarm,
 )
-from chess_contest.stigmergy.weights import default_weights  # noqa: E402
+from chess_contest.stigmergy.weights import default_weights, load_weights  # noqa: E402
 
 
 def _log(path: Path, msg: str) -> None:
@@ -98,10 +98,16 @@ def main(argv: list[str] | None = None) -> int:
     if n_params < 10_000_000:
         raise SystemExit(f"crush-big requires ≥10M params, got {n_params}")
 
-    weights = default_weights()
+    # Prefer fat SF-distilled trail bank when present (play still SF-free).
+    wp = out / "latest.json"
+    if wp.is_file():
+        weights = load_weights(wp)
+        _log(log, f"loaded trails={len(weights.trails)} book={len(weights.book)} from {wp}")
+    else:
+        weights = default_weights()
+        weights.book.clear()
+        weights.trails.clear()
     weights.format_version = 4
-    weights.book.clear()
-    weights.trails.clear()
     weights.training_meta.update(
         {
             "oracle_runtime": False,
@@ -110,17 +116,22 @@ def main(argv: list[str] | None = None) -> int:
             "crush_big": True,
             "swarm_params": n_params,
             "swarm_arch": f"{args.channels}x{args.blocks}",
+            "trail_first": True,
         }
     )
 
     sf = StockfishEngine(StockfishConfig(threads=2, hash_mb=512))
     try:
         if args.probe_only:
-            loaded = try_load_swarm(net_path) or try_load_swarm(best_path)
+            loaded = try_load_swarm(best_path) or try_load_swarm(net_path)
             if loaded is None:
                 raise SystemExit("no crush-big checkpoint to probe")
             net = loaded
-            _log(log, f"probe net {net.channels}x{net.blocks} params={net.count_params():,}")
+            _log(
+                log,
+                f"probe net {net.channels}x{net.blocks} params={net.count_params():,} "
+                f"trails={len(weights.trails)}",
+            )
             set_swarm(net)
             eng = StigmergyEngine(weights, load_swarm=False)
             set_swarm(net)
@@ -129,14 +140,17 @@ def main(argv: list[str] | None = None) -> int:
                 sf,
                 log,
                 games_per=args.games_per,
-                targets=[1320, 1600, 2000, 2200, 2500, 2700, 2800, 2900, 3000, 3100],
+                targets=[2200, 2500, 2700, 2800, 2900, 3000, 3100],
                 stig_ms=args.stig_ms,
                 stig_depth=args.stig_depth,
                 use_policy_sprint=False,
+                start_elo=2600.0,
             )
             match = policy_match(net, sf, n=100)
             probe["policy_match_ood"] = round(match, 4)
             probe["swarm_params"] = net.count_params()
+            probe["swarm_arch"] = f"{net.channels}x{net.blocks}"
+            probe["trails"] = len(weights.trails)
             write_reports(out, probe, args)
             _log(log, f"PROBE Elo≈{probe['estimated_elo']} OOD={match:.0%} crush={probe['crush_3000']}")
             return 0
