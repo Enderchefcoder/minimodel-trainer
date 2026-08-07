@@ -141,7 +141,24 @@ def fanout_along_frozen_trails(
         try:
             if board.is_game_over(claim_draw=True):
                 return
-            for reply in _replies(board, our_ply):
+            legal = list(board.legal_moves)
+            # Always 1-ply fill EVERY reply so scored play can take the trail
+            # move we just played against any opponent choice.
+            for reply in legal:
+                board.push(reply)
+                try:
+                    if not board.is_game_over(claim_draw=True):
+                        _ensure_teacher_move(
+                            weights,
+                            teacher,
+                            board,
+                            depth=max(8, depth - 2),
+                            strength=240.0,
+                        )
+                finally:
+                    board.pop()
+            # Recurse deep on all early replies, MultiPV-preferred later.
+            for reply in _replies(board, our_ply) if our_ply >= 2 else legal:
                 if filled >= max_nodes:
                     return
                 board.push(reply)
