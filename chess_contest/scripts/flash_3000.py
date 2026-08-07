@@ -169,11 +169,9 @@ def fanout_along_frozen_trails(
         finally:
             board.pop()
 
+    # Only start from side-to-move positions we actually play. Seeding mid-board
+    # after one white ply made DFS store Black's replies as "our" policy.
     roots = [chess.Board()]
-    for uci in ("e2e4", "d2d4", "g1f3", "c2c4"):
-        b = chess.Board()
-        b.push(chess.Move.from_uci(uci))
-        roots.append(b)
     for root in roots:
         if filled >= max_nodes:
             break

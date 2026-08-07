@@ -241,6 +241,31 @@ def test_fanout_opponent_replies_offline() -> None:
     assert len(w.trails) >= 2
 
 
+def test_fanout_preserves_strong_trail_policy() -> None:
+    """Strong trails must not be overwritten by a later SF PV (orphans children)."""
+    from chess_contest.stigmergy.distill import fanout_opponent_replies, set_trail_policy
+    from chess_contest.stigmergy.search import Searcher
+
+    w = default_weights()
+    board = chess.Board()
+    set_trail_policy(w, board, "e2e4", strength=260.0)
+
+    def fake_analyse(
+        b: chess.Board, movetime_ms: int = 40, multipv: int = 1, depth: int | None = None
+    ):
+        del movetime_ms, depth
+        # Deliberately prefer d4 over the locked e4 policy at root.
+        if b.fen() == chess.STARTING_FEN:
+            return [{"uci": "d2d4", "pv": ["d2d4"], "cp": 30, "mate": None}]
+        moves = list(b.legal_moves)
+        return [{"uci": moves[0].uci(), "pv": [moves[0].uci()], "cp": 10, "mate": None}]
+
+    fanout_opponent_replies(
+        w, board, fake_analyse, max_replies=4, fill_ms=1, fill_depth=None, strength=240.0
+    )
+    assert Searcher(w).trail_move(board).uci()[:4] == "e2e4"
+
+
 def test_trails_reinforce_and_trail_move() -> None:
     from chess_contest.stigmergy.distill import distill_stockfish_pv
     from chess_contest.stigmergy.search import Searcher

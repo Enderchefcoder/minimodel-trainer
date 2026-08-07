@@ -86,23 +86,28 @@ notes: reusable lessons first, then a scratchpad for the active task.
 User: don't stop until 3000+; claim someone hit 3000 in 12 min.
 Constraint: stockfish_at_play=false / no SF in choose_move.
 
-Root cause of ~2231: trail hit-rate ~2–12% vs noisy opponents —
-one miss leaves SF-MAX line → weak IDAS/swarm loses. Net alone ≠ 3000.
+Honest peak so far: Elo≈2591 (908k trails) but scored hit only ~20%.
+Converge "hit=100%" was fake — mid-game SF install in the same game.
+Scored play falls off fanout leaves (e.g. after b5c6 missing 21/22).
 
 Plan:
-[X] Kill slow 10s-think swarm probe (falling vs 2200)
-[X] rocket on-policy d8: 16% hit; d8 teacher only 33% vs Elo3000
-[X] Calibrate: SF depth≥12 scores ~88% vs Elo3000 (required)
-[X] Depth-12 trails; full-reply / DFS / 2-ply fanout (in flight)
-[ ] Scored hit still ~15–25% until 2-ply fill proves out; keep going
-[ ] Ladder until crush_3000; STATUS/commit/push
+[X] Kill slow swarm probes; calibrate depth≥12 teacher
+[X] rocket/flash/2-ply converge → 2591, crush_3000=false
+[X] Root cause: leaf gaps + converge hit inflation
+[X] Preserve-strong fanout (don't orphan children on PV churn)
+[X] until_3000.py: train+all-reply fanout → honest probe → ladder
+[ ] Run until_3000 until measured Elo≥3000
+[ ] STATUS/commit/push/PR with crush_3000=true only when earned
 
 Lessons:
-- Depth-8 SF analyse ≈400 pos/s — farm thousands of games, not long IDAS.
-- Never load swarm on trail-crush ladders (SEE/gate + slow blunders).
-- On-policy alone ≠ enough: first miss leaves SF-MAX line forever (16% hit).
-- **Depth-8 SF-MAX ~33% vs UCI_Elo 3000; depth≥12 ~88% — densify at ≥12.**
-- All-legal BFS without queue cap OOMs (2M+ boards); always cap the queue.
+- Depth-8 SF-MAX ~33% vs UCI_Elo 3000; depth≥12 ~88% — densify at ≥12.
+- Never load swarm on trail-crush ladders.
+- Converge hit with install-on-miss ≠ scored hit; probe without install.
+- 1-ply fanout along one spine leaves answers as leaves — next opp reply
+  after playing that answer misses. Need visit+fanout on every reached node
+  (many on-policy games) or ply_depth≥2 early.
+- Don't overwrite strength≥200 trails (PV churn orphans fanout children).
+- All-legal BFS without queue cap OOMs; prefer on-policy + DFS.
 - pkill -f rocket_3000 kills the newly spawned rocket if run in same cmdline.
 ## Task: Chess contest — Stigmergy pheromone-field engine (2026-08-05)
 
