@@ -40,7 +40,7 @@ from chess_contest.stigmergy.stockfish_uci import (  # noqa: E402
     StockfishEngine,
     stockfish_available,
 )
-from chess_contest.stigmergy.weights import load_weights, save_weights  # noqa: E402
+from chess_contest.stigmergy.weights import load_weights, save_weights, trail_key  # noqa: E402
 
 
 def _log(path: Path, msg: str) -> None:
@@ -51,6 +51,32 @@ def _log(path: Path, msg: str) -> None:
         f.write(line + "\n")
 
 
+def _reply_gap(weights, board: chess.Board) -> tuple[int, int]:
+    """Return (missing, total) trail coverage after our current policy move."""
+    searcher = Searcher(weights)
+    mv = searcher.trail_move(board)
+    if mv is None:
+        legal = list(board.legal_moves)
+        # No policy yet — treat as fully missing so caller installs+fanouts.
+        return (max(1, len(legal)), max(1, len(legal)))
+    tmp = board.copy(stack=False)
+    tmp.push(mv)
+    if tmp.is_game_over(claim_draw=True):
+        return (0, 0)
+    total = missing = 0
+    for rep in tmp.legal_moves:
+        total += 1
+        tmp.push(rep)
+        try:
+            if not tmp.is_game_over(claim_draw=True):
+                slot = weights.trails.get(trail_key(tmp)) or {}
+                if not slot or max(float(v) for v in slot.values()) < 50.0:
+                    missing += 1
+        finally:
+            tmp.pop()
+    return missing, total
+
+
 def _fanout(
     weights,
     teacher: StockfishEngine,
@@ -59,19 +85,32 @@ def _fanout(
     our_ply: int,
     depth: int,
     early_plies: int,
+    force: bool = False,
 ) -> int:
-    """Densify from an our-to-move node without orphaning strong trails."""
-    ply_depth = 2 if our_ply < early_plies else 1
-    # Cap only extreme fanouts (rare); openings usually ≤40 legal.
-    max_replies = 60 if our_ply < early_plies + 8 else 32
+    """Densify from an our-to-move node without orphaning strong trails.
+
+    Skips work when reply coverage is already dense (≥90% filled) unless
+    ``force`` (used on probe-miss backfill).
+    """
+    missing, total = _reply_gap(weights, board)
+    # Only skip when every legal reply already has a trail — a 10% hole is
+    # exactly what UCI_Elo noise finds, and one miss collapses scored hit-rate.
+    if not force and total > 0 and missing == 0:
+        return 0
+    if not force and total == 0 and Searcher(weights).trail_move(board) is not None:
+        return 0
+    # 2-ply only on the earliest plies — quadratic cost otherwise dominates.
+    ply_depth = 2 if (force or our_ply < min(8, early_plies)) else 1
+    max_replies = 60 if ply_depth >= 2 or our_ply < early_plies else 28
+    fill_depth = depth if (force or our_ply < early_plies) else max(8, depth - 2)
     return fanout_opponent_replies(
         weights,
         board,
         teacher.analyse_top,
         max_replies=max_replies,
         fill_ms=40,
-        fill_depth=depth if our_ply < early_plies else max(8, depth - 2),
-        strength=260.0 if our_ply < early_plies else 240.0,
+        fill_depth=fill_depth,
+        strength=260.0 if our_ply < early_plies or force else 240.0,
         ply_depth=ply_depth,
     )
 
@@ -219,6 +258,7 @@ def backfill_misses(
             our_ply=0,
             depth=depth,
             early_plies=early_plies,
+            force=True,
         )
     return n
 
