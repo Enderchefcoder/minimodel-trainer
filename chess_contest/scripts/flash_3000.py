@@ -54,44 +54,105 @@ def converge_target(
     stig_ms: int,
     stig_depth: int,
     hit_goal: float,
+    fanout_all_replies: bool = True,
+    fanout_depth: int | None = None,
 ) -> float:
-    """Play/backfill until trail hit-rate on a round reaches hit_goal."""
+    """Play/backfill until trail hit-rate on a round reaches hit_goal.
+
+    On a miss during converge we install *and play* the offline SF-MAX move so
+    the line stays on the teacher policy (scored ladder never does this).
+
+    After each our move, optionally install SF-MAX answers to *every* legal
+    opponent reply so the next game stays on-trail regardless of Elo noise.
+    """
+    fd = depth if fanout_depth is None else fanout_depth
     eng = StigmergyEngine(weights, load_swarm=False)
     set_swarm(None)
     searcher = Searcher(weights)
     last_hit = 0.0
+    # Seed: SF answers for Black after every White first move (and White after
+    # every Black reply to 1.e4/d4/…), so Black-to-move games start on-trail.
+    root = chess.Board()
+    for first in list(root.legal_moves):
+        root.push(first)
+        try:
+            if not root.is_game_over(claim_draw=True):
+                _install_teacher_move(weights, teacher, root, depth=depth, strength=260.0)
+                # Also cover White's answers after Black's replies to this first move.
+                for reply in list(root.legal_moves)[:40]:
+                    root.push(reply)
+                    try:
+                        if not root.is_game_over(claim_draw=True):
+                            _install_teacher_move(
+                                weights, teacher, root, depth=fd, strength=240.0
+                            )
+                    finally:
+                        root.pop()
+        finally:
+            root.pop()
+
     for r in range(1, rounds + 1):
         board = chess.Board()
         stig_white = r % 2 == 0
         hits = our = 0
-        misses: list[chess.Board] = []
-        for _ in range(200):
+        installed = 0
+        for _ in range(120):
             if board.is_game_over(claim_draw=True):
                 break
             if (board.turn == chess.WHITE) == stig_white:
                 our += 1
-                if searcher.trail_move(board) is not None:
+                trail = searcher.trail_move(board)
+                if trail is not None:
                     hits += 1
+                    board.push(trail)
                 else:
-                    misses.append(board.copy(stack=False))
-                mv = eng.choose_move(board, time_ms=stig_ms, max_depth=stig_depth).move
-                if mv is None:
-                    break
-                board.push(mv)
+                    mv = _install_teacher_move(
+                        weights, teacher, board, depth=depth, strength=260.0
+                    )
+                    installed += 1
+                    if mv is None:
+                        mv = eng.choose_move(
+                            board, time_ms=stig_ms, max_depth=stig_depth
+                        ).move
+                    if mv is None:
+                        break
+                    board.push(mv)
+                # Cover every legal opponent reply from this SF-MAX node.
+                if (
+                    fanout_all_replies
+                    and our <= 55
+                    and not board.is_game_over(claim_draw=True)
+                ):
+                    replies = list(board.legal_moves)
+                    if len(replies) > 60:
+                        replies = replies[:60]
+                    use_depth = fd if our <= 20 else max(8, fd - 2)
+                    for reply in replies:
+                        board.push(reply)
+                        try:
+                            if not board.is_game_over(claim_draw=True):
+                                got = _install_teacher_move(
+                                    weights,
+                                    teacher,
+                                    board,
+                                    depth=use_depth,
+                                    strength=240.0,
+                                )
+                                if got is not None:
+                                    installed += 1
+                        finally:
+                            board.pop()
             else:
                 opponent.set_elo(target)
                 board.push(opponent.choose(board, movetime_ms=50))
-        for mb in misses:
-            _install_teacher_move(weights, teacher, mb, depth=depth, strength=260.0)
         last_hit = hits / max(1, our)
         _log(
             log,
             f"converge vs{target} r{r}/{rounds} hit={last_hit:.0%} "
-            f"misses={len(misses)} trails={len(weights.trails)}",
+            f"installed={installed} trails={len(weights.trails)}",
         )
-        if last_hit >= hit_goal and r >= 3:
+        if last_hit >= hit_goal and r >= 2:
             break
-        # Refresh searcher/engine views of trails.
         eng = StigmergyEngine(weights, load_swarm=False)
         set_swarm(None)
         searcher = Searcher(weights)
@@ -103,7 +164,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out-dir", default="chess_contest/weights/gm")
     p.add_argument("--weights", default="chess_contest/weights/gm/latest.json")
     p.add_argument("--sf-depth", type=int, default=12)
-    p.add_argument("--converge-rounds", type=int, default=40)
+    p.add_argument("--fanout-depth", type=int, default=10)
+    p.add_argument("--converge-rounds", type=int, default=12)
     p.add_argument("--hit-goal", type=float, default=0.85)
     p.add_argument("--games-per", type=int, default=10)
     p.add_argument("--stig-ms", type=int, default=40)
@@ -149,6 +211,8 @@ def main(argv: list[str] | None = None) -> int:
                 stig_ms=args.stig_ms,
                 stig_depth=args.stig_depth,
                 hit_goal=args.hit_goal,
+                fanout_all_replies=True,
+                fanout_depth=args.fanout_depth,
             )
             _log(log, f"converged vs{target} hit={hit:.0%}")
             save_weights(weights, out / "latest.json")
