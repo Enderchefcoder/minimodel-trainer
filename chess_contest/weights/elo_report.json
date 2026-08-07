@@ -1,0 +1,314 @@
+{
+  "engine_elo": 1715.0,
+  "ratings": {
+    "random": 200.0,
+    "greedy_material": 849.5,
+    "classic_pst_d2": 1248.2,
+    "classic_pst_d3": 1449.3,
+    "stigmergy": 1387.8
+  },
+  "games": 32,
+  "matches": [
+    {
+      "opponent": "random",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1200.1
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1200.2
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1200.2
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1200.3
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1200.4
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1200.5
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1200.5
+    },
+    {
+      "opponent": "random",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1200.6
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1203.4
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1206.2
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1208.9
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1211.6
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1214.3
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1216.9
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1219.5
+    },
+    {
+      "opponent": "greedy_material",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1222.0
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1235.0
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1247.4
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1259.4
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1271.0
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1282.3
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1293.1
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1303.5
+    },
+    {
+      "opponent": "classic_pst_d2",
+      "stigmergy_color": "black",
+      "result": "0-1",
+      "score": 1.0,
+      "elo_after": 1313.6
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1330.1
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "black",
+      "result": "1/2-1/2",
+      "score": 0.5,
+      "elo_after": 1334.0
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1349.9
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "black",
+      "result": "1/2-1/2",
+      "score": 0.5,
+      "elo_after": 1353.1
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1368.4
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "black",
+      "result": "1/2-1/2",
+      "score": 0.5,
+      "elo_after": 1371.1
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "white",
+      "result": "1-0",
+      "score": 1.0,
+      "elo_after": 1385.7
+    },
+    {
+      "opponent": "classic_pst_d3",
+      "stigmergy_color": "black",
+      "result": "1/2-1/2",
+      "score": 0.5,
+      "elo_after": 1387.8
+    }
+  ],
+  "uniqueness": {
+    "score": 100.0,
+    "max_score": 100.0,
+    "normalized": 1.0,
+    "details": {
+      "bonuses": [
+        {
+          "reason": "novel_family",
+          "delta": 15
+        },
+        {
+          "reason": "rejects_stockfish",
+          "delta": 2
+        },
+        {
+          "reason": "rejects_nnue",
+          "delta": 2
+        },
+        {
+          "reason": "rejects_alphazero",
+          "delta": 2
+        },
+        {
+          "reason": "rejects_lc0",
+          "delta": 2
+        },
+        {
+          "reason": "rejects_classic-pst-only",
+          "delta": 2
+        },
+        {
+          "reason": "multi_channel_pheromone_lattice",
+          "delta": 12
+        },
+        {
+          "reason": "jacobi_diffusion_kernels",
+          "delta": 12
+        },
+        {
+          "reason": "bilinear_cross_color_interaction",
+          "delta": 10
+        },
+        {
+          "reason": "king_resonance_coupling",
+          "delta": 8
+        },
+        {
+          "reason": "ternary_ant_trail_book",
+          "delta": 10
+        },
+        {
+          "reason": "ternary_move_pheromone_bias",
+          "delta": 6
+        },
+        {
+          "reason": "harmonic_board_channel",
+          "delta": 8
+        }
+      ],
+      "penalties": [],
+      "feature_count": 7,
+      "family": "diffusive-pheromone-field"
+    }
+  },
+  "composite": {
+    "elo_component": 0.7625,
+    "bracket_component": 0.85,
+    "uniqueness_component": 1.0,
+    "composite": 0.8556
+  },
+  "mle_elo": 1715.0,
+  "ladder_summary": {
+    "vs_random": "8/8",
+    "vs_greedy_material": "8/8",
+    "vs_classic_pst_d2": "8/8",
+    "vs_classic_pst_d3": "4W-4D-0L (75%)"
+  }
+}

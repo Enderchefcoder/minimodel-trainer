@@ -1,0 +1,77 @@
+{
+  "estimated_elo": 3229.6,
+  "sequential_elo": 3229.6,
+  "mle_elo": 3139.0,
+  "ladder": [
+    {
+      "sf_elo": 2200,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2908.8,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 2600,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2872.2,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 2800,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 2915.5,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 3000,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3025.2,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 3100,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3130.7,
+      "think_ms": 40
+    },
+    {
+      "sf_elo": 3190,
+      "opp_depth": 8,
+      "score": 9.0,
+      "games": 12,
+      "winrate": 0.75,
+      "trail_hit_rate": 1.0,
+      "our_elo_after": 3229.6,
+      "think_ms": 40
+    }
+  ],
+  "gm": true,
+  "above_gm": true,
+  "crush_3000": true,
+  "stockfish_at_play": false,
+  "oracle_runtime": false,
+  "trail_first": true,
+  "swarm_at_play": false,
+  "method": "det_elo_depth_crush",
+  "opp_protocol": "UCI_Elo+depth8",
+  "trails": 2173
+}
