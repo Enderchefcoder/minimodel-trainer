@@ -71,26 +71,28 @@ def _ensure_teacher_move(
     return _install_teacher_move(weights, teacher, board, depth=depth, strength=strength)
 
 
-def freeze_full_reply_tree(
+def fanout_along_frozen_trails(
     weights,
     teacher: StockfishEngine,
     log: Path,
     *,
     depth: int,
-    max_our_plies: int = 30,
-    max_nodes: int = 60_000,
+    max_our_plies: int = 40,
+    max_nodes: int = 100_000,
+    deep_branch: int = 14,
 ) -> int:
-    """Follow frozen trails; enqueue every legal reply child for filling."""
+    """Walk the frozen trail policy; fill answers to every (or MultiPV) reply.
+
+    Unlike game converge, this visits *every* child of the policy move so scored
+    play can stay on-trail when the opponent leaves the densify game's line.
+    """
     from collections import deque
 
     queue: deque[tuple[chess.Board, int]] = deque([(chess.Board(), 0)])
-    # Also start as Black after each White first move.
-    root = chess.Board()
-    for first in list(root.legal_moves):
-        b = root.copy(stack=False)
-        b.push(first)
-        if not b.is_game_over(claim_draw=True):
-            queue.append((b, 0))
+    for uci in ("e2e4", "d2d4", "g1f3", "c2c4"):
+        b = chess.Board()
+        b.push(chess.Move.from_uci(uci))
+        queue.append((b, 0))
 
     seen: set[str] = set()
     filled = 0
@@ -113,23 +115,49 @@ def freeze_full_reply_tree(
         if board.is_game_over(claim_draw=True):
             board.pop()
             continue
-        for reply in list(board.legal_moves):
+        legal = list(board.legal_moves)
+        if our_ply < 4:
+            replies = legal
+        else:
+            teacher.set_elo(None)
+            tops = teacher.analyse_top(
+                board, multipv=min(8, deep_branch), depth=max(8, depth - 2)
+            )
+            prefer = {info["uci"] for info in tops if info.get("uci")}
+            pri = [m for m in legal if board.is_capture(m) or board.gives_check(m)]
+            rest = sorted(
+                (m for m in legal if m not in pri),
+                key=lambda m: (0 if m.uci() in prefer else 1, m.uci()),
+            )
+            replies = []
+            seen_u: set[str] = set()
+            for m in pri + rest:
+                if m.uci() in seen_u:
+                    continue
+                seen_u.add(m.uci())
+                replies.append(m)
+                if len(replies) >= deep_branch:
+                    break
+        for reply in replies:
             child = board.copy(stack=False)
             child.push(reply)
-            if child.is_game_over(claim_draw=True):
-                continue
-            ck = trail_key(child)
-            if ck not in seen:
-                queue.append((child, our_ply + 1))
+            if not child.is_game_over(claim_draw=True):
+                ck = trail_key(child)
+                if ck not in seen:
+                    queue.append((child, our_ply + 1))
         board.pop()
         if filled % 2000 == 0:
             _log(
                 log,
-                f"freeze-tree filled={filled} queue={len(queue)} "
+                f"along-trails filled={filled} queue={len(queue)} "
                 f"trails={len(weights.trails)} {time.time() - t0:.0f}s",
             )
-    _log(log, f"freeze-tree done filled={filled} trails={len(weights.trails)}")
+    _log(log, f"along-trails done filled={filled} trails={len(weights.trails)}")
     return filled
+
+
+# Back-compat alias used by earlier freeze+score helpers.
+freeze_full_reply_tree = fanout_along_frozen_trails
 
 
 def converge_target(
@@ -307,9 +335,15 @@ def main(argv: list[str] | None = None) -> int:
             _log(log, f"converged vs{target} hit={hit:.0%}")
             save_weights(weights, out / "latest.json")
 
-        _log(log, "freeze full-reply tree on stable trails")
-        freeze_full_reply_tree(
-            weights, teacher, log, depth=args.sf_depth, max_our_plies=28, max_nodes=50_000
+        _log(log, "fanout along frozen trail policy (covers opponent deviations)")
+        fanout_along_frozen_trails(
+            weights,
+            teacher,
+            log,
+            depth=args.sf_depth,
+            max_our_plies=36,
+            max_nodes=120_000,
+            deep_branch=14,
         )
         save_weights(weights, out / "latest.json")
 
