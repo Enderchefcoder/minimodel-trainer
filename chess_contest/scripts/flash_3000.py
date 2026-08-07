@@ -81,78 +81,87 @@ def fanout_along_frozen_trails(
     max_nodes: int = 100_000,
     deep_branch: int = 14,
 ) -> int:
-    """Walk the frozen trail policy; fill answers to every (or MultiPV) reply.
+    """DFS along the frozen trail policy; fill replies (depth-first for coverage).
 
-    Unlike game converge, this visits *every* child of the policy move so scored
-    play can stay on-trail when the opponent leaves the densify game's line.
+    BFS burned the node budget on shallow width. DFS spends early budget on
+    deep main lines so scored midgames stay on-trail.
     """
-    from collections import deque
-
-    queue: deque[tuple[chess.Board, int]] = deque([(chess.Board(), 0)])
-    for uci in ("e2e4", "d2d4", "g1f3", "c2c4"):
-        b = chess.Board()
-        b.push(chess.Move.from_uci(uci))
-        queue.append((b, 0))
-
-    seen: set[str] = set()
     filled = 0
     t0 = time.time()
-    while queue and filled < max_nodes:
-        board, our_ply = queue.popleft()
+    seen: set[str] = set()
+
+    def _replies(board: chess.Board, our_ply: int) -> list[chess.Move]:
+        legal = list(board.legal_moves)
+        if our_ply < 2:
+            return legal
+        teacher.set_elo(None)
+        tops = teacher.analyse_top(
+            board, multipv=min(8, deep_branch), depth=max(8, depth - 2)
+        )
+        prefer = {info["uci"] for info in tops if info.get("uci")}
+        pri = [m for m in legal if board.is_capture(m) or board.gives_check(m)]
+        rest = sorted(
+            (m for m in legal if m not in pri),
+            key=lambda m: (0 if m.uci() in prefer else 1, m.uci()),
+        )
+        out: list[chess.Move] = []
+        seen_u: set[str] = set()
+        for m in pri + rest:
+            if m.uci() in seen_u:
+                continue
+            seen_u.add(m.uci())
+            out.append(m)
+            if len(out) >= deep_branch:
+                break
+        return out
+
+    def dfs(board: chess.Board, our_ply: int) -> None:
+        nonlocal filled
+        if filled >= max_nodes or our_ply > max_our_plies:
+            return
         if board.is_game_over(claim_draw=True):
-            continue
+            return
         key = trail_key(board)
         if key in seen:
-            continue
+            return
         seen.add(key)
         mv = _ensure_teacher_move(weights, teacher, board, depth=depth, strength=260.0)
         if mv is None:
-            continue
+            return
         filled += 1
-        if our_ply >= max_our_plies:
-            continue
-        board.push(mv)
-        if board.is_game_over(claim_draw=True):
-            board.pop()
-            continue
-        legal = list(board.legal_moves)
-        if our_ply < 4:
-            replies = legal
-        else:
-            teacher.set_elo(None)
-            tops = teacher.analyse_top(
-                board, multipv=min(8, deep_branch), depth=max(8, depth - 2)
-            )
-            prefer = {info["uci"] for info in tops if info.get("uci")}
-            pri = [m for m in legal if board.is_capture(m) or board.gives_check(m)]
-            rest = sorted(
-                (m for m in legal if m not in pri),
-                key=lambda m: (0 if m.uci() in prefer else 1, m.uci()),
-            )
-            replies = []
-            seen_u: set[str] = set()
-            for m in pri + rest:
-                if m.uci() in seen_u:
-                    continue
-                seen_u.add(m.uci())
-                replies.append(m)
-                if len(replies) >= deep_branch:
-                    break
-        for reply in replies:
-            child = board.copy(stack=False)
-            child.push(reply)
-            if not child.is_game_over(claim_draw=True):
-                ck = trail_key(child)
-                if ck not in seen:
-                    queue.append((child, our_ply + 1))
-        board.pop()
         if filled % 2000 == 0:
             _log(
                 log,
-                f"along-trails filled={filled} queue={len(queue)} "
-                f"trails={len(weights.trails)} {time.time() - t0:.0f}s",
+                f"along-trails(dfs) filled={filled} trails={len(weights.trails)} "
+                f"{time.time() - t0:.0f}s",
             )
-    _log(log, f"along-trails done filled={filled} trails={len(weights.trails)}")
+        if our_ply >= max_our_plies:
+            return
+        board.push(mv)
+        try:
+            if board.is_game_over(claim_draw=True):
+                return
+            for reply in _replies(board, our_ply):
+                if filled >= max_nodes:
+                    return
+                board.push(reply)
+                try:
+                    dfs(board, our_ply + 1)
+                finally:
+                    board.pop()
+        finally:
+            board.pop()
+
+    roots = [chess.Board()]
+    for uci in ("e2e4", "d2d4", "g1f3", "c2c4"):
+        b = chess.Board()
+        b.push(chess.Move.from_uci(uci))
+        roots.append(b)
+    for root in roots:
+        if filled >= max_nodes:
+            break
+        dfs(root, 0)
+    _log(log, f"along-trails(dfs) done filled={filled} trails={len(weights.trails)}")
     return filled
 
 
