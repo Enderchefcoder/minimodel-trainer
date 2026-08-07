@@ -171,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
             raise SystemExit(f"need ≥8000 labeled positions, have {len(data)}")
 
         # Optional warm-start only if arch matches.
-        existing = try_load_swarm(net_path)
+        existing = try_load_swarm(best_path) or try_load_swarm(net_path)
         if existing is not None and existing.channels == args.channels and existing.blocks == args.blocks:
             net = existing
             _log(log, f"warm-start {net_path} params={net.count_params():,}")
@@ -204,8 +204,11 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 _log(log, f"OOD drop {ood:.0%} < {best_ood:.0%}; early-stop")
                 net.load(best_path)
+                net.save(net_path)
                 break
 
+        net.load(best_path)
+        net.save(net_path)
         set_swarm(net)
         eng = StigmergyEngine(weights, load_swarm=False)
         set_swarm(net)
