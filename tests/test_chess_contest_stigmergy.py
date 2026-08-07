@@ -242,7 +242,7 @@ def test_fanout_opponent_replies_offline() -> None:
 
 
 def test_fanout_preserves_strong_trail_policy() -> None:
-    """Strong trails must not be overwritten by a later SF PV (orphans children)."""
+    """Stronger existing trails must not be overwritten by a weaker fill pass."""
     from chess_contest.stigmergy.distill import fanout_opponent_replies, set_trail_policy
     from chess_contest.stigmergy.search import Searcher
 
@@ -264,6 +264,12 @@ def test_fanout_preserves_strong_trail_policy() -> None:
         w, board, fake_analyse, max_replies=4, fill_ms=1, fill_depth=None, strength=240.0
     )
     assert Searcher(w).trail_move(board).uci()[:4] == "e2e4"
+
+    # A stronger fill pass may replace the policy.
+    fanout_opponent_replies(
+        w, board, fake_analyse, max_replies=4, fill_ms=1, fill_depth=None, strength=280.0
+    )
+    assert Searcher(w).trail_move(board).uci()[:4] == "d2d4"
 
 
 def test_trails_reinforce_and_trail_move() -> None:

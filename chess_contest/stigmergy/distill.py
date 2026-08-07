@@ -164,13 +164,13 @@ def fanout_opponent_replies(
                 break
         return out
 
-    def _existing_policy(b: chess.Board) -> str | None:
-        """Reuse a stable trail so later SF PVs cannot orphan fanout children."""
+    def _existing_policy(b: chess.Board, mass: float) -> str | None:
+        """Reuse a trail only when it is at least as strong as this fill pass."""
         slot = weights.trails.get(trail_key(b)) or {}
         if not slot:
             return None
         best_uci, best_w = max(slot.items(), key=lambda kv: float(kv[1]))
-        if float(best_w) < 200.0:
+        if float(best_w) < float(mass):
             return None
         try:
             mv = chess.Move.from_uci(best_uci)
@@ -184,7 +184,7 @@ def fanout_opponent_replies(
     def _fill_node(b: chess.Board, depth_left: int, mass: float) -> int:
         if b.is_game_over(claim_draw=True):
             return 0
-        our_uci = _existing_policy(b)
+        our_uci = _existing_policy(b, mass)
         if our_uci is None:
             tops = _analyse(b, multipv=1)
             our_uci = oracle_set_from_sf(weights, b, tops, strength=mass)

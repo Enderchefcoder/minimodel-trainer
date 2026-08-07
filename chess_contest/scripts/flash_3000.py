@@ -50,15 +50,15 @@ def _ensure_teacher_move(
     depth: int,
     strength: float,
 ) -> chess.Move | None:
-    """Return existing high-strength trail move, or install SF-MAX if missing.
+    """Return trail move, refreshing from SF when ``strength`` is higher.
 
-    Refuses to overwrite a stable trail (≥200) with a different move — that was
-    orphaning full-reply fanout children when later Elo bands reshuffled PV.
+    Older runs locked strength≥200 forever, so shallow/wrong PVs could never be
+    replaced by depth-12 SF-MAX — scored games then "hit" losing moves.
     """
     slot = weights.trails.get(trail_key(board)) or {}
     if slot:
         best_uci, best_w = max(slot.items(), key=lambda kv: float(kv[1]))
-        if float(best_w) >= 200.0:
+        if float(best_w) >= float(strength):
             try:
                 mv = chess.Move.from_uci(best_uci)
             except ValueError:

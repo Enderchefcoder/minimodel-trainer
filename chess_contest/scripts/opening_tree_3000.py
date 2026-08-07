@@ -336,15 +336,17 @@ def main(argv: list[str] | None = None) -> int:
                 for rep in list(tmp.legal_moves):
                     tmp.push(rep)
                     try:
-                        if not tmp.is_game_over(claim_draw=True):
-                            if _ensure_teacher_move(
+                        if (
+                            not tmp.is_game_over(claim_draw=True)
+                            and _ensure_teacher_move(
                                 weights,
                                 teacher,
                                 tmp,
                                 depth=max(8, args.sf_depth - 2),
                                 strength=250.0,
-                            ):
-                                bf += 1
+                            )
+                        ):
+                            bf += 1
                     finally:
                         tmp.pop()
             for mb in misses[args.backfill_cap :]:
