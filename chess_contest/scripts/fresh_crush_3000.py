@@ -102,7 +102,7 @@ def farm_sfmax_spine(
         # Full-width early, preferred later.
         reps = (
             list(board.legal_moves)
-            if ply < 8
+            if ply < 4
             else _fanout_replies(board, teacher, branch=branch)
         )
         for rep in reps:
@@ -152,7 +152,7 @@ def farm_game(
                 break
             reps = (
                 list(board.legal_moves)
-                if our_ply < 6
+                if our_ply < 3
                 else _fanout_replies(board, teacher, branch=branch)
             )
             for rep in reps:
