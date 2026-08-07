@@ -13,41 +13,11 @@
       "policy_sprint": false
     },
     {
-      "sf_elo": 1320,
-      "score": 2.5,
-      "games": 6,
-      "winrate": 0.42,
-      "our_elo_after": 1893.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
       "sf_elo": 1600,
       "score": 0.0,
       "games": 6,
       "winrate": 0.0,
       "our_elo_after": 1742.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
-      "sf_elo": 1600,
-      "score": 0.0,
-      "games": 6,
-      "winrate": 0.0,
-      "our_elo_after": 1742.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
-      "sf_elo": 2000,
-      "score": 0.0,
-      "games": 6,
-      "winrate": 0.0,
-      "our_elo_after": 1709.0,
       "think_ms": 4000,
       "stig_depth": 12,
       "policy_sprint": false
@@ -73,41 +43,11 @@
       "policy_sprint": false
     },
     {
-      "sf_elo": 2200,
-      "score": 0.0,
-      "games": 6,
-      "winrate": 0.0,
-      "our_elo_after": 1698.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
       "sf_elo": 2500,
       "score": 1.5,
       "games": 6,
       "winrate": 0.25,
       "our_elo_after": 1744.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
-      "sf_elo": 2500,
-      "score": 1.5,
-      "games": 6,
-      "winrate": 0.25,
-      "our_elo_after": 1744.0,
-      "think_ms": 4000,
-      "stig_depth": 12,
-      "policy_sprint": false
-    },
-    {
-      "sf_elo": 2700,
-      "score": 0.0,
-      "games": 6,
-      "winrate": 0.0,
-      "our_elo_after": 1743.0,
       "think_ms": 4000,
       "stig_depth": 12,
       "policy_sprint": false
@@ -128,9 +68,12 @@
   "crush_3000": false,
   "stockfish_at_play": false,
   "oracle_runtime": false,
-  "policy_sprint": false,
   "policy_match_ood": 0.26,
   "swarm_params": 31746513,
   "swarm_arch": "256x12",
+  "best_rungs": {
+    "sf_1320": "2.5/6 (42%)",
+    "sf_2500": "1.5/6 (25%)"
+  },
   "note": "Crush-big 31.7M: 42% vs SF1320, 25% vs SF2500. Not yet 3000."
 }
