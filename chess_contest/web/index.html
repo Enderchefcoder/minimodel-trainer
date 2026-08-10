@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Stigmergy — Diffusive Pheromone Field Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Source+Sans+3:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="stigmergy.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+  <script src="stigmergy_engine.js"></script>
+</head>
+<body>
+  <h1>Stigmergy <span>Diffusive Pheromone Engine</span></h1>
+  <p class="subtitle">
+    Multi-channel pheromone diffusion · bilinear field interactions · ternary ant-trail memory.
+    Not Stockfish, not NNUE, not AlphaZero — a contest architecture scored on Elo, bracket, and uniqueness.
+  </p>
+
+  <div id="wrap">
+    <div class="board-shell">
+      <div id="board" aria-label="Chess board"></div>
+    </div>
+
+    <aside id="sidebar">
+      <h3>Match</h3>
+      <div id="status">Load weights, then start a game.</div>
+      <div class="row inline">
+        <label style="margin:0">Play as</label>
+        <select id="sideSelect">
+          <option value="w" selected>White</option>
+          <option value="b">Black</option>
+        </select>
+        <select id="timeSelect" title="Think time (depth grows with time)">
+          <option value="800">Fast ~0.8s</option>
+          <option value="2000" selected>Normal ~2s</option>
+          <option value="5000">Strong ~5s</option>
+          <option value="12000">Max ~12s</option>
+        </select>
+      </div>
+      <div class="row inline">
+        <button id="newGameBtn" class="primary" disabled>New Game</button>
+        <button id="undoBtn" disabled>Undo</button>
+      </div>
+      <div id="stats"></div>
+
+      <h3>Weights</h3>
+      <div class="row inline">
+        <input type="file" id="importFile" accept=".json,application/json" />
+      </div>
+      <div class="row inline">
+        <button id="loadBaseBtn">Load bundled base</button>
+        <button id="resetBtn">Clear</button>
+      </div>
+      <div id="weightsStatus">No weights loaded.</div>
+
+      <h3>Uniqueness fingerprint</h3>
+      <div id="uniqBox" style="font-size:0.78rem;color:var(--muted);line-height:1.45">—</div>
+
+      <h3>Log</h3>
+      <div id="trainLogBox"></div>
+    </aside>
+  </div>
+
+  <div id="promoModal">
+    <div class="box">
+      <button data-p="q">♛</button>
+      <button data-p="r">♜</button>
+      <button data-p="b">♝</button>
+      <button data-p="n">♞</button>
+    </div>
+  </div>
+
+  <footer>
+    Train weights with <code>python chess_contest/scripts/train_base.py</code>, then load the JSON here.
+    Rules: chess.js. Eval + search + book: custom Stigmergy-DPFE. Square grid uses equal <code>fr</code> tracks
+    so every cell stays square on phones and desktops.
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

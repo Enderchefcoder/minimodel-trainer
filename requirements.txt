@@ -13,3 +13,4 @@ numpy>=1.24
 pyyaml>=6.0
 tqdm>=4.65
 requests>=2.28
+chess>=1.10

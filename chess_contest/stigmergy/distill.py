@@ -1,0 +1,488 @@
+"""Winner-distillation: learn book + move biases + field nudges from game winners.
+
+Stockfish is only an oracle/opponent. Distilled knowledge lands in Stigmergy's
+continuous float trails and pheromone field — never an NNUE clone.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Any
+
+import chess
+import numpy as np
+
+from chess_contest.stigmergy.coarse import set_coarse_policy
+from chess_contest.stigmergy.evaluate import evaluate_board
+from chess_contest.stigmergy.weights import StigmergyWeights, mutate_field, trail_key
+
+
+@dataclass
+class DistillStats:
+    games: int = 0
+    wins: int = 0
+    losses: int = 0
+    draws: int = 0
+    moves_reinforced: int = 0
+    book_updates: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "games": self.games,
+            "wins": self.wins,
+            "losses": self.losses,
+            "draws": self.draws,
+            "moves_reinforced": self.moves_reinforced,
+            "book_updates": self.book_updates,
+        }
+
+
+def _lm_key(board: chess.Board, move: chess.Move) -> str | None:
+    piece = board.piece_at(move.from_square)
+    if piece is None:
+        return None
+    return (
+        f"{piece.symbol().lower()}"
+        f"{chess.square_name(move.from_square)}"
+        f"{chess.square_name(move.to_square)}"
+    )
+
+
+def _book_code(c: float, mean: float) -> int:
+    return 1 if c > mean * 1.25 else (-1 if c < mean * 0.55 else 0)
+
+
+def _reinforce_trail(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    uci: str,
+    amount: float,
+) -> None:
+    if amount <= 0:
+        return
+    key = trail_key(board)
+    slot = weights.trails.setdefault(key, {})
+    slot[uci[:4]] = slot.get(uci[:4], 0.0) + amount
+
+
+def set_trail_policy(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    uci: str,
+    *,
+    strength: float = 50.0,
+) -> None:
+    """Replace a position's trail with a single decisive float64 policy move."""
+    key = trail_key(board)
+    try:
+        parsed = chess.Move.from_uci(uci)
+    except ValueError:
+        return
+    if parsed not in board.legal_moves:
+        # Allow under-specified non-promo UCI (e2e4) against legal moves.
+        short = uci[:4]
+        parsed = None
+        for legal in board.legal_moves:
+            if legal.uci()[:4] == short:
+                parsed = legal
+                break
+        if parsed is None:
+            return
+    full = parsed.uci()
+    short = full[:4]
+    # Store both full and short keys so promo and non-promo lookups hit.
+    weights.trails[key] = {full: float(strength), short: float(strength)}
+    set_coarse_policy(weights, board, full, strength)
+    path = "".join(m.uci()[:4] for m in board.move_stack)
+    _reinforce_book_entry(weights, path, short, strength)
+    lm = _lm_key(board, parsed)
+    if lm is not None:
+        weights.learned_moves[lm] = float(weights.learned_moves.get(lm, 0.0)) + strength
+
+
+def oracle_set_from_sf(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    sf_tops: list[dict[str, Any]],
+    *,
+    strength: float = 100.0,
+) -> str | None:
+    """Install SF top-1 as the sole float64 trail policy. Returns UCI or None."""
+    if not sf_tops:
+        return None
+    uci = sf_tops[0].get("uci")
+    if not uci:
+        return None
+    set_trail_policy(weights, board, uci, strength=strength)
+    return uci
+
+
+def fanout_opponent_replies(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    sf_analyse,
+    *,
+    max_replies: int = 60,
+    fill_ms: int = 40,
+    fill_depth: int | None = 12,
+    strength: float = 90.0,
+    rng: np.random.Generator | None = None,
+    ply_depth: int = 1,
+) -> int:
+    """Install SF policy here and fill policies after opponent replies.
+
+    ``ply_depth=2`` also fanouts from every 1-ply child so alternate UCI_Elo
+    lines stay covered for an extra move (quadratic SF cost, depth-limited).
+    """
+    del rng
+
+    def _analyse(b: chess.Board, *, multipv: int = 1, depth: int | None = None) -> list[dict[str, Any]]:
+        d = fill_depth if depth is None else depth
+        if d is not None:
+            return sf_analyse(b, movetime_ms=fill_ms, multipv=multipv, depth=d)
+        return sf_analyse(b, movetime_ms=fill_ms, multipv=multipv)
+
+    def _replies(b: chess.Board) -> list[chess.Move]:
+        legal = list(b.legal_moves)
+        if len(legal) <= max_replies:
+            return legal
+        priority = [m for m in legal if b.is_capture(m) or b.gives_check(m)]
+        rest = [m for m in legal if m not in priority]
+        tops = _analyse(b, multipv=min(8, max_replies), depth=max(8, (fill_depth or 10) - 2))
+        prefer = {info["uci"] for info in tops if info.get("uci")}
+        rest.sort(key=lambda m: (0 if m.uci() in prefer else 1, m.uci()))
+        ordered = priority + rest
+        seen: set[str] = set()
+        out: list[chess.Move] = []
+        for move in ordered:
+            u = move.uci()
+            if u in seen:
+                continue
+            seen.add(u)
+            out.append(move)
+            if len(out) >= max_replies:
+                break
+        return out
+
+    def _existing_policy(b: chess.Board, mass: float) -> str | None:
+        """Reuse a trail only when it is at least as strong as this fill pass."""
+        slot = weights.trails.get(trail_key(b)) or {}
+        if not slot:
+            return None
+        best_uci, best_w = max(slot.items(), key=lambda kv: float(kv[1]))
+        if float(best_w) < float(mass):
+            return None
+        try:
+            mv = chess.Move.from_uci(best_uci)
+        except ValueError:
+            mv = None
+        if mv is None or mv not in b.legal_moves:
+            short = best_uci[:4]
+            mv = next((m for m in b.legal_moves if m.uci()[:4] == short), None)
+        return None if mv is None else mv.uci()
+
+    def _fill_node(b: chess.Board, depth_left: int, mass: float) -> int:
+        if b.is_game_over(claim_draw=True):
+            return 0
+        our_uci = _existing_policy(b, mass)
+        if our_uci is None:
+            tops = _analyse(b, multipv=1)
+            our_uci = oracle_set_from_sf(weights, b, tops, strength=mass)
+        if our_uci is None:
+            return 0
+        filled = 1
+        if depth_left <= 0:
+            return filled
+        try:
+            our_move = chess.Move.from_uci(our_uci)
+        except ValueError:
+            return filled
+        if our_move not in b.legal_moves:
+            our_move = next((m for m in b.legal_moves if m.uci()[:4] == our_uci[:4]), None)
+            if our_move is None:
+                return filled
+        b.push(our_move)
+        try:
+            if b.is_game_over(claim_draw=True):
+                return filled
+            for reply in _replies(b):
+                b.push(reply)
+                try:
+                    filled += _fill_node(b, depth_left - 1, mass * 0.95)
+                finally:
+                    b.pop()
+        finally:
+            b.pop()
+        return filled
+
+    return _fill_node(board, max(0, ply_depth), strength)
+
+
+def _reinforce_book_entry(
+    weights: StigmergyWeights,
+    path: str,
+    uci: str,
+    amount: float,
+) -> None:
+    slot = weights.book.setdefault(path, [])
+    existing = {e["m"]: e for e in slot}
+    move = uci[:4]
+    if move in existing:
+        entry = existing[move]
+        entry["w"] = float(entry.get("w", 0.0)) + amount
+        entry["code"] = _book_code(entry["w"], max(entry["w"], 1.0))
+        entry["games"] = int(entry.get("games", 0)) + 1
+    else:
+        existing[move] = {"m": move, "w": float(amount), "code": 1, "games": 1}
+    weights.book[path] = list(existing.values())
+
+
+def distill_game(
+    weights: StigmergyWeights,
+    moves: list[chess.Move],
+    result: str,
+    *,
+    winner_boost: float = 1.0,
+    loser_penalty: float = 0.35,
+    book_plies: int = 16,
+) -> DistillStats:
+    """Reinforce the winner's moves; softly discourage the loser's."""
+    stats = DistillStats(games=1)
+    if result == "1-0":
+        winner = chess.WHITE
+        stats.wins = 1  # from white's perspective of result, not stigmergy
+    elif result == "0-1":
+        winner = chess.BLACK
+        stats.losses = 1
+    else:
+        winner = None
+        stats.draws = 1
+
+    board = chess.Board()
+    path = ""
+    book_raw: dict[str, dict[str, float]] = {}
+    for ply, move in enumerate(moves):
+        if move not in board.legal_moves:
+            break
+        key = _lm_key(board, move)
+        is_winner_move = winner is not None and board.turn == winner
+        is_loser_move = winner is not None and board.turn != winner
+        if key is not None:
+            decay = 1.0 if ply < 30 else 0.5
+            if is_winner_move:
+                delta = winner_boost * decay
+                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + delta
+                _reinforce_trail(weights, board, move.uci(), delta)
+                stats.moves_reinforced += 1
+            elif is_loser_move:
+                delta = loser_penalty * decay
+                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) - delta
+                stats.moves_reinforced += 1
+            elif winner is None:
+                delta = 0.05 * decay
+                weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + delta
+                _reinforce_trail(weights, board, move.uci(), delta * 0.5)
+
+        if ply < book_plies:
+            uci = move.uci()[:4]
+            w = 3.0 if is_winner_move else (0.4 if is_loser_move else 1.0)
+            book_raw.setdefault(path, {})
+            book_raw[path][uci] = book_raw[path].get(uci, 0.0) + w
+
+        board.push(move)
+        path += move.uci()[:4]
+
+    for bpath, entries in book_raw.items():
+        mean = sum(entries.values()) / max(1, len(entries))
+        weights.book[bpath] = [
+            {
+                "m": m,
+                "w": float(c),
+                "code": _book_code(c, mean),
+                "games": round(c),
+            }
+            for m, c in entries.items()
+        ]
+        stats.book_updates += 1
+    return stats
+
+
+def distill_stockfish_pv(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    pv_uci: list[str],
+    *,
+    boost: float = 1.2,
+) -> int:
+    """Reinforce an SF principal variation as if it were a strong winner line."""
+    n = 0
+    b = board.copy(stack=False)
+    path = "".join(m.uci()[:4] for m in board.move_stack)
+    for i, uci in enumerate(pv_uci[:12]):
+        try:
+            move = chess.Move.from_uci(uci)
+        except ValueError:
+            break
+        if move not in b.legal_moves:
+            break
+        rank_decay = boost * (1.0 if i < 6 else 0.4)
+        key = _lm_key(b, move)
+        if key is not None:
+            weights.learned_moves[key] = weights.learned_moves.get(key, 0.0) + rank_decay
+            n += 1
+        _reinforce_trail(weights, b, uci, rank_decay)
+        if i < 10:
+            _reinforce_book_entry(weights, path, uci, rank_decay)
+        b.push(move)
+        path += uci[:4]
+    return n
+
+
+def distill_stockfish_top(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    tops: list[dict[str, Any]],
+    *,
+    boost: float = 1.0,
+) -> int:
+    """Reinforce multipv Stockfish lines into trails, book, and learned moves.
+
+    Top-1 gets the bulk of float mass so trail_move follows a single clear policy.
+    """
+    n = 0
+    for rank, info in enumerate(tops):
+        # Strong top-1 preference for a decisive continuous trail.
+        decay = boost * (1.0 if rank == 0 else 0.15 / rank)
+        pv = info.get("pv") or []
+        uci = info.get("uci") or (pv[0] if pv else None)
+        if not uci:
+            continue
+        b = board.copy(stack=False)
+        path = "".join(m.uci()[:4] for m in board.move_stack)
+        line = pv if pv else [uci]
+        for i, move_uci in enumerate(line[:8]):
+            try:
+                move = chess.Move.from_uci(move_uci)
+            except ValueError:
+                break
+            if move not in b.legal_moves:
+                break
+            amount = decay * (1.0 if i < 3 else 0.25)
+            lm = _lm_key(b, move)
+            if lm is not None:
+                weights.learned_moves[lm] = weights.learned_moves.get(lm, 0.0) + amount
+                n += 1
+            _reinforce_trail(weights, b, move_uci, amount)
+            if i < 6:
+                _reinforce_book_entry(weights, path, move_uci, amount)
+            b.push(move)
+            path += move_uci[:4]
+    return n
+
+
+def clip_field_params(params) -> None:
+    """Keep pheromone parameters in a numerically stable band."""
+    params.deposit = np.clip(params.deposit, -15.0, 15.0)
+    params.decay = np.clip(params.decay, 0.12, 0.95)
+    params.mix = np.clip(params.mix, 0.05, 0.9)
+    params.interaction = np.clip(params.interaction, -3.0, 3.0)
+    params.self_energy = np.clip(params.self_energy, -2.0, 2.0)
+    params.king_resonance = np.clip(params.king_resonance, -3.0, 3.0)
+    params.material_anchor = float(np.clip(params.material_anchor, 0.4, 2.5))
+    params.tempo_bonus = float(np.clip(params.tempo_bonus, 0.0, 40.0))
+    params.passed_pawn_scale = float(np.clip(params.passed_pawn_scale, 0.2, 3.0))
+    params.mobility_scale = float(np.clip(params.mobility_scale, 0.2, 3.0))
+    params.swarm_scale = float(np.clip(params.swarm_scale, 0.05, 5.0))
+    if params.field_head is not None:
+        params.field_head = np.clip(params.field_head, -8.0, 8.0)
+
+
+def imitation_toward_move(
+    weights: StigmergyWeights,
+    board: chess.Board,
+    target: chess.Move,
+    rng: np.random.Generator,
+    lr: float = 0.04,
+) -> bool:
+    """Nudge field so 1-ply eval prefers Stockfish's move over our top wrong move."""
+    if target not in board.legal_moves:
+        return False
+    scored: list[tuple[chess.Move, float]] = []
+    mover_white = board.turn == chess.WHITE
+    for move in board.legal_moves:
+        board.push(move)
+        val = evaluate_board(board, weights)
+        board.pop()
+        s = val if mover_white else -val
+        scored.append((move, s))
+    scored.sort(key=lambda t: t[1], reverse=True)
+    if scored[0][0] == target:
+        return True
+    # Additive, clipped nudges — multiplicative updates explode overnight.
+    piece = board.piece_at(target.from_square)
+    wrong = board.piece_at(scored[0][0].from_square)
+    if piece is not None:
+        idx = "pnbrqk".index(piece.symbol().lower())
+        weights.field.deposit[idx] += lr * 0.15 + rng.normal(0, lr * 0.02, weights.field.deposit[idx].shape)
+    if wrong is not None and wrong != piece:
+        idx = "pnbrqk".index(wrong.symbol().lower())
+        weights.field.deposit[idx] -= lr * 0.1
+    weights.field.material_anchor = float(
+        min(2.0, weights.field.material_anchor + lr * 0.01)
+    )
+    if weights.field.field_head is not None:
+        weights.field.field_head = weights.field.field_head + rng.normal(
+            0, lr * 0.015, weights.field.field_head.shape
+        )
+    clip_field_params(weights.field)
+    return False
+
+
+def prune_learned_moves(weights: StigmergyWeights, keep: int = 50000) -> None:
+    """Cap memory so JSON stays manageable."""
+    if len(weights.learned_moves) <= keep:
+        return
+    top = sorted(weights.learned_moves.items(), key=lambda kv: abs(kv[1]), reverse=True)[:keep]
+    weights.learned_moves = dict(top)
+
+
+def prune_trails(weights: StigmergyWeights, keep_positions: int = 200000) -> None:
+    """Keep the strongest trail positions by peak move intensity."""
+    if len(weights.trails) <= keep_positions:
+        return
+    ranked = sorted(
+        weights.trails.items(),
+        key=lambda kv: max((abs(v) for v in kv[1].values()), default=0.0),
+        reverse=True,
+    )[:keep_positions]
+    weights.trails = {k: dict(v) for k, v in ranked}
+
+
+def evolve_against_baseline(
+    weights: StigmergyWeights,
+    rng: np.random.Generator,
+    score_fn,
+    sigma: float = 0.05,
+) -> bool:
+    """Adopt mutated field if score_fn(candidate_weights) > score_fn(current)."""
+    baseline = score_fn(weights)
+    cand_field = mutate_field(weights.field, rng, sigma=sigma)
+    trial = StigmergyWeights(
+        field=cand_field,
+        book=weights.book,
+        learned_moves=dict(weights.learned_moves),
+        trails={k: dict(v) for k, v in weights.trails.items()},
+        diffusion_steps=weights.diffusion_steps,
+        format_version=weights.format_version,
+        training_meta=dict(weights.training_meta),
+    )
+    # Preserve field_head if present on params.
+    if getattr(weights.field, "field_head", None) is not None:
+        trial.field.field_head = weights.field.field_head + rng.normal(
+            0, sigma * 0.3, weights.field.field_head.shape
+        )
+    cand_score = score_fn(trial)
+    if cand_score > baseline + 0.02:
+        weights.field = trial.field
+        return True
+    return False

@@ -1,0 +1,15 @@
+[2026-08-05T03:22:19Z] Starting overnight GM push hours=8.0 seed=7
+[2026-08-05T03:22:19Z] Loaded chess_contest/weights/base_weights.json
+[2026-08-05T03:22:19Z] SF book build: 500 positions
+[2026-08-05T03:22:23Z]   book build 50/500, reinforced=1267
+[2026-08-05T03:22:27Z]   book build 100/500, reinforced=2482
+[2026-08-05T03:22:32Z]   book build 150/500, reinforced=3761
+[2026-08-05T03:22:36Z]   book build 200/500, reinforced=4979
+[2026-08-05T03:22:40Z]   book build 250/500, reinforced=6186
+[2026-08-05T03:22:44Z]   book build 300/500, reinforced=7449
+[2026-08-05T03:22:48Z]   book build 350/500, reinforced=8696
+[2026-08-05T03:22:52Z]   book build 400/500, reinforced=9949
+[2026-08-05T03:22:56Z]   book build 450/500, reinforced=11234
+[2026-08-05T03:23:00Z]   book build 500/500, reinforced=12506
+[2026-08-05T03:25:48Z] cycle 1 SF batch done vs~1500 stig_wins=0/6
+08-05T03:25:48Z] cycle 1 SF batch done vs~1500 stig_wins=0/6
