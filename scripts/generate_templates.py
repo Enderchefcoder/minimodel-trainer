@@ -538,11 +538,11 @@ SPECS: list[TemplateSpec] = [
             "value_residual": True,
         },
         recommended_tokens="0.4-1B",
-        training_defaults={"lr": 3.0e-3, "batch_tokens": 65536, "seq_len": 512},
+        training_defaults={"lr": 3.0e-3, "batch_tokens": 65536, "seq_len": 1024},
         notes=[
             "Sandbox bake-off winner near 1.4M (tied with MHA/deep variants; "
-            "GQA chosen for T4 throughput). Train on FineWeb-Edu 50% + "
-            "DCLM-100BT 32% + TinyStories 15% + soft-label QA 3%.",
+            "GQA chosen for T4 throughput). Crush-glint2 v2 mix: FineWeb-Edu "
+            "55% + DCLM-100BT 28% + TinyStories 12% + soft-label QA 5%.",
         ],
     ),
     TemplateSpec(
