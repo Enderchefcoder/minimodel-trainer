@@ -1,0 +1,57 @@
+[2026-08-05T03:37:28Z] Starting overnight GM push hours=8.0 seed=7
+[2026-08-05T03:37:28Z] Loaded chess_contest/weights/overnight/ckpt_book.json
+[2026-08-05T03:37:28Z] Skipping book rebuild (resuming from SF book checkpoint)
+[2026-08-05T03:37:34Z] cycle 1 analysed≈100 top1_hits~33
+[2026-08-05T03:39:00Z] cycle 1 SF games stig_wins=0/12 last_vs=MAX
+[2026-08-05T03:39:06Z] cycle 2 analysed≈100 top1_hits~11
+[2026-08-05T03:40:07Z] cycle 2 SF games stig_wins=0/24 last_vs=3000
+[2026-08-05T03:40:37Z] cycle 2 self-play adopted=0/2
+[2026-08-05T03:40:43Z] cycle 3 analysed≈100 top1_hits~19
+[2026-08-05T03:41:42Z] cycle 3 SF games stig_wins=0/36 last_vs=3000
+[2026-08-05T03:41:48Z] cycle 4 analysed≈100 top1_hits~28
+[2026-08-05T03:42:21Z] cycle 4 SF games stig_wins=0/48 last_vs=3000
+[2026-08-05T03:42:30Z] cycle 4 self-play adopted=0/2
+[2026-08-05T03:42:36Z] cycle 5 analysed≈100 top1_hits~17
+[2026-08-05T03:43:22Z] cycle 5 SF games stig_wins=0/60 last_vs=MAX
+[2026-08-05T03:43:28Z] cycle 6 analysed≈100 top1_hits~22
+[2026-08-05T03:44:04Z] cycle 6 SF games stig_wins=0/72 last_vs=2800
+[2026-08-05T03:44:11Z] cycle 6 self-play adopted=1/2
+[2026-08-05T03:44:17Z] cycle 7 analysed≈100 top1_hits~30
+[2026-08-05T03:44:50Z] cycle 7 SF games stig_wins=0/84 last_vs=3190
+[2026-08-05T03:44:56Z] cycle 8 analysed≈100 top1_hits~29
+[2026-08-05T03:45:32Z] cycle 8 SF games stig_wins=0/96 last_vs=3190
+[2026-08-05T03:45:38Z] cycle 8 self-play adopted=0/2
+[2026-08-05T03:45:44Z] cycle 9 analysed≈100 top1_hits~26
+[2026-08-05T03:46:18Z] cycle 9 SF games stig_wins=0/108 last_vs=MAX
+[2026-08-05T03:46:25Z] cycle 10 analysed≈100 top1_hits~26
+[2026-08-05T03:47:01Z] cycle 10 SF games stig_wins=0/120 last_vs=1700
+[2026-08-05T03:47:05Z] cycle 10 self-play adopted=0/2
+[2026-08-05T03:47:11Z] cycle 11 analysed≈100 top1_hits~22
+[2026-08-05T03:47:42Z] cycle 11 SF games stig_wins=0/132 last_vs=2500
+[2026-08-05T03:47:49Z] cycle 12 analysed≈100 top1_hits~17
+[2026-08-05T03:48:23Z] cycle 12 SF games stig_wins=0/144 last_vs=3000
+[2026-08-05T03:48:30Z] cycle 12 self-play adopted=0/2
+[2026-08-05T03:48:36Z] cycle 13 analysed≈100 top1_hits~18
+[2026-08-05T03:49:09Z] cycle 13 SF games stig_wins=0/156 last_vs=MAX
+[2026-08-05T03:49:16Z] cycle 14 analysed≈100 top1_hits~26
+[2026-08-05T03:49:50Z] cycle 14 SF games stig_wins=0/168 last_vs=3000
+[2026-08-05T03:50:01Z] cycle 14 self-play adopted=0/2
+[2026-08-05T03:50:02Z] checkpoint ckpt_753s.json
+[2026-08-05T03:50:08Z] cycle 15 analysed≈100 top1_hits~25
+[2026-08-05T03:53:00Z] cycle 15 SF games stig_wins=0/180 last_vs=1320
+[2026-08-05T03:53:06Z] cycle 16 analysed≈100 top1_hits~26
+[2026-08-05T03:53:50Z] cycle 16 SF games stig_wins=0/192 last_vs=2800
+[2026-08-05T03:53:57Z] cycle 16 self-play adopted=0/2
+[2026-08-05T03:54:03Z] cycle 17 analysed≈100 top1_hits~23
+[2026-08-05T03:54:34Z] cycle 17 SF games stig_wins=0/204 last_vs=MAX
+[2026-08-05T03:54:41Z] cycle 18 analysed≈100 top1_hits~31
+[2026-08-05T03:55:14Z] cycle 18 SF games stig_wins=0/216 last_vs=3190
+[2026-08-05T03:55:26Z] cycle 18 self-play adopted=0/2
+[2026-08-05T03:55:32Z] cycle 19 analysed≈100 top1_hits~25
+[2026-08-05T03:56:09Z] cycle 19 SF games stig_wins=0/228 last_vs=3190
+[2026-08-05T03:56:16Z] cycle 20 analysed≈100 top1_hits~30
+[2026-08-05T03:56:48Z] cycle 20 SF games stig_wins=0/240 last_vs=1900
+[2026-08-05T03:56:54Z] cycle 20 self-play adopted=0/2
+[2026-08-05T03:57:00Z] cycle 21 analysed≈100 top1_hits~27
+lf-play adopted=0/2
+[2026-08-05T03:57:00Z] cycle 21 analysed≈100 top1_hits~27

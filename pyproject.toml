@@ -35,6 +35,7 @@ dependencies = [
     "pyyaml>=6.0",
     "tqdm>=4.65",
     "requests>=2.28",
+    "chess>=1.10",
 ]
 
 [project.optional-dependencies]
@@ -64,7 +65,8 @@ mmt = "minimodel.cli:main"
 # The repository keeps its sources in `src/`, but they are importable under the
 # single top-level package name `minimodel` so that directories such as
 # `src/datasets/` never shadow third-party packages.
-package-dir = { minimodel = "src" }
+# chess_contest/ lives at the repo root as a parallel contest package.
+package-dir = { minimodel = "src", chess_contest = "chess_contest" }
 packages = [
     "minimodel",
     "minimodel.core",
@@ -83,6 +85,9 @@ packages = [
     "minimodel.vision.data",
     "minimodel.vision.training",
     "minimodel.vision.sampling",
+    "chess_contest",
+    "chess_contest.stigmergy",
+    "chess_contest.scripts",
 ]
 
 [tool.setuptools.package-data]
@@ -105,7 +110,7 @@ filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
 branch = true
-source = ["minimodel"]
+source = ["minimodel", "chess_contest"]
 omit = ["*/__main__.py"]
 
 [tool.coverage.report]
@@ -133,7 +138,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["minimodel"]
+known-first-party = ["minimodel", "chess_contest"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B011"]
