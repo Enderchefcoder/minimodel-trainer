@@ -58,5 +58,5 @@ wrote - there is no hidden state between them.
 
 | Page | Contents |
 | --- | --- |
-| [../research/README.md](../research/README.md) | Reading lists and design notes |
+| [../research/README.md](../research/README.md) | Research program: reports (incl. the curated [model comparison](../research/reports/06_model_comparisons.md) and the [CoT vs latent-reasoning ablation](../research/reports/13_cot_latent_reasoning.md)), reading lists and design notes |
 | [../AGENTS.md](../AGENTS.md) | Repository conventions (for contributors) |

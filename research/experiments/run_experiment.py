@@ -23,13 +23,17 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from eval_harness import ModelAdapter, eval_arc_easy, eval_blimp, eval_wikitext  # noqa: E402
+from eval_harness import ModelAdapter, eval_arc_easy, eval_blimp, eval_wikitext
 
-from minimodel.architectures.registry import ARCHITECTURES  # noqa: E402
-from minimodel.datasets.loader import PackedTextDataset, build_dataloader, infinite_loader  # noqa: E402
-from minimodel.tokenization.tokenize import BPETokenizer  # noqa: E402
-from minimodel.training.optim import build_optimizer  # noqa: E402
-from minimodel.training.schedules import build_scheduler, resolve_warmup  # noqa: E402
+from minimodel.architectures.registry import ARCHITECTURES
+from minimodel.datasets.loader import (
+    PackedTextDataset,
+    build_dataloader,
+    infinite_loader,
+)
+from minimodel.tokenization.tokenize import BPETokenizer
+from minimodel.training.optim import build_optimizer
+from minimodel.training.schedules import build_scheduler, resolve_warmup
 
 ART = Path("research/artifacts")
 RESULTS = Path("research/data/results")

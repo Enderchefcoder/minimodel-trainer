@@ -1,0 +1,46 @@
+[
+  {
+    "name": "cot_direct",
+    "mode": "direct",
+    "family": "dense_transformer",
+    "params": 620757,
+    "final_loss": 2.8906,
+    "tokens_seen": 61440,
+    "tokens_per_second": 2132.6,
+    "test_exact_match": 0.0,
+    "test_n": 60
+  },
+  {
+    "name": "cot_brief",
+    "mode": "cot_brief",
+    "family": "dense_transformer",
+    "params": 620757,
+    "final_loss": 2.9281,
+    "tokens_seen": 61440,
+    "tokens_per_second": 2142.4,
+    "test_exact_match": 3.33,
+    "test_n": 60
+  },
+  {
+    "name": "cot_detail",
+    "mode": "cot_detail",
+    "family": "dense_transformer",
+    "params": 620757,
+    "final_loss": 3.433,
+    "tokens_seen": 61440,
+    "tokens_per_second": 2099.3,
+    "test_exact_match": 0.0,
+    "test_n": 60
+  },
+  {
+    "name": "cot_latent_loop",
+    "mode": "direct",
+    "family": "looped_transformer",
+    "params": 466805,
+    "final_loss": 3.7529,
+    "tokens_seen": 61440,
+    "tokens_per_second": 794.8,
+    "test_exact_match": 0.0,
+    "test_n": 60
+  }
+]

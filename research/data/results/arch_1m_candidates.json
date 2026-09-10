@@ -18,7 +18,7 @@
       "prior_rank": 1,
       "candidate_class": "researched",
       "family": "dense-transformer",
-      "description": "Rank-1 ~1.03M dense GQA + value residual + QK-norm \u2014 researched winner shape from the crush-Glint-2 bake-off, retargeted to ~1M.",
+      "description": "Rank-1 ~1.03M dense GQA + value residual + QK-norm \u2014 researched winner shape from the Glint-2 bake-off, retargeted to ~1M.",
       "measured_rank": 10
     },
     {
@@ -397,7 +397,7 @@
       "prior_rank": 1,
       "candidate_class": "researched",
       "family": "dense-transformer",
-      "description": "Rank-1 ~1.03M dense GQA + value residual + QK-norm \u2014 researched winner shape from the crush-Glint-2 bake-off, retargeted to ~1M.",
+      "description": "Rank-1 ~1.03M dense GQA + value residual + QK-norm \u2014 researched winner shape from the Glint-2 bake-off, retargeted to ~1M.",
       "measured_rank": 10
     },
     {

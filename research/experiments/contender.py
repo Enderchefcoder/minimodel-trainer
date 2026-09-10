@@ -22,12 +22,14 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from eval_harness import ModelAdapter, eval_arc_easy, eval_blimp, eval_wikitext  # noqa: E402
-from run_experiment import ExpConfig, build_model_from, train, val_loss  # noqa: E402
+from eval_harness import ModelAdapter, eval_arc_easy, eval_blimp, eval_wikitext
+from run_experiment import ExpConfig, build_model_from, train, val_loss
 
-from minimodel.inference.quality_probe import train_quality_probe  # noqa: E402
-from minimodel.inference.search import EFFORT_LEVELS, effort_generate, score_continuation  # noqa: E402
-from minimodel.tokenization.tokenize import BPETokenizer  # noqa: E402
+from minimodel.inference.quality_probe import train_quality_probe
+from minimodel.inference.search import (
+    effort_generate,
+)
+from minimodel.tokenization.tokenize import BPETokenizer
 
 ART = Path("research/artifacts")
 RESULTS = Path("research/data/results")
@@ -37,8 +39,9 @@ def contender_config(steps: int) -> ExpConfig:
     return ExpConfig(
         name="contender_dense",
         family="dense_transformer",
-        arch=dict(dim=160, n_layers=3, n_heads=5, head_dim=32, n_kv_heads=5, ffn_hidden=512,
-                  window=256, qk_norm=True, tie_embeddings=True, max_seq_len=512, vocab_size=4096),
+        arch={"dim": 160, "n_layers": 3, "n_heads": 5, "head_dim": 32, "n_kv_heads": 5,
+              "ffn_hidden": 512, "window": 256, "qk_norm": True, "tie_embeddings": True,
+              "max_seq_len": 512, "vocab_size": 4096},
         seq_len=256, batch_size=48, max_steps=steps, lr=3e-3,
         optimizer="adamw", schedule="wsd", warmup=0.03,
         schedule_kwargs={"decay_ratio": 0.2, "decay_shape": "sqrt"},

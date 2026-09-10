@@ -3,9 +3,15 @@
 *Source: <https://huggingface.co/Glint-Research/Glint-2> (README, `generate.py`,
 `effort.py`), retrieved 2026-08-02. All quotes and numbers are from that repo.*
 
-Glint-2 is the model we are explicitly trying to beat. It is a **1.06M-parameter
-pure-loop transformer** — the same architectural family as our
+Glint-2 is the model we are explicitly trying to beat. Its README advertises a
+**1.06M-parameter pure-loop transformer** — the same architectural family as our
 `supra2_1406240`, but taken to a minimalist extreme.
+
+> **Correction (report 10):** the *shipped* checkpoint is a **1,710,049-param
+> loop+coda** model — one shared block iterated 8 times plus a unique coda block
+> — i.e. 61% larger than advertised. Everything below describes the advertised
+> design; the verification of the real artifact is report 10, and every baseline
+> number in this program is measured on the **1.71M** weights.
 
 ## Reported scores (the target)
 
@@ -17,7 +23,7 @@ From the "tiny-ml leaderboard", base model, single checkpoint, no soup:
 | glint-0.4 | 1M | 58.5 | 31.0 | 5.01 |
 | glint-1 | 1M | 61.2 | 32.0 | 4.45 |
 | glint-1.3 (merged) | 982K | 68.7 | 32.5 | 3.08 |
-| **glint-2** | **1.06M** | **73.96** | **36.80** | **3.09** |
+| **glint-2** | **1.06M** (advertised; actually 1.71M) | **73.96** | **36.80** | **3.09** (byte-ppl, mislabeled as ppl) |
 
 BLiMP chance is 50; ARC-Easy chance ≈ 25. WikiText ppl is *per-token on a
 4096-vocab BPE*, so it is not comparable to word-level GPT-2 numbers (~29) and

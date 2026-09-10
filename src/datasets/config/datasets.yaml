@@ -207,7 +207,7 @@ datasets:
     description: >-
       510 prompt→continuation documents derived from
       slm_next_token_dataset.json (soft 3-way next-token triples). Oversample
-      in crush-glint2; use soft_labels.soft_kl_loss for the soft targets.
+      in the dense-1-4m-t4 mix; use soft_labels.soft_kl_loss for the soft targets.
 
   cosmopedia-full:
     source: huggingface
@@ -676,9 +676,9 @@ mixtures:
       - { dataset: finemath, weight: 0.20 }
       - { dataset: python-edu, weight: 0.10 }
 
-  crush-glint2:
+  dense-1-4m-t4:
     description: >-
-      1.4M Glint-2 crusher mix (v2). FineWeb-Edu-heavy for ARC/WikiText,
+      Recipe-11 1.4M mix (v2). FineWeb-Edu-heavy for ARC/WikiText,
       DCLM for HellaSwag-style text, TinyStories for fluency/BLiMP, and
       soft-label QA oversampled so prompt→answer continuations stick.
     stage: pretrain

@@ -24,10 +24,10 @@ import torch
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent / "baselines"))
 
-from eval_harness import ModelAdapter, eval_blimp, eval_wikitext  # noqa: E402
-from run_experiment import ExpConfig, build_model_from, train  # noqa: E402
+from eval_harness import ModelAdapter, eval_blimp, eval_wikitext
+from run_experiment import ExpConfig, build_model_from, train
 
-from minimodel.tokenization.tokenize import BPETokenizer  # noqa: E402
+from minimodel.tokenization.tokenize import BPETokenizer
 
 ART = Path("research/artifacts")
 RESULTS = Path("research/data/results")
@@ -54,8 +54,8 @@ def eval_at_loops(name, encode, model, n_bytes, loop_grid, *, blimp_pp=15, wt=10
 
 
 def run_glint() -> dict:
-    from glint2_model import load_glint2  # noqa: PLC0415
-    from tokenizers import Tokenizer  # noqa: PLC0415
+    from glint2_model import load_glint2
+    from tokenizers import Tokenizer
 
     model = load_glint2("research/baselines/glint2/glint-2.pt", loops=8)
     tok = Tokenizer.from_file("research/baselines/glint2/tokenizer.json")
@@ -69,11 +69,14 @@ def run_ours(steps: int) -> dict:
     torch.manual_seed(1234)
     cfg = ExpConfig(
         name="ours_varloop", family="looped_transformer",
-        arch=dict(dim=96, n_heads=8, head_dim=12, ffn_hidden=768, embedding_type="tied",
-                  prelude_layers=0, coda_layers=1, n_shared_blocks=1, value_residual=True,
-                  use_timestep_scale=True, use_outer_residual=True, loop_lora_rank=4,
-                  max_loops_table=16, train_loops=8, min_loops=4, variable_loops=True,
-                  norm_eps=1e-5, window=256, max_seq_len=512, vocab_size=4096),
+        arch={"dim": 96, "n_heads": 8, "head_dim": 12, "ffn_hidden": 768,
+              "embedding_type": "tied",
+              "prelude_layers": 0, "coda_layers": 1, "n_shared_blocks": 1,
+              "value_residual": True,
+              "use_timestep_scale": True, "use_outer_residual": True, "loop_lora_rank": 4,
+              "max_loops_table": 16, "train_loops": 8, "min_loops": 4,
+              "variable_loops": True, "norm_eps": 1e-5, "window": 256,
+              "max_seq_len": 512, "vocab_size": 4096},
         seq_len=256, batch_size=32, max_steps=steps, lr=3e-3,
     )
     tok = BPETokenizer.load(ART / "tokenizer_v4096.json")

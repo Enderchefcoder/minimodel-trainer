@@ -18,8 +18,8 @@ from tokenizers import Tokenizer
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent.parent / "baselines"))
 
-from eval_harness import ModelAdapter, run_all  # noqa: E402
-from glint2_model import load_glint2  # noqa: E402
+from eval_harness import ModelAdapter, run_all
+from glint2_model import load_glint2
 
 
 def build_adapter(loops: int = 8, max_len: int = 256, batch_size: int = 32) -> ModelAdapter:

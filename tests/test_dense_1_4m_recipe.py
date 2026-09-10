@@ -1,4 +1,4 @@
-"""Tests for the crush-glint2 1.4M recipe (template, mix, soft labels)."""
+"""Tests for the recipe-11 1.4M dense run (template, mix, soft labels)."""
 
 from __future__ import annotations
 
@@ -67,21 +67,21 @@ class TestCrushRecipe:
         logits = model(x)
         assert logits.shape == (2, 16, 4096)
 
-    def test_crush_glint2_mixture(self):
-        mix = get_mixture("crush-glint2")
+    def test_dense_1_4m_mixture(self):
+        mix = get_mixture("dense-1-4m-t4")
         weights = dict(mix.normalized_weights())
         assert pytest.approx(sum(weights.values())) == 1.0
         assert pytest.approx(weights["fineweb-edu-10bt"], abs=0.01) == 0.55
         assert pytest.approx(weights["dclm-100bt"], abs=0.01) == 0.28
         assert pytest.approx(weights["tinystories"], abs=0.01) == 0.12
         assert pytest.approx(weights["slm-next-token-qa"], abs=0.01) == 0.05
-        resolved = resolve_mixture("crush-glint2")
+        resolved = resolve_mixture("dense-1-4m-t4")
         assert len(resolved) == 4
         assert get_dataset("dclm-100bt").repo == "HuggingFaceFW/dclm_100BT"
         assert get_dataset("slm-next-token-qa").source == "local"
 
     def test_recipe_config_exists(self):
-        path = Path("configs/pretrain/crush_glint2_1.4m.yaml")
+        path = Path("configs/pretrain/dense_1_4m_t4.yaml")
         assert path.exists()
         text = path.read_text(encoding="utf-8")
         assert "dense_1_4m" in text
@@ -91,7 +91,7 @@ class TestCrushRecipe:
         assert "seq_len: 1024" in text
 
     def test_colab_notebook_is_single_run_cell(self):
-        path = Path("notebooks/03_crush_glint2_colab.ipynb")
+        path = Path("notebooks/03_train_dense_1_4m_colab.ipynb")
         assert path.exists()
         nb = json.loads(path.read_text(encoding="utf-8"))
         code_cells = [c for c in nb["cells"] if c["cell_type"] == "code"]
