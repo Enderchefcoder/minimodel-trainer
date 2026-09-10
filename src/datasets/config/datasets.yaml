@@ -626,6 +626,32 @@ datasets:
     license: mit
     description: Last-word prediction requiring long-range context.
 
+  mmlu:
+    source: huggingface
+    repo: cais/mmlu
+    config: all
+    split: test
+    stage: eval
+    format: multiple_choice
+    license: mit
+    description: >-
+      57-subject multiple-choice exam. Included for Open_SLM_Leaderboard
+      comparability; expect near chance (0.25) below ~300M params.
+
+  gsm8k-eval:
+    source: huggingface
+    repo: openai/gsm8k
+    config: main
+    split: test
+    stage: eval
+    format: verifiable
+    fields: { prompt: question, answer: answer }
+    verifier: numeric
+    license: mit
+    description: >-
+      GSM8K test split, scored by exact numeric match after generation. The
+      leaderboard's maths metric; small base models usually score ~0 here.
+
 # ============================================================================
 # Mixtures
 # ============================================================================
@@ -734,3 +760,18 @@ mixtures:
       - { dataset: arc-challenge, weight: 1.0 }
       - { dataset: hellaswag, weight: 1.0 }
       - { dataset: piqa, weight: 1.0 }
+
+  slm-leaderboard:
+    description: >-
+      The AxiomicLabs Open_SLM_Leaderboard set: BLiMP, ARC, HellaSwag, PIQA,
+      WinoGrande, MMLU and GSM8K.
+    stage: eval
+    components:
+      - { dataset: blimp, weight: 1.0 }
+      - { dataset: arc-easy, weight: 1.0 }
+      - { dataset: arc-challenge, weight: 1.0 }
+      - { dataset: hellaswag, weight: 1.0 }
+      - { dataset: piqa, weight: 1.0 }
+      - { dataset: winogrande, weight: 1.0 }
+      - { dataset: mmlu, weight: 1.0 }
+      - { dataset: gsm8k-eval, weight: 1.0 }

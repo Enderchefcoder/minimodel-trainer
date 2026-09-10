@@ -31,6 +31,11 @@ sys.path.insert(0, str(REPO_ROOT))
 import torch  # noqa: E402
 
 from minimodel.architectures.builder import build_model  # noqa: E402
+from minimodel.architectures.ender import (  # noqa: E402
+    EnderAdapter,
+    EnderLoss,
+    build_ender_optimizer,
+)
 from minimodel.benchmarking.bench import run_suite  # noqa: E402
 from minimodel.cardgen.modelcard_autogen import generate_model_card  # noqa: E402
 from minimodel.core.logging_utils import get_logger, setup_logging  # noqa: E402
@@ -253,7 +258,52 @@ def run_text_pipeline(root: Path) -> dict[str, Any]:
     results["benchmark"] = benchmark.headline()
     results["card"] = str(card)
     results["merged"] = str(root / "runs" / "merged")
+    results["ender"] = run_ender_stage(root / "ender", tokenizer, overrides)
     return results
+
+
+def run_ender_stage(root: Path, tokenizer, overrides: dict[str, Any]) -> dict[str, Any]:
+    """Graft ENDER onto the smoke model and take a few staged training steps.
+
+    Exercises the adaptation path (EnderAdapter + staged optimizer + EnderLoss)
+    that pretraining does not cover, including the fresh-adapter-is-a-no-op
+    invariant the whole before/after methodology rests on.
+    """
+    backbone = build_model("dense_3m", overrides=overrides, verify_budget=False)
+    tokens = torch.randint(0, overrides["vocab_size"], (2, 16))
+    backbone.eval()
+    with torch.no_grad():
+        reference = backbone(tokens)
+
+    adapter = EnderAdapter(
+        backbone, {"dim": overrides["dim"], "r_latent": 16, "num_steps": 2}
+    )
+    adapter.eval()
+    with torch.no_grad():
+        wrapped = adapter(tokens)
+    if not torch.allclose(wrapped, reference, atol=1e-5):
+        raise AssertionError("fresh ENDER adapter changed the backbone's logits")
+
+    optimizer = build_ender_optimizer(adapter, base_lr=1e-3, unfreeze_top_blocks=1)
+    loss_engine = EnderLoss(lambda_delta=0.05)
+    adapter.train()
+    first_loss = None
+    for _ in range(3):
+        logits = adapter(tokens)
+        loss, _extras = loss_engine(logits[:, :-1], tokens[:, 1:])
+        if first_loss is None:
+            first_loss = float(loss)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+    backbone_params_frozen = not adapter.backbone.blocks[0].attention.W_qkv.weight.requires_grad
+    return {
+        "noop_check": "passed",
+        "first_loss": round(first_loss, 4),
+        "final_loss": round(float(loss), 4),
+        "backbone_stage1_frozen": backbone_params_frozen,
+    }
 
 
 def run_vision_pipeline(root: Path) -> dict[str, Any]:

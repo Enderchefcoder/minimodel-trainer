@@ -514,6 +514,59 @@ SPECS: list[TemplateSpec] = [
         recommended_tokens="5-15B",
         training_defaults={"lr": 1.2e-3, "batch_tokens": 262144, "seq_len": 1024},
     ),
+    # ---------------- ENDER (endogenous recurrent depth) ----------------
+    TemplateSpec(
+        name="ender_12m",
+        family="ender",
+        description=(
+            "ENDER (Endogenous Neural Depth with Evolving Recurrence), ~12M. A "
+            "dense trunk whose latent recurrence runs 4 steps of a shared core "
+            "before the final norm; effective depth scales with the step count "
+            "(`steps` at inference) at zero parameter cost."
+        ),
+        arch={
+            "vocab_size": 8192,
+            "dim": 384,
+            "n_layers": 6,
+            "n_heads": 6,
+            "head_dim": 64,
+            "ffn_hidden": ffn_hidden(384),
+            "window": 1024,
+            "max_seq_len": 2048,
+            "r_latent": 192,
+            "num_steps": 4,
+            "min_steps": 2,
+            "variable_steps": True,
+        },
+        recommended_tokens="2-6B",
+        training_defaults={"lr": 2.0e-3, "batch_tokens": 131072, "seq_len": 512},
+        notes=[
+            "The recurrence module is a no-op at init (zero output gate), so "
+            "training starts from the dense baseline.",
+            "Raise `steps` at inference for a free quality/latency trade.",
+        ],
+    ),
+    TemplateSpec(
+        name="ender_30m",
+        family="ender",
+        description="ENDER, ~30M params. Recurrent-depth dense transformer for instruction-tuned deployments.",
+        arch={
+            "vocab_size": 16384,
+            "dim": 512,
+            "n_layers": 8,
+            "n_heads": 8,
+            "head_dim": 64,
+            "ffn_hidden": ffn_hidden(512),
+            "window": 1024,
+            "max_seq_len": 4096,
+            "r_latent": 256,
+            "num_steps": 6,
+            "min_steps": 2,
+            "variable_steps": True,
+        },
+        recommended_tokens="6-20B",
+        training_defaults={"lr": 1.2e-3, "batch_tokens": 262144, "seq_len": 1024},
+    ),
     # ---------------- dense ----------------
     TemplateSpec(
         name="dense_1_4m",
