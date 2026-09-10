@@ -29,10 +29,10 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from eval_harness import ModelAdapter, eval_blimp, eval_wikitext  # noqa: E402
-from run_experiment import ExpConfig, build_model_from, train  # noqa: E402
+from eval_harness import ModelAdapter, eval_blimp, eval_wikitext
+from run_experiment import ExpConfig, build_model_from, train
 
-from minimodel.tokenization.tokenize import BPETokenizer  # noqa: E402
+from minimodel.tokenization.tokenize import BPETokenizer
 
 ART = Path("research/artifacts")
 RESULTS = Path("research/data/results")
@@ -40,12 +40,15 @@ LOOP_GRID = [4, 6, 8, 10, 12, 16]
 
 
 def base_arch(**over):
-    arch = dict(
-        dim=96, n_heads=8, head_dim=12, ffn_hidden=768, embedding_type="tied",
-        prelude_layers=0, coda_layers=1, n_shared_blocks=1, value_residual=True,
-        use_timestep_scale=True, use_outer_residual=True, loop_lora_rank=4,
-        max_loops_table=16, norm_eps=1e-5, window=256, max_seq_len=512, vocab_size=4096,
-    )
+    arch = {
+        "dim": 96, "n_heads": 8, "head_dim": 12, "ffn_hidden": 768,
+        "embedding_type": "tied",
+        "prelude_layers": 0, "coda_layers": 1, "n_shared_blocks": 1,
+        "value_residual": True,
+        "use_timestep_scale": True, "use_outer_residual": True, "loop_lora_rank": 4,
+        "max_loops_table": 16, "norm_eps": 1e-5, "window": 256, "max_seq_len": 512,
+        "vocab_size": 4096,
+    }
     arch.update(over)
     return arch
 

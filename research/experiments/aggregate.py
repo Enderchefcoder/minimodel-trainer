@@ -26,7 +26,7 @@ def load_results() -> dict[str, dict[str, Any]]:
         "loop_robustness.json",
         "arch_1m_candidates.json",
         "arch_bakeoff_merged.json",
-        "crush_arch_bakeoff.json",
+        "arch_bakeoff.json",
         "head_to_head.json",
         "glint2_proof.json",
     }

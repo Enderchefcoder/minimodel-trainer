@@ -87,7 +87,7 @@ SPECS: list[TemplateSpec] = [
         family="dense-transformer",
         description=(
             "Rank-1 ~1.03M dense GQA + value residual + QK-norm — researched "
-            "winner shape from the crush-Glint-2 bake-off, retargeted to ~1M."
+            "winner shape from the recipe-11 bake-off, retargeted to ~1M."
         ),
         arch={**_MM1M_BASE, "n_layers": 5, "ffn_hidden": 256, "value_residual": True},
         recommended_tokens="0.3-1B",
@@ -519,7 +519,7 @@ SPECS: list[TemplateSpec] = [
         name="dense_1_4m",
         family="dense-transformer",
         description=(
-            "Dense GQA transformer at ~1.406M params — the Glint-2 crusher. "
+            "Dense GQA transformer at ~1.406M params — recipe 11's GPU contender. "
             "Matched to the 1.4M budget with QK-norm, tied embeddings and value "
             "residuals; preferred over looped at fixed training tokens."
         ),
@@ -541,7 +541,7 @@ SPECS: list[TemplateSpec] = [
         training_defaults={"lr": 3.0e-3, "batch_tokens": 65536, "seq_len": 1024},
         notes=[
             "Sandbox bake-off winner near 1.4M (tied with MHA/deep variants; "
-            "GQA chosen for T4 throughput). Crush-glint2 v2 mix: FineWeb-Edu "
+            "GQA chosen for T4 throughput). dense-1-4m-t4 mix: FineWeb-Edu "
             "55% + DCLM-100BT 28% + TinyStories 12% + soft-label QA 5%.",
         ],
     ),

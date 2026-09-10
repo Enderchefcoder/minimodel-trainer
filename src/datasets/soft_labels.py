@@ -1,4 +1,4 @@
-"""Soft-label next-token triples for the crush-glint2 QA corpus.
+"""Soft-label next-token triples for the recipe-11 QA corpus.
 
 The bundled ``research/data/corpus/slm_next_token_dataset.json`` stores, for
 each prompt, a gold continuation and a 3-way soft distribution over candidate

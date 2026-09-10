@@ -8,10 +8,11 @@ minutes.
 | --- | --- |
 | [01_train_a_language_model.ipynb](01_train_a_language_model.ipynb) | Tokenizer → corpus → pretrain → SFT → evaluate → generate, all in-process |
 | [02_pixel_art_generator.ipynb](02_pixel_art_generator.ipynb) | Sprites → palette corpus → PixelGPT → sampling grids, plus a DiT comparison |
-| [03_crush_glint2_colab.ipynb](03_crush_glint2_colab.ipynb) | **One-cell Colab T4**: train `dense_1_4m` on FineWeb-Edu/DCLM/TinyStories/soft-QA for ≤4h with Drive backup (recipe report 11) |
+| [03_train_dense_1_4m_colab.ipynb](03_train_dense_1_4m_colab.ipynb) | **One-cell Colab T4**: train `dense_1_4m` on FineWeb-Edu/DCLM/TinyStories/soft-QA for ≤4h with Drive backup (recipe report 11) |
 | [04_stigmergy_train.ipynb](04_stigmergy_train.ipynb) | **Chess contest**: train Stigmergy-DPFE (pheromone fields) on CPU/CUDA → JSON weights |
 | [05_stigmergy_fields.ipynb](05_stigmergy_fields.ipynb) | Visualize the 10-channel diffused pheromone lattice |
 | [06_stigmergy_elo.ipynb](06_stigmergy_elo.ipynb) | Elo ladder + uniqueness → contest composite score |
+| [07_instruct_tune_gptx25_135m.ipynb](07_instruct_tune_gptx25_135m.ipynb) | Instruct-tune **AxiomicLabs/GPT-X2.5-135M** (HF `trust_remote_code`) on any `Input`/`Output` JSONL with ChatML masking, then chat with it |
 
 Setup from the repo root:
 

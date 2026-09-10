@@ -15,11 +15,12 @@ and written up in `reports/`.
 | 03 | [architecture_bakeoff](reports/03_architecture_bakeoff.md) | At a fixed token budget, dense beats looped per-token |
 | 04 | [stabilizers_optimizer](reports/04_stabilizers_optimizer.md) | Value residuals + Muon; what helps looped training |
 | 05 | [ffn_ratio](reports/05_ffn_ratio.md) | Is Glint-2's 22× FFN the right allocation? |
+| 06 | [model_comparisons](reports/06_model_comparisons.md) | Curated side-by-side arch + benchmark comparison; how to read each metric and what to choose |
 | 07 | [loop_robustness](reports/07_loop_robustness.md) | Glint-2 breaks off 8 loops (35×); ours span 1.04–1.19× and scale up |
 | 08 | [inference_wins](reports/08_inference_wins.md) | Effort ladder + quality probe: architecture-agnostic upside |
 | 09 | [synthesis](reports/09_synthesis.md) | The recipe to beat Glint-2, and the CPU-budget contender |
 | 10 | [glint2_verification](reports/10_glint2_verification.md) | Fresh Hub proof: shipped weights are 1.71M loop+coda; README mislabels params + WikiText ppl |
-| 11 | [crush_glint2_recipe](reports/11_crush_glint2_recipe.md) | Locked 1.4M dense GQA recipe + Colab T4 one-cell notebook (FineWeb-Edu/DCLM/TinyStories/soft-QA) |
+| 11 | [dense_1_4m_recipe](reports/11_dense_1_4m_recipe.md) | Locked 1.4M dense GQA recipe + Colab T4 one-cell notebook (FineWeb-Edu/DCLM/TinyStories/soft-QA) |
 | 12 | [arch_1m_candidates](reports/12_arch_1m_candidates.md) | 20 ~1M arches graded on report-03 protocol; merged with original 5 |
 | — | [RESULTS](reports/RESULTS.md) | Auto-aggregated tables + figures from all runs |
 
@@ -33,12 +34,12 @@ and written up in `reports/`.
 | `eval_harness.py` | Model-agnostic BLiMP / ARC / byte-ppl scorer (shared by all) |
 | `bakeoff_1m_candidates.py` | Report-03-protocol bake-off for `mm1m_r*`; merges with `arch_*` |
 | `aggregate.py` | Build `RESULTS.md` + charts from result JSONs |
+| `cot_latent_ablation.py` | Report-13 study: direct vs brief-CoT vs detailed-CoT vs looped latent, identical arches + harness |
 | `run_experiment.py` | Train one config, evaluate, save a result JSON |
 | `ablations.py` | Grouped compute-matched ablations (arch, stabilizers, optimizer, ffn, ...) |
 | `loops_scaling.py` | Evaluate a model across loop counts |
 | `loop_robustness.py` | Controlled fixed-vs-uniform-vs-Poisson loop-training comparison |
 | `contender.py` | Train the best-effort dense contender + measure inference lift |
-| `aggregate.py` | Build `reports/RESULTS.md` and figures from result JSONs |
 
 ## Baselines (`baselines/`)
 

@@ -1,4 +1,4 @@
-# Report 11 — Crush Glint-2: locked 1.4M recipe
+# Report 11 — The locked 1.4M dense recipe
 
 *Date: 2026-08-04 (v2 notebook 2026-08-05). Evidence: prior reports 03/04/09/12,
 sandbox bake-off, SmolLM2 / FineWeb-Edu / DCLM literature, live Glint-2
@@ -8,7 +8,7 @@ verification (report 10).*
 
 | lever | choice | why |
 | --- | --- | --- |
-| **Architecture** | **dense GQA** `dense_1_4m` — dim=128, L=5, H=8, kv=2, ffn=352, QK-norm, tied embed, value residual → **1,406,506** params | Report 03: dense >> looped at fixed tokens. Sandbox: GQA ≈ MHA; GQA wins T4 throughput. Report 12 Mambas win *at ~1.1M TinyStories*; for 1.4M GPU encyclopedic crush stay dense |
+| **Architecture** | **dense GQA** `dense_1_4m` — dim=128, L=5, H=8, kv=2, ffn=352, QK-norm, tied embed, value residual → **1,406,506** params | Report 03: dense >> looped at fixed tokens. Sandbox: GQA ≈ MHA; GQA wins T4 throughput. Report 12 Mambas win *at ~1.1M TinyStories*; for the 1.4M GPU encyclopedic run stay dense |
 | **Tokenizer** | **4096-vocab byte-level BPE** trained on the mix | Matches Glint-2 for fair WikiText; ~4 bytes/token |
 | **Data mix (v2)** | **FineWeb-Edu 55% / DCLM-100BT 28% / TinyStories 12% / soft-QA 5%** | Edu↑ for ARC/WikiText; soft-QA↑ so answers stick; DCLM kept for HellaSwag; TinyStories still bootstraps fluency |
 | **Optimizer** | **AdamW** lr=**3e-3**, wd=0.1, β=(0.9, 0.95), clip=1.0 | Sandbox LR sweep: 3e-3 best on dense |
@@ -27,7 +27,7 @@ WikiText **byte-ppl ~3.18** (their "3.09" is 2^BPB, not token-ppl), BLiMP
 1. **Looped supra2 / Glint-shape** — loses per-token at fixed budget (report 03).
 2. **Dense wide-shallow (160×3)** — slightly better sandbox val but **1.47M** (over budget).
 3. **~1.1M Mamba / Griffin (report 12)** — win TinyStories val loss at 2.46M tokens;
-   not chosen for the *encyclopedic* 1.4M Colab crush (throughput + FineWeb scale).
+   not chosen for the *encyclopedic* 1.4M Colab run (throughput + FineWeb scale).
 4. **Dense GQA 128×5 (chosen)** — on-budget, fast, matches MobileLLM/SmolLM GQA bias.
 
 ## Soft-label JSON
@@ -39,7 +39,7 @@ steps). Plain CE docs in `slm_next_token_qa.jsonl`. Training uses CE on
 
 ## Colab artefact
 
-`notebooks/03_crush_glint2_colab.ipynb` — **one cell (v2)**: mount Drive,
+`notebooks/03_train_dense_1_4m_colab.ipynb` — **one cell (v2)**: mount Drive,
 install, stream the mix, train ≤4h on T4 with AMP/compile/EMA, checkpoint to
 Drive, smoke-generate, run Glint-matched eval.
 

@@ -15,7 +15,8 @@ import time
 from pathlib import Path
 
 from minimodel.datasets.tokenize_datasets import tokenize_text_records
-from minimodel.tokenization.tokenize import BPETokenizer, train_tokenizer as _train_bpe
+from minimodel.tokenization.tokenize import BPETokenizer
+from minimodel.tokenization.tokenize import train_tokenizer as _train_bpe
 
 ART = Path("research/artifacts")
 TRAIN = Path("research/data/train")

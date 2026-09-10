@@ -17,22 +17,24 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 
-from run_experiment import ExpConfig, build_model_from, run_experiment  # noqa: E402
+from run_experiment import ExpConfig, build_model_from, run_experiment
 
 # ~1.7M looped block at Glint-2's shape; other configs match its budget.
-GLINT_ARCH = dict(
-    dim=96, n_heads=8, head_dim=12, ffn_hidden=2112, embedding_type="tied",
-    prelude_layers=0, coda_layers=1, n_shared_blocks=1,
-    use_timestep_scale=False, use_outer_residual=False, value_residual=False,
-    loop_lora_rank=4, max_loops_table=16, train_loops=8, min_loops=8,
-    variable_loops=False, norm_eps=1e-5, window=256, max_seq_len=512,
-)
+GLINT_ARCH = {
+    "dim": 96, "n_heads": 8, "head_dim": 12, "ffn_hidden": 2112,
+    "embedding_type": "tied", "prelude_layers": 0, "coda_layers": 1,
+    "n_shared_blocks": 1, "use_timestep_scale": False, "use_outer_residual": False,
+    "value_residual": False, "loop_lora_rank": 4, "max_loops_table": 16,
+    "train_loops": 8, "min_loops": 8, "variable_loops": False, "norm_eps": 1e-5,
+    "window": 256, "max_seq_len": 512,
+}
 
-DEFAULTS = dict(
-    vocab=4096, seq_len=256, batch_size=32, max_steps=300, lr=3e-3,
-    optimizer="adamw", schedule="cosine", warmup=0.05, eval_loops=8,
-    blimp_per_paradigm=15, arc_limit=150, wikitext_max_tokens=10000, log_every=100,
-)
+DEFAULTS = {
+    "vocab": 4096, "seq_len": 256, "batch_size": 32, "max_steps": 300, "lr": 3e-3,
+    "optimizer": "adamw", "schedule": "cosine", "warmup": 0.05, "eval_loops": 8,
+    "blimp_per_paradigm": 15, "arc_limit": 150, "wikitext_max_tokens": 10000,
+    "log_every": 100,
+}
 
 
 def _looped(**arch_over):
@@ -68,14 +70,16 @@ def group_arch() -> list[ExpConfig]:
                                norm_eps=1e-6), **DEFAULTS),
         # Dense transformer at matched budget (no looping): ~1.70M.
         ExpConfig(name="arch_dense", family="dense_transformer",
-                  arch=dict(dim=160, n_layers=3, n_heads=5, head_dim=32, n_kv_heads=5,
-                            ffn_hidden=512, window=256, qk_norm=True, tie_embeddings=True,
-                            max_seq_len=512), **DEFAULTS),
+                  arch={"dim": 160, "n_layers": 3, "n_heads": 5, "head_dim": 32,
+                        "n_kv_heads": 5, "ffn_hidden": 512, "window": 256,
+                        "qk_norm": True, "tie_embeddings": True, "max_seq_len": 512},
+                  **DEFAULTS),
         # Sparse MoE at matched *active* budget (~1.67M active, 2.85M total).
         ExpConfig(name="arch_moe", family="moe_transformer",
-                  arch=dict(dim=128, n_layers=4, n_heads=4, head_dim=32, n_kv_heads=1,
-                            ffn_hidden=256, n_routed_experts=6, top_k=2, first_moe_layer=1,
-                            window=256, qk_norm=True, tie_embeddings=True, max_seq_len=512),
+                  arch={"dim": 128, "n_layers": 4, "n_heads": 4, "head_dim": 32,
+                        "n_kv_heads": 1, "ffn_hidden": 256, "n_routed_experts": 6,
+                        "top_k": 2, "first_moe_layer": 1, "window": 256,
+                        "qk_norm": True, "tie_embeddings": True, "max_seq_len": 512},
                   **DEFAULTS),
     ]
 
@@ -85,7 +89,7 @@ def group_stabilizers() -> list[ExpConfig]:
 
     Uses the 8x-FFN fast base; the stabiliser effect is orthogonal to FFN width.
     """
-    base = dict(family="looped_transformer")
+    base = {"family": "looped_transformer"}
     return [
         ExpConfig(name="stab_none", **base, arch=_fast(), **DEFAULTS),
         ExpConfig(name="stab_vr", **base, arch=_fast(value_residual=True), **DEFAULTS),

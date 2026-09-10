@@ -1,16 +1,17 @@
-# Crush Glint-2: 1.4M dense GQA on FineWeb-Edu + DCLM-100BT + TinyStories +
-# soft-label QA. Designed for a single Colab T4 (~4h wall clock).
-# See research/reports/11_crush_glint2_recipe.md for the design rationale.
+# Recipe 11: dense_1_4m on FineWeb-Edu + DCLM-100BT + TinyStories +
+# soft-label QA, tuned for a single Colab T4 (~4h wall clock). Targets are
+# Glint-2's published scores (report 10); see
+# research/reports/11_dense_1_4m_recipe.md for the design rationale.
 # Notebook v2: AMP + compile, wall-clock WSD, EMA, seq-1024 probe, Glint eval.
 extends: _base.yaml
 
-run_name: crush-glint2-1.4m
+run_name: dense-1-4m-t4
 
 model:
   template: dense_1_4m
 
 data:
-  mixture: crush-glint2
+  mixture: dense-1-4m-t4
   # Soft-label JSON (prompt→answer + 3-way next-token targets) lives at:
   #   research/data/corpus/slm_next_token_dataset.json
   soft_label_json: research/data/corpus/slm_next_token_dataset.json

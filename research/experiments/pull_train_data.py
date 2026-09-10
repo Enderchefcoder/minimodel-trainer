@@ -6,11 +6,14 @@ fineweb-edu sample for a knowledge/encyclopedic slice (Glint-2 clearly saw some,
 given its WikiText behaviour and the probe trained on fineweb-edu).
 """
 from __future__ import annotations
+
 import sys
 from pathlib import Path
+
 from datasets import load_dataset
 
-OUT = Path("research/data/train"); OUT.mkdir(parents=True, exist_ok=True)
+OUT = Path("research/data/train")
+OUT.mkdir(parents=True, exist_ok=True)
 
 def dump(name, ds, field, max_docs, max_chars):
     path = OUT / f"{name}.txt"
@@ -21,7 +24,8 @@ def dump(name, ds, field, max_docs, max_chars):
             if not t.strip():
                 continue
             f.write(t.strip() + "\n<eos>\n")
-            n += 1; chars += len(t)
+            n += 1
+            chars += len(t)
             if n >= max_docs or chars >= max_chars:
                 break
     print(f"{name}: {n:,} docs, {chars:,} chars -> {path}")

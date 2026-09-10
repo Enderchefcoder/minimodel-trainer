@@ -3,6 +3,16 @@ license: mit
 language:
 - en
 ---
+> **⚠ ERRATA (verified 2026-08-03, see `research/reports/10_glint2_verification.md`):**
+> everything below is the *original upstream README*, kept verbatim for the record.
+> Its size and architecture claims are **wrong against the shipped artifact**:
+> the released checkpoint is a **1,710,049-parameter loop+coda model** (one unique
+> coda block after the loop), not "1.06M / pure-loop / zero unique layers". The
+> 1,065k figure counts the model *without* the coda. Its "wikitext-2 ppl 3.09" is
+> byte-normalised perplexity (2^BPB), not token perplexity. ARC-Easy 36.80 is real.
+> Our faithful loader (`research/baselines/glint2_model.py`) reproduces the shipped
+> weights at 1,710,049 params.
+
 Check out this for infer! https://huggingface.co/spaces/Glint-Research/glint-2-effort-explorer
 
 one transformer block, looped 8 times, 1.06 million parameters. the pure-loop model: we deleted every unique layer and kept one wide block that iterates. the release: weights, tokenizer, two inference scripts, a 3.5 KB corrective probe, this readme. the sft chat variant arrices soon in the same repo.
