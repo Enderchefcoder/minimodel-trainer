@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from minimodel.architectures.base import BaseLanguageModel
 from minimodel.architectures.dense import DenseTransformer
+from minimodel.architectures.ender import EnderTransformer
 from minimodel.architectures.experimental import ExperimentalTransformer
 from minimodel.architectures.hybrid import HybridRecurrentTransformer
 from minimodel.architectures.looped import LoopedTransformer
@@ -50,6 +51,11 @@ ARCHITECTURES.add(
     MambaLM.architecture_name,
     MambaLM,
     aliases=("mamba", "ssm", "selective_ssm"),
+)
+ARCHITECTURES.add(
+    EnderTransformer.architecture_name,
+    EnderTransformer,
+    aliases=("ender", "endogenous_depth", "evolving_recurrence"),
 )
 
 

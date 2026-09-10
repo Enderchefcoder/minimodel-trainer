@@ -19,6 +19,11 @@ Available families
     for ~1M Glint-2 bake-offs.
 ``mamba-lm``
     Pure-PyTorch selective SSM (Mamba-style) with hybrid attention variants.
+``ender``
+    Endogenous Neural Depth with Evolving Recurrence: a latent recurrence grafted
+    before the final norm of a dense stack (or any backbone, via
+    :class:`EnderAdapter`), giving tunable effective depth at a fixed parameter
+    count.
 
 See ``docs/architecture.md`` for how to pick between them.
 """
@@ -37,6 +42,14 @@ from minimodel.architectures.builder import (
     template_to_model_config,
 )
 from minimodel.architectures.dense import DenseTransformer, DenseTransformerConfig
+from minimodel.architectures.ender import (
+    EnderAdapter,
+    EnderLoss,
+    EnderRecurrenceModule,
+    EnderTransformer,
+    EnderTransformerConfig,
+    build_ender_optimizer,
+)
 from minimodel.architectures.experimental import (
     ExperimentalTransformer,
     ExperimentalTransformerConfig,
@@ -70,6 +83,11 @@ __all__ = [
     "CausalLocalAttention",
     "DenseTransformer",
     "DenseTransformerConfig",
+    "EnderAdapter",
+    "EnderLoss",
+    "EnderRecurrenceModule",
+    "EnderTransformer",
+    "EnderTransformerConfig",
     "ExperimentalTransformer",
     "ExperimentalTransformerConfig",
     "FactorizedEmbedding",
@@ -90,6 +108,7 @@ __all__ = [
     "RotaryEmbedding",
     "SwiGLUFeedForward",
     "TransformerBlock",
+    "build_ender_optimizer",
     "build_model",
     "describe_model",
     "list_architectures",

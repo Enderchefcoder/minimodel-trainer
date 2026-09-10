@@ -113,6 +113,42 @@ Mamba-style selective state space without custom kernels, with hybrid variants
 (attention tail, SSM/attention braid, multi-head SSM). Streamable via
 `KVCache.recurrent_states`.
 
+### `ender` - endogenous neural depth with evolving recurrence
+
+A latent recurrence grafted in front of the final norm. The residual stream is
+projected to a small latent space (`r_latent`), a shared causal core block runs
+`num_steps` times with gated tanh-bounded updates, and the resulting innovation
+is injected back through a zero-initialised gate:
+
+    z_0 = down(norm_in(h));  u_k = core(z_k + step_embed[k])
+    z_{k+1} = z_k + g_k * tanh(u_k - z_k)
+    h' = h + alpha * up(z_K - z_0)
+
+The zero `alpha` makes a fresh ENDER model *exactly* the dense baseline - the
+recurrence has to earn its influence - which also makes before/after benchmark
+comparisons clean. Like the looped family, effective depth is a test-time dial:
+
+```python
+model(tokens, steps=2)   # faster
+model(tokens, steps=6)   # deeper (extra step embeddings pad with zeros)
+```
+
+Two entry points:
+
+- `EnderTransformer` - trained from scratch (`ender_12m`, `ender_30m` templates);
+- `EnderAdapter` - wraps *any* backbone (locate final norm, install a
+  forward-pre-hook). This is how you add ENDER to a pretrained checkpoint such
+  as `AxiomicLabs/GPT-X2.5-135M`: `scripts/apply_ender.py` grafts it, trains
+  the recurrence with the backbone frozen (`build_ender_optimizer`, staged:
+  optionally unfreezing the top blocks at a reduced LR), and
+  `scripts/bench_ender.py` benchmarks before vs after on BLiMP, ARC-Easy and
+  the Open_SLM_Leaderboard set.
+
+The auxiliary `loss_delta` term (last-vs-prior latent distance) rewards a
+recurrence that has converged by its final step, so extra test-time steps
+refine rather than churn. Pick it when you want depth gains without retraining
+a backbone, or a runtime depth/latency trade at fixed parameters.
+
 ## Choosing, in one table
 
 | Constraint | Choice |
@@ -122,6 +158,7 @@ Mamba-style selective state space without custom kernels, with hybrid variants
 | Training compute budget, memory is fine | `moe` |
 | Long context or tiny decode memory | `hybrid` / `mamba-lm` |
 | Novel ~1M Glint-2 experiments | `experimental` / `mm1m_r*` templates |
+| Add depth to a frozen pretrained backbone | `ender` (adapter) |
 
 The ordered ~1M candidate ladder is `list_glint2_candidates()` (ranks 1–20).
 
